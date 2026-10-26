@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Agendar cita  (CU-01 / CU-16)
+  ----------------------------------------------------------------------------
+  Permite reservar un horario con un barbero desde la caja o desde la app del
+  barbero. Pasos: elegir barbero → elegir fecha → elegir un horario libre →
+  buscar al cliente → elegir el servicio → confirmar.
+
+  Parámetros de URL opcionales:
+    ?cliente=ID   preselecciona al cliente (viene de «Perfil del cliente»).
+
+  Endpoints: GET /barberos · GET /servicios · GET /clientes?buscar= ·
+             GET /clientes/:id · GET /citas/disponibilidad · POST /citas
+  Lógica:    assets/js/paginas/agendar-cita.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agendar cita · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Estilos exclusivos de esta pantalla -->
+  <style>
+    /* Barbero seleccionable */
+    .barbero-opcion[aria-pressed="true"] { background: var(--color-blanco); border-color: var(--color-blanco); color: var(--color-texto-invertido); }
+    .barbero-opcion[aria-pressed="true"] .fila__titulo { color: var(--color-texto-invertido); }
+    .barbero-opcion[aria-pressed="true"] .fila__detalle { color: #52525b; }
+    .barbero-opcion[aria-pressed="true"] .avatar { background: #0c0d0e; color: #fff; border-color: #0c0d0e; }
+
+    /* Cuadro de horario: el estado lo pone el controlador en data-estado */
+    .horario {
+      display: flex; flex-direction: column; justify-content: space-between; gap: 6px;
+      min-height: 76px; padding: 10px 12px; text-align: left;
+      border-radius: var(--radio-sm); border: 1px solid var(--color-borde);
+      background: var(--color-superficie-baja); color: var(--color-texto);
+      font: inherit; cursor: pointer; transition: border-color .15s, background-color .15s;
+    }
+    .horario__hora { font: 700 16px/1 var(--fuente-numeros); }
+    .horario__estado { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .horario__detalle { font-size: 11.5px; color: var(--color-texto-tenue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .horario[data-estado="Libre"] .horario__estado { color: var(--color-exito); }
+    .horario[data-estado="Libre"]:hover { border-color: var(--color-texto-suave); background: var(--color-superficie-alta); }
+    .horario[data-estado="Ocupado"] { background: var(--color-superficie-alta); opacity: .75; cursor: not-allowed; }
+    .horario[data-estado="Ocupado"] .horario__estado { color: var(--color-texto-suave); }
+    .horario[data-estado="NoDisponible"] { opacity: .45; cursor: not-allowed; }
+    .horario[data-estado="NoDisponible"] .horario__estado { color: var(--color-texto-tenue); }
+    .horario[data-estado][aria-pressed="true"] { background: var(--color-blanco); border-color: var(--color-blanco); color: var(--color-texto-invertido); box-shadow: 0 0 20px rgba(255,255,255,.25); }
+    .horario[data-estado][aria-pressed="true"] .horario__estado { color: var(--color-texto-invertido); }
+
+    /* Comprobante de la cita (papel claro) */
+    .comprobante { background: #f8f7f4; color: #111; border-radius: var(--radio); padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.5); }
+    .comprobante .dato__etiqueta { color: #71717a; }
+    .comprobante .dato__valor { color: #111; }
+
+    /* Barra de ocupación */
+    .barra { height: 8px; border-radius: 999px; background: var(--color-superficie-alta); overflow: hidden; border: 1px solid var(--color-borde); }
+    .barra__relleno { height: 100%; width: 0; background: #fff; border-radius: 999px; transition: width .3s ease; }
+  </style>
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/paginas/agendar-cita.js" defer></script>
+</head>
+
+<body>
+  <!-- Encabezado unificado: flecha para volver al panel principal -->
+  <encabezado-app variante="modulo"></encabezado-app>
+
+  <main class="pagina">
+
+    <!-- ===== Título ===== -->
+    <div class="cabecera-pagina">
+      <div>
+        <span class="cabecera-pagina__antetitulo">Gestión de turnos</span>
+        <h1 class="cabecera-pagina__titulo">Agendar cita</h1>
+        <p class="cabecera-pagina__descripcion">Elige barbero, fecha y horario; después asigna al cliente y el servicio.</p>
+      </div>
+      <!-- Jornada del barbero seleccionado (HoraEntrada–HoraSalida · comida) -->
+      <span id="jornada" class="pastilla" hidden>
+        <span class="icono icono--sm texto-suave" aria-hidden="true">schedule</span>
+        <span>Jornada <strong class="text-white" data-campo="Jornada"></strong></span>
+        <span class="texto-tenue" data-campo="Comida"></span>
+      </span>
+    </div>
+
+    <!-- ===== Paso 1 y 2: barbero y fecha ===== -->
+    <section class="tarjeta mb-4" aria-labelledby="titulo-barbero">
+      <div class="tarjeta__encabezado">
+        <h2 id="titulo-barbero" class="tarjeta__titulo"><span class="icono" aria-hidden="true">content_cut</span>Barbero</h2>
+        <span class="text-xs texto-tenue">Selecciona con quién será la cita</span>
+      </div>
+
+      <p id="barberos-cargando" class="cargando">Cargando barberos…</p>
+      <div id="barberos-vacio" class="estado-vacio" hidden>
+        <span class="icono" aria-hidden="true">person_off</span>
+        <span class="estado-vacio__titulo">No hay barberos registrados</span>
+        <span>El Dueño los da de alta en «Personal y horarios».</span>
+      </div>
+      <!-- Lista de barberos (plantilla #plantilla-barbero) -->
+      <div id="lista-barberos" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2" role="group" aria-label="Barberos" hidden></div>
+
+      <!-- Navegación de fecha y leyenda -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-4 mt-4 border-t border-borde">
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" id="dia-anterior" class="boton boton--icono" aria-label="Día anterior"><span class="icono" aria-hidden="true">chevron_left</span></button>
+          <span class="flex items-center gap-2 px-2 font-semibold text-white">
+            <span class="icono icono--sm" aria-hidden="true">calendar_today</span>
+            <span id="fecha-texto" class="first-letter:uppercase"></span>
+          </span>
+          <button type="button" id="dia-siguiente" class="boton boton--icono" aria-label="Día siguiente"><span class="icono" aria-hidden="true">chevron_right</span></button>
+          <button type="button" id="dia-hoy" class="boton boton--pequeno">Hoy</button>
+        </div>
+        <ul class="flex flex-wrap items-center gap-4 text-xs texto-suave" aria-label="Leyenda">
+          <li class="flex items-center gap-2"><span class="insignia__punto texto-exito"></span>Libre</li>
+          <li class="flex items-center gap-2"><span class="insignia__punto texto-tenue"></span>Ocupado</li>
+          <li class="flex items-center gap-2"><span class="icono icono--sm texto-tenue" aria-hidden="true">block</span>No disponible</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+      <!-- ===== Paso 3: horarios del día ===== -->
+      <section class="tarjeta lg:col-span-7 xl:col-span-8" aria-labelledby="titulo-horarios">
+        <div class="tarjeta__encabezado">
+          <h2 id="titulo-horarios" class="tarjeta__titulo"><span class="icono" aria-hidden="true">calendar_view_week</span>Horarios del día</h2>
+          <span id="cupos-libres" class="insignia insignia--exito" hidden><span class="insignia__punto"></span><span data-texto></span></span>
+        </div>
+
+        <p id="horarios-cargando" class="cargando" hidden>Consultando disponibilidad…</p>
+        <div id="horarios-vacio" class="estado-vacio">
+          <span class="icono" aria-hidden="true">event_busy</span>
+          <span class="estado-vacio__titulo" data-titulo>Selecciona un barbero</span>
+          <span data-detalle>Se mostrarán sus horarios libres y ocupados del día.</span>
+        </div>
+        <!-- Cuadrícula de horarios (plantilla #plantilla-horario) -->
+        <div id="lista-horarios" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2.5" hidden></div>
+
+        <!-- Ocupación calculada con los horarios recibidos -->
+        <div id="ocupacion" class="bloque mt-4 flex flex-wrap items-center justify-between gap-3" hidden>
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="dato"><span class="dato__etiqueta">Ocupación</span><span class="dato__valor numeros" data-campo="Porcentaje"></span></div>
+            <div class="barra w-40 sm:w-48"><div class="barra__relleno" id="barra-ocupacion"></div></div>
+          </div>
+          <span class="text-sm texto-suave" data-campo="Resumen"></span>
+        </div>
+      </section>
+
+      <!-- ===== Paso 4 y 5: cliente, servicio y confirmación ===== -->
+      <aside class="tarjeta lg:col-span-5 xl:col-span-4 columna-fija flex flex-col gap-4" aria-labelledby="titulo-datos">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <h2 id="titulo-datos" class="tarjeta__titulo"><span class="icono" aria-hidden="true">event_available</span>Datos de la cita</h2>
+        </div>
+
+        <!-- Resumen de la reserva -->
+        <div class="comprobante" aria-live="polite">
+          <div class="flex items-baseline gap-2">
+            <span id="resumen-hora" class="titulo-serif text-3xl font-bold">--:--</span>
+            <span class="text-sm font-semibold" style="color:#52525b">hrs</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 pt-3 mt-2" style="border-top:1px solid #d4d4d8">
+            <div class="dato"><span class="dato__etiqueta">Fecha</span><span class="dato__valor text-sm" id="resumen-fecha">—</span></div>
+            <div class="dato"><span class="dato__etiqueta">Barbero</span><span class="dato__valor text-sm" id="resumen-barbero">—</span></div>
+            <div class="dato col-span-2"><span class="dato__etiqueta">Duración</span><span class="dato__valor text-sm" id="resumen-duracion">—</span></div>
+          </div>
+        </div>
+
+        <!-- Cliente -->
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <label class="etiqueta" for="buscar-cliente" style="margin:0">Cliente <span class="etiqueta__requerido">*</span></label>
+            <button type="button" class="boton boton--fantasma boton--pequeno" data-nav="nuevo-cliente.html">
+              <span class="icono icono--sm" aria-hidden="true">person_add</span>Cliente nuevo
+            </button>
+          </div>
+
+          <!-- Cliente elegido -->
+          <div id="cliente-elegido" class="fila" hidden>
+            <span class="avatar" data-campo="Nombre" data-formato="iniciales"></span>
+            <div class="fila__cuerpo">
+              <div class="fila__titulo" data-campo="Nombre"></div>
+              <div class="fila__detalle numeros" data-campo="Telefono" data-formato="telefono"></div>
+            </div>
+            <button type="button" id="cambiar-cliente" class="boton boton--pequeno">Cambiar</button>
+          </div>
+
+          <!-- Búsqueda -->
+          <div id="cliente-busqueda">
+            <div class="campo-icono">
+              <span class="icono" aria-hidden="true">search</span>
+              <input class="campo" id="buscar-cliente" type="search" placeholder="Nombre o teléfono" autocomplete="off">
+            </div>
+            <p id="clientes-sin-resultados" class="ayuda" hidden>Sin coincidencias. Registra al cliente con «Cliente nuevo».</p>
+            <div id="resultados-clientes" class="flex flex-col gap-2 mt-2" hidden></div>
+          </div>
+        </div>
+
+        <!-- Servicio solicitado (catálogo GET /servicios) -->
+        <div>
+          <label class="etiqueta" for="servicio">Servicio solicitado</label>
+          <select class="campo" id="servicio" disabled>
+            <option value="">Cargando servicios…</option>
+          </select>
+          <div id="servicio-detalle" class="bloque mt-2 flex items-center justify-between gap-3" hidden>
+            <div class="min-w-0">
+              <div class="font-bold text-white text-sm" data-campo="NombreServicio"></div>
+              <div class="text-xs texto-tenue" data-campo="Descripcion" data-vacio=""></div>
+            </div>
+            <div class="text-right">
+              <div class="numeros font-bold text-white" data-campo="Precio" data-formato="moneda"></div>
+              <div class="text-xs texto-exito"><span data-campo="DuracionMin"></span> min</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información para el usuario -->
+        <div class="alerta">
+          <span class="icono texto-exito" aria-hidden="true">chat</span>
+          <p>La agenda se sincroniza con las citas y cancelaciones recibidas por WhatsApp.</p>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button type="button" id="confirmar" class="boton boton--primario flex-1" disabled>
+            <span class="icono icono--sm" aria-hidden="true">check_circle</span>Confirmar cita
+          </button>
+          <button type="button" id="limpiar" class="boton">Cancelar</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- ===================== Plantillas ===================== -->
+
+  <!-- Barbero en la lista de selección -->
+  <template id="plantilla-barbero">
+    <button type="button" class="fila fila--seleccionable barbero-opcion" aria-pressed="false" data-campo-id="ID_Barbero">
+      <span class="avatar" style="width:34px;height:34px;font-size:13px" data-campo="Nombre" data-formato="iniciales"></span>
+      <span class="fila__cuerpo">
+        <span class="fila__titulo block text-sm" data-campo="Nombre"></span>
+        <span class="fila__detalle block" data-campo="RolesActividades" data-vacio="Barbero"></span>
+      </span>
+    </button>
+  </template>
+
+  <!-- Cuadro de horario: data-estado = Libre | Ocupado | NoDisponible -->
+  <template id="plantilla-horario">
+    <button type="button" class="horario" aria-pressed="false">
+      <span class="horario__hora" data-campo="Hora"></span>
+      <span>
+        <span class="horario__estado block" data-campo="EstadoTexto"></span>
+        <span class="horario__detalle block" data-campo="Detalle" data-vacio=""></span>
+      </span>
+    </button>
+  </template>
+
+  <!-- Resultado de búsqueda de clientes -->
+  <template id="plantilla-cliente">
+    <button type="button" class="fila fila--seleccionable" data-campo-id="ID_Cliente">
+      <span class="avatar" style="width:34px;height:34px;font-size:13px" data-campo="Nombre" data-formato="iniciales"></span>
+      <span class="fila__cuerpo">
+        <span class="fila__titulo block text-sm" data-campo="Nombre"></span>
+        <span class="fila__detalle block numeros" data-campo="Telefono" data-formato="telefono"></span>
+      </span>
+    </button>
+  </template>
+</body>
+</html>
