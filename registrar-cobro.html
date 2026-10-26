@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Registrar cobro  (CU-05)
+  ----------------------------------------------------------------------------
+  Punto de venta: se asocia (opcionalmente) al cliente, se agregan servicios,
+  productos o membresías, se elige el método de pago y se emite el ticket.
+
+  Los totales que se muestran aquí son una vista previa. El back end
+  recalcula precios, descuento por membresía e IVA, valida existencias y
+  guarda la venta en una sola transacción (ver diagrama de secuencia 3.1.2).
+
+  Parámetros de URL opcionales:
+    ?cliente=ID   asocia al cliente (viene de «Perfil del cliente»).
+
+  Endpoints: GET /clientes?buscar= · GET /clientes/:id · GET /servicios ·
+             GET /productos · GET /membresias · GET /barberos · POST /ventas
+  Lógica:    assets/js/paginas/registrar-cobro.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registrar cobro · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Estilos exclusivos de esta pantalla -->
+  <style>
+    /* Botones grandes de método de pago */
+    .metodo-pago { flex-direction: column; min-height: 72px; text-transform: none; letter-spacing: 0; font-weight: 600; }
+    .metodo-pago .icono { font-size: 26px; }
+    .metodo-pago[aria-pressed="true"] { background: var(--color-blanco); border-color: var(--color-blanco); color: var(--color-texto-invertido); }
+
+    /* Selector de cantidad (− 1 +) */
+    .cantidad { display: flex; align-items: center; border: 1px solid var(--color-borde); border-radius: var(--radio-sm); background: var(--color-superficie-baja); }
+    .cantidad button { width: 44px; min-height: 42px; border: 0; background: transparent; color: var(--color-texto-suave); font-size: 20px; cursor: pointer; }
+    .cantidad button:hover { color: #fff; }
+    .cantidad output { flex: 1; text-align: center; font: 700 15px/1 var(--fuente-numeros); }
+  </style>
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/paginas/registrar-cobro.js" defer></script>
+</head>
+
+<body>
+  <encabezado-app variante="modulo"></encabezado-app>
+
+  <main class="pagina">
+
+    <!-- ===== Título ===== -->
+    <div class="cabecera-pagina">
+      <div>
+        <span class="cabecera-pagina__antetitulo">Punto de venta</span>
+        <h1 class="cabecera-pagina__titulo">Registrar cobro</h1>
+        <p class="cabecera-pagina__descripcion">Agrega los conceptos, elige el método de pago y emite el ticket digital.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+      <!-- ===================== Columna izquierda ===================== -->
+      <div class="lg:col-span-7 flex flex-col gap-5 min-w-0">
+
+        <!-- ===== Cliente asociado ===== -->
+        <section class="tarjeta" aria-labelledby="titulo-cliente">
+          <div class="tarjeta__encabezado">
+            <h2 id="titulo-cliente" class="tarjeta__titulo"><span class="icono" aria-hidden="true">person_search</span>Cliente asociado</h2>
+            <span class="text-xs texto-tenue">Opcional · aplica los beneficios de membresía</span>
+          </div>
+
+          <!-- Búsqueda -->
+          <div id="cliente-busqueda">
+            <div class="campo-icono">
+              <span class="icono" aria-hidden="true">search</span>
+              <input class="campo" id="buscar-cliente" type="search" placeholder="Buscar por nombre o teléfono" autocomplete="off">
+            </div>
+            <p id="clientes-sin-resultados" class="ayuda" hidden>Sin coincidencias. Puedes cobrar sin cliente o registrarlo desde el panel.</p>
+            <div id="resultados-clientes" class="flex flex-col gap-2 mt-2" hidden></div>
+          </div>
+
+          <!-- Cliente elegido -->
+          <div id="cliente-elegido" class="fila" hidden>
+            <span class="avatar" data-campo="Nombre" data-formato="iniciales"></span>
+            <div class="fila__cuerpo">
+              <div class="fila__titulo" data-campo="Nombre"></div>
+              <div class="fila__detalle numeros" data-campo="Telefono" data-formato="telefono"></div>
+              <div class="mt-1" id="membresia-cliente"></div>
+            </div>
+            <button type="button" id="cambiar-cliente" class="boton boton--pequeno">Cambiar</button>
+          </div>
+        </section>
+
+        <!-- ===== Agregar conceptos ===== -->
+        <section class="tarjeta" aria-labelledby="titulo-conceptos">
+          <h2 id="titulo-conceptos" class="solo-lector">Agregar conceptos</h2>
+
+          <!-- Pestañas: Servicio / Producto / Membresía -->
+          <div class="segmentado mb-5" role="tablist" aria-label="Tipo de concepto">
+            <button type="button" class="segmentado__opcion" role="tab" aria-selected="true" aria-controls="panel-servicio" data-pestana="servicio">
+              <span class="icono icono--sm" aria-hidden="true">content_cut</span>Servicio
+            </button>
+            <button type="button" class="segmentado__opcion" role="tab" aria-selected="false" aria-controls="panel-producto" data-pestana="producto">
+              <span class="icono icono--sm" aria-hidden="true">inventory_2</span>Producto
+            </button>
+            <button type="button" class="segmentado__opcion" role="tab" aria-selected="false" aria-controls="panel-membresia" data-pestana="membresia">
+              <span class="icono icono--sm" aria-hidden="true">loyalty</span>Membresía
+            </button>
+          </div>
+
+          <!-- Servicio -->
+          <div id="panel-servicio" role="tabpanel" class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="etiqueta" for="servicio">Servicio</label>
+                <select class="campo" id="servicio"></select>
+              </div>
+              <div>
+                <label class="etiqueta" for="barbero">Barbero que atendió</label>
+                <select class="campo" id="barbero"></select>
+              </div>
+            </div>
+            <button type="button" id="agregar-servicio" class="boton boton--bloque" disabled>
+              <span class="icono icono--sm" aria-hidden="true">add_circle</span>Agregar a la venta
+            </button>
+          </div>
+
+          <!-- Producto -->
+          <div id="panel-producto" role="tabpanel" class="flex flex-col gap-4" hidden>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="sm:col-span-2">
+                <label class="etiqueta" for="producto">Producto de mostrador</label>
+                <select class="campo" id="producto"></select>
+              </div>
+              <div>
+                <span class="etiqueta" id="etiqueta-cantidad">Cantidad</span>
+                <div class="cantidad" role="group" aria-labelledby="etiqueta-cantidad">
+                  <button type="button" id="cantidad-menos" aria-label="Quitar uno">−</button>
+                  <output id="cantidad">1</output>
+                  <button type="button" id="cantidad-mas" aria-label="Agregar uno">+</button>
+                </div>
+              </div>
+            </div>
+            <div class="bloque flex justify-between text-sm">
+              <span class="texto-suave">Existencias disponibles</span>
+              <strong id="existencias" class="numeros">—</strong>
+            </div>
+            <!-- Se muestra cuando no hay existencias suficientes (conducta no deseada del ERS) -->
+            <div id="alerta-existencias" class="alerta alerta--error" role="alert" hidden>
+              <span class="icono" aria-hidden="true">warning</span>
+              <div><strong>Producto sin existencias suficientes</strong>No se puede agregar hasta reabastecer el inventario.</div>
+            </div>
+            <button type="button" id="agregar-producto" class="boton boton--bloque" disabled>
+              <span class="icono icono--sm" aria-hidden="true">add_circle</span>Agregar producto
+            </button>
+          </div>
+
+          <!-- Membresía -->
+          <div id="panel-membresia" role="tabpanel" class="flex flex-col gap-4" hidden>
+            <div>
+              <label class="etiqueta" for="membresia">Plan de membresía</label>
+              <select class="campo" id="membresia"></select>
+              <p class="ayuda">Requiere un cliente asociado.</p>
+            </div>
+            <button type="button" id="agregar-membresia" class="boton boton--bloque" disabled>
+              <span class="icono icono--sm" aria-hidden="true">add_circle</span>Agregar membresía
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===================== Columna derecha: resumen ===================== -->
+      <aside class="tarjeta lg:col-span-5 columna-fija flex flex-col gap-4" aria-labelledby="titulo-resumen">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <h2 id="titulo-resumen" class="tarjeta__titulo titulo-serif" style="font-size:20px"><span class="icono" aria-hidden="true">receipt_long</span>Resumen de la venta</h2>
+          <span id="numero-conceptos" class="insignia insignia--oro">0 conceptos</span>
+        </div>
+
+        <div id="conceptos-vacio" class="estado-vacio">
+          <span class="icono" aria-hidden="true">shopping_bag</span>
+          <span>Agrega un servicio, producto o membresía para iniciar la venta.</span>
+        </div>
+        <!-- Conceptos agregados (plantilla #plantilla-concepto) -->
+        <ul id="lista-conceptos" class="flex flex-col gap-2" hidden></ul>
+
+        <!-- Totales (vista previa; el servidor recalcula) -->
+        <div class="bloque">
+          <div class="total-linea"><span>Subtotal de conceptos</span><span id="total-subtotal">$0.00</span></div>
+          <div class="total-linea total-linea--descuento" id="linea-descuento" hidden>
+            <span id="texto-descuento">Descuento membresía</span><span id="total-descuento">−$0.00</span>
+          </div>
+          <div class="total-linea"><span>IVA incluido (16 %)</span><span id="total-iva">$0.00</span></div>
+          <div class="total-final">
+            <div>
+              <div class="etiqueta" style="margin:0">Total a cobrar</div>
+              <div class="text-xs texto-tenue">Moneda nacional (MXN)</div>
+            </div>
+            <div class="total-final__importe" id="total-final">$0.00</div>
+          </div>
+        </div>
+
+        <!-- Método de pago -->
+        <div>
+          <span class="etiqueta" id="etiqueta-metodo">Método de pago</span>
+          <div class="grid grid-cols-3 gap-2" role="group" aria-labelledby="etiqueta-metodo">
+            <button type="button" class="boton metodo-pago" data-metodo="Efectivo" aria-pressed="true"><span class="icono" aria-hidden="true">payments</span>Efectivo</button>
+            <button type="button" class="boton metodo-pago" data-metodo="Transferencia" aria-pressed="false"><span class="icono" aria-hidden="true">qr_code_2</span>Transferencia</button>
+            <button type="button" class="boton metodo-pago" data-metodo="Tarjeta" aria-pressed="false"><span class="icono" aria-hidden="true">credit_card</span>Tarjeta</button>
+          </div>
+        </div>
+
+        <!-- Solo efectivo: monto recibido y cambio -->
+        <div id="datos-efectivo" class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="etiqueta" for="monto-recibido">Monto recibido</label>
+            <input class="campo numeros" id="monto-recibido" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+          </div>
+          <div class="bloque">
+            <div class="dato__etiqueta">Cambio a entregar</div>
+            <div id="cambio" class="numeros font-bold text-lg texto-exito">$0.00</div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <button type="button" id="cobrar" class="boton boton--primario boton--bloque boton--grande" disabled>
+          <span class="icono" aria-hidden="true">receipt</span>Cobrar y emitir ticket
+        </button>
+        <button type="button" id="cancelar-venta" class="boton boton--fantasma boton--bloque">
+          <span class="icono icono--sm" aria-hidden="true">close</span>Cancelar venta
+        </button>
+      </aside>
+    </div>
+  </main>
+
+  <!-- ===================== Plantillas ===================== -->
+
+  <!-- Resultado de búsqueda de clientes -->
+  <template id="plantilla-cliente">
+    <button type="button" class="fila fila--seleccionable" data-campo-id="ID_Cliente">
+      <span class="avatar" style="width:34px;height:34px;font-size:13px" data-campo="Nombre" data-formato="iniciales"></span>
+      <span class="fila__cuerpo">
+        <span class="fila__titulo block text-sm" data-campo="Nombre"></span>
+        <span class="fila__detalle block numeros" data-campo="Telefono" data-formato="telefono"></span>
+      </span>
+    </button>
+  </template>
+
+  <!-- Concepto agregado a la venta -->
+  <template id="plantilla-concepto">
+    <li class="fila">
+      <div class="fila__cuerpo">
+        <div class="fila__titulo text-sm"><span data-campo="NombreItem"></span> <span class="texto-tenue" data-campo="CantidadTexto" data-vacio=""></span></div>
+        <div class="fila__detalle"><span data-campo="TipoItem"></span> · <span data-campo="DetalleTexto"></span></div>
+      </div>
+      <span class="numeros font-semibold" data-campo="Importe" data-formato="moneda"></span>
+      <button type="button" class="boton boton--fantasma boton--icono" data-accion="quitar" aria-label="Quitar concepto">
+        <span class="icono icono--sm" aria-hidden="true">close</span>
+      </button>
+    </li>
+  </template>
+</body>
+</html>

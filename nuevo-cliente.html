@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Registrar nuevo cliente  (CU-04)
+  ----------------------------------------------------------------------------
+  Alta de cliente con los datos que pide el ERS: nombre, teléfono, foto de
+  corte de referencia, descripción del estilo, estado de membresía, fecha de
+  inicio e historial (observaciones). Al guardar se abre su perfil.
+
+  Endpoints: GET /membresias · POST /clientes (multipart/form-data)
+  Lógica:    assets/js/paginas/nuevo-cliente.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registrar nuevo cliente · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Estilos exclusivos de esta pantalla -->
+  <style>
+    /* Marco de la foto de referencia */
+    .marco-foto { position: relative; aspect-ratio: 4 / 3; max-width: 100%; border-radius: var(--radio); overflow: hidden; border: 1px dashed var(--color-borde-fuerte); background: var(--color-superficie-baja); display: flex; align-items: center; justify-content: center; }
+    .marco-foto img { width: 100%; height: 100%; object-fit: cover; }
+    .paso { font: 700 10.5px/1 var(--fuente-numeros); letter-spacing: .08em; text-transform: uppercase; color: var(--color-oro-claro); background: var(--color-oro-fondo); border: 1px solid rgba(229,184,66,.35); border-radius: var(--radio-sm); padding: 6px 8px; white-space: nowrap; }
+  </style>
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/paginas/nuevo-cliente.js" defer></script>
+</head>
+
+<body>
+  <encabezado-app variante="modulo"></encabezado-app>
+
+  <main class="pagina">
+
+    <!-- ===== Título ===== -->
+    <div class="cabecera-pagina">
+      <div>
+        <span class="cabecera-pagina__antetitulo">Ficha técnica</span>
+        <h1 class="cabecera-pagina__titulo">Registrar nuevo cliente</h1>
+        <p class="cabecera-pagina__descripcion">Los campos con <span class="texto-oro">*</span> son obligatorios.</p>
+      </div>
+    </div>
+
+    <form id="formulario-cliente" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" novalidate>
+
+      <!-- ===== Paso 1: datos del cliente ===== -->
+      <section class="tarjeta lg:col-span-7 flex flex-col gap-5" aria-labelledby="titulo-datos">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 id="titulo-datos" class="tarjeta__titulo"><span class="icono" aria-hidden="true">person_pin</span>Datos del cliente</h2>
+            <p class="tarjeta__subtitulo">Identidad de contacto y estilo de corte</p>
+          </div>
+          <span class="paso">Paso 1 de 2</span>
+        </div>
+
+        <!-- Nombre (CLIENTE.Nombre) -->
+        <div>
+          <label class="etiqueta" for="nombre">Nombre completo <span class="etiqueta__requerido">*</span></label>
+          <div class="campo-icono">
+            <span class="icono" aria-hidden="true">account_circle</span>
+            <input class="campo" id="nombre" name="Nombre" type="text" maxlength="100" autocomplete="name" required aria-describedby="error-nombre">
+          </div>
+          <p id="error-nombre" class="ayuda ayuda--error" hidden>Escribe el nombre completo (mínimo 3 letras).</p>
+        </div>
+
+        <!-- Teléfono (CLIENTE.Telefono, 10 dígitos, único) -->
+        <div>
+          <div class="flex justify-between items-baseline">
+            <label class="etiqueta" for="telefono">Teléfono (WhatsApp) <span class="etiqueta__requerido">*</span></label>
+            <span id="contador-telefono" class="text-xs texto-tenue numeros">0 / 10 dígitos</span>
+          </div>
+          <div class="grid grid-cols-[110px_1fr] gap-2">
+            <select class="campo" id="lada" name="Lada" aria-label="Lada del país">
+              <option value="+52" selected>+52 MX</option>
+              <option value="+1">+1 EE. UU.</option>
+            </select>
+            <input class="campo numeros" id="telefono" name="Telefono" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel-national" required aria-describedby="error-telefono">
+          </div>
+          <p id="error-telefono" class="ayuda ayuda--error" hidden>El teléfono debe tener exactamente 10 dígitos.</p>
+        </div>
+
+        <!-- Descripción del estilo (CLIENTE.Descripcion) -->
+        <div>
+          <div class="flex justify-between items-baseline">
+            <label class="etiqueta" for="descripcion">Descripción del estilo preferido</label>
+            <span class="text-xs texto-tenue">Visible para los barberos</span>
+          </div>
+          <textarea class="campo" id="descripcion" name="Descripcion" maxlength="255" placeholder="Técnica, largo, peinado, perfilado de barba…"></textarea>
+        </div>
+
+        <!-- Observaciones / historial (columna sugerida CLIENTE.Observaciones) -->
+        <div>
+          <label class="etiqueta" for="observaciones">Historial y observaciones <span class="etiqueta__opcional">(opcional)</span></label>
+          <textarea class="campo" id="observaciones" name="Observaciones" maxlength="500" placeholder="Piel sensible, alergias, frecuencia de visita…"></textarea>
+        </div>
+      </section>
+
+      <!-- ===== Paso 2: membresía y foto ===== -->
+      <div class="lg:col-span-5 flex flex-col gap-5">
+        <section class="tarjeta flex flex-col gap-5" aria-labelledby="titulo-membresia">
+          <div class="tarjeta__encabezado" style="margin-bottom:0">
+            <div>
+              <h2 id="titulo-membresia" class="tarjeta__titulo"><span class="icono" aria-hidden="true">loyalty</span>Membresía y registro</h2>
+              <p class="tarjeta__subtitulo">Club Engreídos Barbershop</p>
+            </div>
+            <span class="paso">Paso 2 de 2</span>
+          </div>
+
+          <!-- Estado de membresía (CLIENTE.EstadoMembresia) -->
+          <div>
+            <span class="etiqueta" id="etiqueta-estado">Estado de membresía</span>
+            <div class="segmentado" role="group" aria-labelledby="etiqueta-estado">
+              <button type="button" class="segmentado__opcion" data-membresia="Activa" aria-pressed="false">
+                <span class="icono icono--sm" aria-hidden="true">verified</span>Activa
+              </button>
+              <button type="button" class="segmentado__opcion" data-membresia="Inactiva" aria-pressed="true">
+                <span class="icono icono--sm" aria-hidden="true">block</span>Inactiva
+              </button>
+            </div>
+          </div>
+
+          <!-- Plan (ID_Membresia) y fecha de inicio (CLIENTE.FechaInicio) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="etiqueta" for="plan">Tipo de membresía</label>
+              <select class="campo" id="plan" name="ID_Membresia" disabled></select>
+            </div>
+            <div>
+              <label class="etiqueta" for="fecha-inicio">Fecha de inicio</label>
+              <input class="campo numeros" id="fecha-inicio" name="FechaInicio" type="date" disabled>
+            </div>
+          </div>
+        </section>
+
+        <!-- Foto de corte de referencia (CLIENTE.FotoCorteReferencia) -->
+        <section class="tarjeta flex flex-col gap-4" aria-labelledby="titulo-foto">
+          <div class="tarjeta__encabezado" style="margin-bottom:0">
+            <h2 id="titulo-foto" class="tarjeta__titulo"><span class="icono" aria-hidden="true">photo_camera_front</span>Foto de corte de referencia</h2>
+            <span class="text-xs texto-tenue">Guía visual</span>
+          </div>
+
+          <div class="marco-foto">
+            <img id="vista-previa" alt="Vista previa de la foto de referencia" hidden>
+            <div id="sin-foto" class="flex flex-col items-center gap-1 text-sm texto-tenue">
+              <span class="icono icono--xl" aria-hidden="true">add_a_photo</span>Sin foto
+            </div>
+          </div>
+
+          <!-- En teléfono, capture="environment" abre la cámara trasera -->
+          <input id="foto" name="foto" type="file" accept="image/*" capture="environment" class="solo-lector">
+          <div class="grid grid-cols-2 gap-2">
+            <label for="foto" class="boton" role="button" tabindex="0"><span class="icono icono--sm" aria-hidden="true">add_a_photo</span>Tomar / subir</label>
+            <button type="button" id="quitar-foto" class="boton boton--fantasma" disabled><span class="icono icono--sm" aria-hidden="true">delete</span>Quitar</button>
+          </div>
+        </section>
+
+        <div class="alerta">
+          <span class="icono texto-suave" aria-hidden="true">shield</span>
+          <p>Los datos del cliente quedan disponibles en todas las pantallas del salón. Pide su autorización antes de tomar la foto.</p>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button type="button" class="boton sm:w-40" data-nav="@panel">Cancelar</button>
+          <button type="submit" id="guardar" class="boton boton--primario flex-1">
+            <span class="icono icono--sm" aria-hidden="true">check_circle</span>Guardar cliente
+          </button>
+        </div>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

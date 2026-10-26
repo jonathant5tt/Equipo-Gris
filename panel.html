@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Panel principal
+  ----------------------------------------------------------------------------
+  Pantalla de inicio después de iniciar sesión, común para los tres roles.
+  Cada mosaico declara en `data-roles` quién puede verlo; el controlador
+  oculta los que no corresponden y numera los visibles.
+
+    Cajero  → Agendar cita, Registrar cobro, Nuevo cliente, Clientes,
+              Cierre de caja, Historial de ventas.
+    Dueño   → Lo mismo que el cajero + Personal y horarios + Suspender servicio.
+    Barbero → Mis citas, Agendar cita, Nuevo cliente, Clientes, Mi horario
+              y la tarjeta «Siguiente turno».
+
+  Endpoints: GET /establecimiento/estado · GET /citas/proxima ·
+             PATCH /citas/:id/estado                     (ver docs/API.md)
+  Lógica:    assets/js/paginas/panel.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel principal · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/paginas/panel.js" defer></script>
+</head>
+
+<body class="flex flex-col">
+  <!-- Encabezado unificado: en el panel lleva el menú de ajustes (☰) -->
+  <encabezado-app variante="panel"></encabezado-app>
+
+  <main class="pagina flex-1">
+
+    <!-- ===== Título, bienvenida y estado del servicio ===== -->
+    <div class="cabecera-pagina">
+      <div>
+        <h1 class="cabecera-pagina__titulo">Panel principal</h1>
+        <p class="cabecera-pagina__descripcion">Bienvenido, <strong class="text-white" id="nombre-usuario"></strong></p>
+      </div>
+
+      <!-- Estado del servicio: el Dueño puede tocarlo para suspender o reanudar -->
+      <div class="pastilla" style="border-radius:var(--radio)">
+        <span class="pastilla__etiqueta text-xs uppercase tracking-wider font-semibold">Estado del servicio:</span>
+        <button type="button" id="estado-servicio" class="insignia" disabled>
+          <span class="insignia__punto" aria-hidden="true"></span><span data-texto>Consultando…</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== Siguiente turno (solo Barbero) ===== -->
+    <section id="siguiente-turno" class="tarjeta tarjeta--resaltada mb-6" data-roles="Barbero" aria-labelledby="titulo-turno" hidden>
+      <div class="tarjeta__encabezado" style="margin-bottom:12px">
+        <h2 id="titulo-turno" class="tarjeta__titulo"><span class="icono" aria-hidden="true">schedule</span>Siguiente turno</h2>
+      </div>
+
+      <p id="turno-cargando" class="cargando">Consultando tu agenda…</p>
+
+      <div id="turno-vacio" class="estado-vacio" hidden>
+        <span class="icono" aria-hidden="true">event_available</span>
+        <span class="estado-vacio__titulo">No tienes turnos próximos</span>
+        <span>Las citas que te asignen aparecerán aquí.</span>
+      </div>
+
+      <!-- Datos de la próxima cita (Api.citas.proxima) -->
+      <div id="turno-datos" class="flex flex-wrap items-center justify-between gap-4" hidden>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1 min-w-0">
+          <div class="dato"><span class="dato__etiqueta">Hora</span><span class="dato__valor numeros" data-campo="FechaHora" data-formato="hora"></span></div>
+          <div class="dato"><span class="dato__etiqueta">Cliente</span><span class="dato__valor" data-campo="NombreCliente"></span></div>
+          <div class="dato"><span class="dato__etiqueta">Servicio</span><span class="dato__valor" data-campo="NombreServicio"></span></div>
+          <div class="dato"><span class="dato__etiqueta">Origen</span><span class="dato__valor" data-campo="Origen"></span></div>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" id="turno-ficha" class="boton">Ver ficha</button>
+          <button type="button" id="turno-atencion" class="boton boton--primario">
+            <span class="icono icono--sm" aria-hidden="true">play_arrow</span><span data-texto>Iniciar atención</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Mosaicos de acceso a los módulos =====
+         data-roles: roles que ven el mosaico · data-nav: pantalla destino -->
+    <nav aria-label="Módulos">
+      <div id="mosaicos" class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+
+        <button type="button" class="mosaico" data-roles="Barbero" data-nav="barbero-mis-citas.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">event_note</span></span>
+          <span class="mosaico__titulo">Mis citas</span>
+          <span class="mosaico__descripcion">Agenda del día y turnos programados</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Cajero,Dueño,Barbero" data-nav="agendar-cita.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">calendar_add_on</span></span>
+          <span class="mosaico__titulo">Agendar cita</span>
+          <span class="mosaico__descripcion">Reservar un horario con un barbero</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Cajero,Dueño" data-nav="registrar-cobro.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">point_of_sale</span></span>
+          <span class="mosaico__titulo">Registrar cobro</span>
+          <span class="mosaico__descripcion">Servicios, productos y membresías</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Cajero,Dueño,Barbero" data-nav="nuevo-cliente.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">person_add</span></span>
+          <span class="mosaico__titulo">Registrar nuevo cliente</span>
+          <span class="mosaico__descripcion">Alta con número de WhatsApp</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Cajero,Dueño,Barbero" data-nav="@perfil">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">group</span></span>
+          <span class="mosaico__titulo">Clientes y perfiles</span>
+          <span class="mosaico__descripcion">Historial de cortes, fotos y notas</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Cajero,Dueño" data-nav="cierre-caja.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">payments</span></span>
+          <span class="mosaico__titulo">Cierre de caja</span>
+          <span class="mosaico__descripcion">Arqueo y corte del turno</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Cajero,Dueño" data-nav="historial-ventas.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">receipt_long</span></span>
+          <span class="mosaico__titulo">Historial de ventas</span>
+          <span class="mosaico__descripcion">Folios, filtros y exportación</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Barbero" data-nav="barbero-mi-horario.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">schedule</span></span>
+          <span class="mosaico__titulo">Mi horario y roles</span>
+          <span class="mosaico__descripcion">Jornada, descansos y actividades</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Dueño" data-nav="personal-horarios.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">badge</span></span>
+          <span class="mosaico__titulo">Personal y horarios</span>
+          <span class="insignia"><span class="icono icono--sm" aria-hidden="true">lock</span>Solo dueño</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Dueño" data-nav="suspender-servicio.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">power_settings_new</span></span>
+          <span class="mosaico__titulo">Suspender / reanudar servicio</span>
+          <span class="insignia"><span class="icono icono--sm" aria-hidden="true">lock</span>Solo dueño</span>
+        </button>
+      </div>
+    </nav>
+  </main>
+
+  <!-- Pie con la versión de la aplicación (APP_CONFIG.VERSION) -->
+  <footer class="pagina text-xs text-texto-tenue flex justify-between" style="padding-top:0;padding-bottom:24px">
+    <span>Engreídos Barbershop</span>
+    <span>Versión <span data-version></span></span>
+  </footer>
+</body>
+</html>

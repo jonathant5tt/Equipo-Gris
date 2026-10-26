@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Personal y horarios  (CU-08, solo Dueño)
+  ----------------------------------------------------------------------------
+  El Dueño consulta y modifica la jornada de cada barbero: hora de entrada y
+  salida, horario de comida, días de trabajo (los no marcados son descanso)
+  y roles o actividades. También consulta sus servicios e ingresos diarios.
+
+  Endpoints: GET /barberos · PUT /barberos/:id/horario · GET /barberos/:id/ingresos
+  Lógica:    assets/js/paginas/personal-horarios.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Personal y horarios · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Estilos exclusivos de esta pantalla -->
+  <style>
+    /* Botón de día de la semana (activo = día laboral) */
+    .dia { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; border-radius: var(--radio-sm); border: 1px solid var(--color-borde); background: var(--color-superficie-baja); color: var(--color-texto-tenue); font: 700 15px/1 var(--fuente-numeros); cursor: pointer; }
+    .dia small { font: 600 10px/1 var(--fuente-cuerpo); }
+    .dia[aria-pressed="true"] { background: var(--color-blanco); border-color: var(--color-blanco); color: var(--color-texto-invertido); }
+    .tabla tr[aria-selected="true"] td { background: var(--color-oro-fondo); }
+  </style>
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/paginas/personal-horarios.js" defer></script>
+</head>
+
+<body>
+  <encabezado-app variante="modulo"></encabezado-app>
+
+  <main class="pagina">
+
+    <!-- ===== Título ===== -->
+    <div class="cabecera-pagina">
+      <div>
+        <span class="cabecera-pagina__antetitulo">Solo dueño</span>
+        <h1 class="cabecera-pagina__titulo">Personal y horarios</h1>
+        <p class="cabecera-pagina__descripcion">Jornadas, comida y descansos de cada barbero, y su rendimiento diario.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+      <div class="lg:col-span-7 flex flex-col gap-5 min-w-0">
+
+        <!-- ===== Programación semanal ===== -->
+        <section class="tarjeta" aria-labelledby="titulo-programacion">
+          <div class="tarjeta__encabezado">
+            <h2 id="titulo-programacion" class="tarjeta__titulo"><span class="icono" aria-hidden="true">badge</span>Programación de barberos</h2>
+            <span class="insignia" id="numero-barberos">0 barberos</span>
+          </div>
+          <p id="barberos-cargando" class="cargando">Cargando barberos…</p>
+          <div id="barberos-vacio" class="estado-vacio" hidden>
+            <span class="icono" aria-hidden="true">person_off</span>
+            <span class="estado-vacio__titulo">No hay barberos registrados</span>
+            <span>Cuando se den de alta en el sistema aparecerán aquí.</span>
+          </div>
+          <div class="tabla-contenedor" id="barberos-tabla" hidden>
+            <table class="tabla">
+              <thead>
+                <tr><th scope="col">Barbero</th><th scope="col">Jornada</th><th scope="col">Comida</th><th scope="col">Descanso</th><th scope="col"><span class="solo-lector">Acciones</span></th></tr>
+              </thead>
+              <tbody id="barberos-filas"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ===== Servicios e ingresos del barbero elegido ===== -->
+        <section class="tarjeta" aria-labelledby="titulo-ingresos">
+          <div class="tarjeta__encabezado">
+            <h2 id="titulo-ingresos" class="tarjeta__titulo"><span class="icono" aria-hidden="true">payments</span>Servicios e ingresos diarios</h2>
+            <span class="text-xs texto-tenue" id="ingresos-barbero">Últimos 7 días</span>
+          </div>
+          <div id="ingresos-vacio" class="estado-vacio">
+            <span class="icono" aria-hidden="true">query_stats</span>
+            <span data-texto>Toca el ícono de estadísticas de un barbero para ver sus servicios e ingresos.</span>
+          </div>
+          <div class="tabla-contenedor" id="ingresos-tabla" hidden>
+            <table class="tabla">
+              <thead><tr><th scope="col">Fecha</th><th scope="col" class="derecha">Servicios realizados</th><th scope="col" class="derecha">Ingreso del día</th></tr></thead>
+              <tbody id="ingresos-filas"></tbody>
+              <tfoot>
+                <tr id="ingresos-total">
+                  <td class="font-bold">Total</td>
+                  <td class="derecha numeros font-bold" data-campo="Servicios"></td>
+                  <td class="derecha numeros font-bold texto-oro" data-campo="Ingreso" data-formato="moneda"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== Formulario de edición ===== -->
+      <aside class="tarjeta lg:col-span-5 columna-fija" aria-labelledby="titulo-edicion">
+        <div class="tarjeta__encabezado">
+          <h2 id="titulo-edicion" class="tarjeta__titulo"><span class="icono" aria-hidden="true">edit_calendar</span>Editar horario<span id="nombre-edicion" class="texto-oro"></span></h2>
+        </div>
+
+        <div id="edicion-vacio" class="estado-vacio">
+          <span class="icono" aria-hidden="true">touch_app</span>
+          <span>Toca el ícono de edición de un barbero para modificar su horario.</span>
+        </div>
+
+        <form id="formulario-horario" class="flex flex-col gap-4" novalidate hidden>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="etiqueta" for="hora-entrada">Hora de entrada</label><input class="campo numeros" id="hora-entrada" name="HoraEntrada" type="time" required></div>
+            <div><label class="etiqueta" for="hora-salida">Hora de salida</label><input class="campo numeros" id="hora-salida" name="HoraSalida" type="time" required></div>
+            <div><label class="etiqueta" for="comida-inicio">Comida: inicio</label><input class="campo numeros" id="comida-inicio" name="ComidaInicio" type="time"></div>
+            <div><label class="etiqueta" for="comida-fin">Comida: fin</label><input class="campo numeros" id="comida-fin" name="ComidaFin" type="time"></div>
+          </div>
+
+          <!-- Días de trabajo (BARBERO.DiasTrabajo = "L,M,X,J,V,S") -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="etiqueta" style="margin:0" id="etiqueta-dias">Días de trabajo</span>
+              <span class="insignia" id="dias-activos">0 días</span>
+            </div>
+            <div class="grid grid-cols-7 gap-1.5" role="group" aria-labelledby="etiqueta-dias">
+              <button type="button" class="dia" data-dia="L" aria-pressed="false" aria-label="Lunes">L<small>Lun</small></button>
+              <button type="button" class="dia" data-dia="M" aria-pressed="false" aria-label="Martes">M<small>Mar</small></button>
+              <button type="button" class="dia" data-dia="X" aria-pressed="false" aria-label="Miércoles">X<small>Mié</small></button>
+              <button type="button" class="dia" data-dia="J" aria-pressed="false" aria-label="Jueves">J<small>Jue</small></button>
+              <button type="button" class="dia" data-dia="V" aria-pressed="false" aria-label="Viernes">V<small>Vie</small></button>
+              <button type="button" class="dia" data-dia="S" aria-pressed="false" aria-label="Sábado">S<small>Sáb</small></button>
+              <button type="button" class="dia" data-dia="D" aria-pressed="false" aria-label="Domingo">D<small>Dom</small></button>
+            </div>
+            <p class="ayuda" id="texto-descanso">Los días sin marcar son de descanso.</p>
+          </div>
+
+          <div>
+            <label class="etiqueta" for="roles">Roles / actividades</label>
+            <input class="campo" id="roles" name="RolesActividades" type="text" maxlength="255" placeholder="Cortes, barba, atención de citas">
+            <p class="ayuda">Separa las actividades con comas.</p>
+          </div>
+
+          <p id="error-horario" class="ayuda ayuda--error" hidden></p>
+
+          <div class="flex gap-2">
+            <button type="submit" id="guardar" class="boton boton--primario flex-1"><span class="icono icono--sm" aria-hidden="true">check</span>Guardar cambios</button>
+            <button type="button" id="cancelar" class="boton">Cancelar</button>
+          </div>
+        </form>
+      </aside>
+    </div>
+  </main>
+
+  <!-- ===================== Plantillas ===================== -->
+  <template id="plantilla-barbero">
+    <tr data-campo-id="ID_Barbero">
+      <td><div class="flex items-center gap-2"><span class="avatar" style="width:32px;height:32px;font-size:12px" data-campo="Nombre" data-formato="iniciales"></span><span class="font-semibold whitespace-nowrap" data-campo="Nombre"></span></div></td>
+      <td class="numeros whitespace-nowrap" data-campo="Jornada"></td>
+      <td class="numeros whitespace-nowrap" data-campo="Comida"></td>
+      <td><span class="insignia" data-campo="Descanso"></span></td>
+      <td>
+        <div class="flex gap-1.5 justify-end">
+          <button type="button" class="boton boton--icono" data-accion="editar" title="Editar horario" aria-label="Editar horario"><span class="icono icono--sm" aria-hidden="true">edit</span></button>
+          <button type="button" class="boton boton--icono boton--fantasma" data-accion="historial" title="Servicios e ingresos" aria-label="Ver servicios e ingresos"><span class="icono icono--sm" aria-hidden="true">query_stats</span></button>
+        </div>
+      </td>
+    </tr>
+  </template>
+
+  <template id="plantilla-ingreso">
+    <tr>
+      <td class="numeros" data-campo="Fecha" data-formato="fecha"></td>
+      <td class="derecha numeros" data-campo="Servicios"></td>
+      <td class="derecha numeros" data-campo="Ingreso" data-formato="moneda"></td>
+    </tr>
+  </template>
+</body>
+</html>

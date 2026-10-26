@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Servicio en mantenimiento  (pantalla pública)
+  ----------------------------------------------------------------------------
+  Se muestra a cajeros y barberos mientras el Dueño mantiene el servicio
+  suspendido (ver suspender-servicio.html). Presenta el mensaje que escribió
+  el Dueño y vuelve a verificar el estado de forma periódica; cuando el
+  servicio se reanuda, regresa al panel (o al inicio de sesión).
+
+  No lleva el encabezado de los módulos porque el usuario no puede navegar
+  a ninguna otra pantalla mientras dure la suspensión.
+
+  Endpoints: GET /establecimiento/estado (público, sin token)
+  Lógica:    assets/js/paginas/mantenimiento.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Servicio en mantenimiento · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Estilos exclusivos de esta pantalla -->
+  <style>
+    .ilustracion { max-height: 240px; width: auto; margin: 0 auto; border-radius: var(--radio); filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.6)); user-select: none; pointer-events: none; }
+    .comillas { font: 600 34px/1 var(--fuente-titulos); color: var(--color-texto-tenue); user-select: none; }
+    .girando { animation: girar 0.9s linear infinite; }
+    @keyframes girar { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .girando { animation: none; } }
+  </style>
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Lógica de esta pantalla -->
+  <script src="assets/js/paginas/mantenimiento.js" defer></script>
+</head>
+
+<body>
+  <main class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+    <div class="w-full max-w-2xl flex flex-col items-center text-center gap-6">
+
+      <!-- Marca (mismo diseño que el panel principal, en tamaño grande) -->
+      <span class="marca marca--grande" aria-label="Engreídos Barbershop">
+        <span class="marca__nombre"><span class="marca__corchete">[</span><span class="marca__texto">Engreídos</span><span class="marca__corchete">]</span></span>
+        <span class="marca__subtitulo">Barbershop</span>
+      </span>
+
+      <img class="ilustracion" src="assets/img/mantenimiento.png" alt="Robot barbero en mantenimiento">
+
+      <div class="flex flex-col gap-2">
+        <h1 class="titulo-serif text-3xl sm:text-4xl font-bold text-white">Servicio en mantenimiento</h1>
+        <p class="texto-suave max-w-lg mx-auto">Por ahora no es posible usar la caja ni la agenda. Esta pantalla se actualizará sola cuando el servicio se reanude.</p>
+      </div>
+
+      <!-- Mensaje escrito por el Dueño (ESTABLECIMIENTO.MensajeMantenimiento) -->
+      <section class="tarjeta w-full text-left" aria-labelledby="titulo-aviso">
+        <div class="tarjeta__encabezado">
+          <h2 id="titulo-aviso" class="tarjeta__titulo"><span class="icono icono--relleno" aria-hidden="true">campaign</span>Aviso de administración</h2>
+          <span class="insignia insignia--error"><span class="insignia__punto" aria-hidden="true"></span>Suspendido</span>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="comillas" aria-hidden="true">“</span>
+          <p class="flex-1 text-sm italic leading-relaxed" id="mensaje" style="white-space:pre-line;overflow-wrap:anywhere"></p>
+          <span class="comillas self-end" aria-hidden="true">”</span>
+        </div>
+      </section>
+
+      <div class="w-full max-w-sm flex flex-col items-center gap-3">
+        <button type="button" id="reintentar" class="boton boton--primario boton--grande boton--bloque">
+          <span class="icono" aria-hidden="true" id="reintentar-icono">sync</span>Reintentar conexión
+        </button>
+        <!-- Solo visible si hay una sesión abierta -->
+        <button type="button" id="cerrar-sesion" class="boton boton--fantasma boton--pequeno" data-nav="@logout" hidden>
+          <span class="icono icono--sm" aria-hidden="true">logout</span>Cerrar sesión
+        </button>
+        <p class="flex items-center gap-2 text-xs texto-tenue" role="status" id="estado-verificacion">
+          <span class="insignia__punto" aria-hidden="true"></span>Verificando el estado automáticamente
+        </p>
+      </div>
+
+      <p class="text-xs texto-tenue">Versión <span data-version></span></p>
+    </div>
+  </main>
+</body>
+</html>
