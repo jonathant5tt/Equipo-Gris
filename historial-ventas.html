@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Historial de ventas  (CU-07 / requisito de consulta)
+  ----------------------------------------------------------------------------
+  Consulta de ventas por día actual, rango de días o fecha específica, con
+  filtro por concepto y búsqueda por folio o cliente. Muestra indicadores,
+  totales por método de pago y permite exportar a CSV o imprimir.
+
+  Endpoints: GET /ventas?desde=&hasta=&concepto=&buscar=&pagina=&tamano=
+  Lógica:    assets/js/paginas/historial-ventas.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Historial de ventas · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/paginas/historial-ventas.js" defer></script>
+</head>
+
+<body>
+  <encabezado-app variante="modulo"></encabezado-app>
+
+  <main class="pagina">
+
+    <!-- ===== Título y acciones ===== -->
+    <div class="cabecera-pagina">
+      <div>
+        <span class="cabecera-pagina__antetitulo">Auditoría</span>
+        <h1 class="cabecera-pagina__titulo">Historial de ventas</h1>
+        <p class="cabecera-pagina__descripcion">Consulta de folios, conceptos y métodos de pago.</p>
+      </div>
+      <div class="flex gap-2 no-imprimir">
+        <button type="button" id="imprimir" class="boton"><span class="icono icono--sm" aria-hidden="true">print</span>Imprimir</button>
+        <button type="button" id="exportar" class="boton boton--primario" disabled><span class="icono icono--sm" aria-hidden="true">download</span>Exportar CSV</button>
+      </div>
+    </div>
+
+    <!-- ===== Filtros ===== -->
+    <section class="tarjeta mb-5 no-imprimir" aria-label="Filtros">
+      <form id="filtros" class="flex flex-col gap-4" novalidate>
+        <div class="segmentado sm:w-fit" role="group" aria-label="Periodo">
+          <button type="button" class="segmentado__opcion" data-periodo="hoy" aria-pressed="true">Hoy</button>
+          <button type="button" class="segmentado__opcion" data-periodo="rango" aria-pressed="false">Rango de días</button>
+          <button type="button" class="segmentado__opcion" data-periodo="fecha" aria-pressed="false">Fecha específica</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div>
+            <label class="etiqueta" for="desde" id="etiqueta-desde">Desde</label>
+            <input class="campo numeros" id="desde" type="date">
+          </div>
+          <div>
+            <label class="etiqueta" for="hasta">Hasta</label>
+            <input class="campo numeros" id="hasta" type="date">
+          </div>
+          <div>
+            <label class="etiqueta" for="concepto">Concepto</label>
+            <select class="campo" id="concepto">
+              <option value="">Todos los conceptos</option>
+              <option value="Servicio">Servicios</option>
+              <option value="Producto">Productos</option>
+              <option value="Membresía">Membresías</option>
+            </select>
+          </div>
+          <div>
+            <label class="etiqueta" for="buscar">Búsqueda</label>
+            <input class="campo" id="buscar" type="search" placeholder="Folio o cliente">
+          </div>
+          <button type="submit" class="boton boton--primario"><span class="icono icono--sm" aria-hidden="true">filter_alt</span>Filtrar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ===== Indicadores del periodo ===== -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5" id="indicadores" aria-label="Indicadores">
+      <div class="tarjeta"><div class="dato__etiqueta">Transacciones</div><div class="text-3xl font-bold numeros mt-1" data-campo="Transacciones"></div><div class="text-xs texto-tenue">tickets</div></div>
+      <div class="tarjeta"><div class="dato__etiqueta">Servicios realizados</div><div class="text-3xl font-bold numeros mt-1" data-campo="Servicios"></div><div class="text-xs texto-tenue">cortes y rituales</div></div>
+      <div class="tarjeta"><div class="dato__etiqueta">Productos vendidos</div><div class="text-3xl font-bold numeros mt-1" data-campo="Productos"></div><div class="text-xs texto-tenue">piezas</div></div>
+      <div class="tarjeta"><div class="dato__etiqueta">Ticket promedio</div><div class="text-3xl font-bold numeros mt-1" data-campo="TicketPromedio" data-formato="moneda"></div><div class="text-xs texto-tenue">MXN</div></div>
+    </section>
+
+    <!-- ===== Tabla de ventas ===== -->
+    <section class="tarjeta mb-5" aria-labelledby="titulo-tabla">
+      <h2 id="titulo-tabla" class="solo-lector">Ventas del periodo</h2>
+      <p id="ventas-cargando" class="cargando" hidden>Consultando ventas…</p>
+      <div id="ventas-vacio" class="estado-vacio">
+        <span class="icono" aria-hidden="true">receipt_long</span>
+        <span class="estado-vacio__titulo">No hay ventas en el periodo seleccionado</span>
+        <span>Cambia las fechas o los filtros y vuelve a consultar.</span>
+      </div>
+      <div class="tabla-contenedor" id="ventas-tabla" hidden>
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th scope="col">Fecha y hora</th><th scope="col">Folio</th><th scope="col">Cliente</th><th scope="col">Concepto</th>
+              <th scope="col">Barbero</th><th scope="col">Método</th><th scope="col" class="derecha">Importe</th><th scope="col" class="no-imprimir"><span class="solo-lector">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody id="ventas-filas"></tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <nav class="flex flex-wrap items-center justify-between gap-3 mt-4 no-imprimir" aria-label="Paginación" id="paginacion" hidden>
+        <p class="text-sm texto-suave" id="texto-paginacion"></p>
+        <div class="flex gap-2">
+          <button type="button" id="pagina-anterior" class="boton boton--icono" aria-label="Página anterior"><span class="icono" aria-hidden="true">chevron_left</span></button>
+          <span class="pastilla numeros" id="numero-pagina"></span>
+          <button type="button" id="pagina-siguiente" class="boton boton--icono" aria-label="Página siguiente"><span class="icono" aria-hidden="true">chevron_right</span></button>
+        </div>
+      </nav>
+    </section>
+
+    <!-- ===== Totales por método ===== -->
+    <section class="tarjeta flex flex-wrap items-center justify-between gap-5" id="totales" aria-label="Totales del periodo">
+      <dl class="flex flex-wrap gap-6">
+        <div class="dato"><dt class="dato__etiqueta">Efectivo</dt><dd class="dato__valor numeros" data-campo="Efectivo" data-formato="moneda"></dd></div>
+        <div class="dato"><dt class="dato__etiqueta">Tarjeta</dt><dd class="dato__valor numeros" data-campo="Tarjeta" data-formato="moneda"></dd></div>
+        <div class="dato"><dt class="dato__etiqueta">Transferencia</dt><dd class="dato__valor numeros" data-campo="Transferencia" data-formato="moneda"></dd></div>
+      </dl>
+      <div class="text-right">
+        <div class="dato__etiqueta">Total del periodo</div>
+        <div class="total-final__importe" data-campo="Total" data-formato="moneda"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== Plantillas ===================== -->
+  <template id="plantilla-venta">
+    <tr>
+      <td class="whitespace-nowrap"><span class="numeros" data-campo="FechaHoraCobro" data-formato="fecha"></span><span class="tabla__secundario numeros" data-campo="FechaHoraCobro" data-formato="hora"></span></td>
+      <td class="numeros texto-suave" data-campo="NumeroFactura"></td>
+      <td data-campo="NombreCliente" data-vacio="Público en general"></td>
+      <td><span class="tabla__secundario" data-campo="TipoItem" data-vacio=""></span><span data-campo="Concepto"></span></td>
+      <td data-campo="NombreBarbero" data-vacio="Mostrador"></td>
+      <td><span class="insignia" data-campo="MetodoPago"></span></td>
+      <td class="derecha numeros font-semibold" data-campo="ImporteTotal" data-formato="moneda"></td>
+      <td class="no-imprimir"><button type="button" class="boton boton--fantasma boton--icono" data-accion="ver" aria-label="Ver ticket"><span class="icono icono--sm" aria-hidden="true">receipt</span></button></td>
+    </tr>
+  </template>
+</body>
+</html>

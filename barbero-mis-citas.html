@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Mis citas  (vista móvil del Barbero)
+  ----------------------------------------------------------------------------
+  Agenda diaria del barbero con sesión: avisos (cancelaciones, cambios de
+  horario), navegación por día, lista de turnos con su estado y acciones
+  para iniciar o finalizar la atención. Accesos rápidos a «Nueva cita» y
+  «Nuevo cliente».
+
+  Endpoints: GET /avisos · GET /citas/mias?fecha= · PATCH /citas/:id/estado
+  Lógica:    assets/js/paginas/barbero-mis-citas.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mis citas · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Estilos exclusivos de esta pantalla -->
+  <style>
+    /* Turno de la agenda */
+    .turno__hora { flex: none; width: 64px; padding-right: 12px; border-right: 1px solid var(--color-borde); font: 700 21px/1 var(--fuente-numeros); color: #fff; }
+    .turno--terminado { opacity: 0.55; }
+    .turno--actual { border-left: 4px solid var(--color-blanco); }
+
+    /* Botón flotante y su menú de accesos rápidos */
+    .flotante { position: fixed; right: max(16px, calc(50% - 264px)); bottom: 96px; z-index: 40; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+    .flotante__principal { width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--color-blanco); color: var(--color-texto-invertido); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); cursor: pointer; transition: transform 0.2s; }
+    .flotante__principal[aria-expanded="true"] { transform: rotate(45deg); }
+    .flotante__principal .icono { font-size: 30px; }
+  </style>
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/componentes/navegacion-barbero.js" defer></script>
+  <script src="assets/js/paginas/barbero-mis-citas.js" defer></script>
+</head>
+
+<body>
+  <encabezado-app variante="modulo"></encabezado-app>
+
+  <main class="pagina pagina--movil flex flex-col gap-4">
+
+    <!-- ===== Título ===== -->
+    <div class="cabecera-pagina" style="margin-bottom:0">
+      <div>
+        <span class="cabecera-pagina__antetitulo">Agenda</span>
+        <h1 class="cabecera-pagina__titulo">Mis citas</h1>
+      </div>
+      <span class="insignia" id="numero-avisos" hidden><span class="icono icono--sm" aria-hidden="true">notifications</span><span data-texto></span></span>
+    </div>
+
+    <!-- ===== Avisos (cancelaciones por WhatsApp, cambios de horario) ===== -->
+    <section id="avisos" class="flex flex-col gap-2" aria-label="Avisos" hidden></section>
+
+    <!-- ===== Selector de día ===== -->
+    <section class="tarjeta flex items-center justify-between gap-3" style="padding:12px" aria-label="Día consultado">
+      <button type="button" class="boton boton--icono" id="dia-anterior" aria-label="Día anterior"><span class="icono" aria-hidden="true">chevron_left</span></button>
+      <button type="button" class="text-center bg-transparent border-0 cursor-pointer" id="dia-hoy" title="Volver a hoy">
+        <span class="block font-bold text-white" id="fecha-texto"></span>
+        <span class="block text-xs font-semibold uppercase tracking-widest texto-tenue numeros" id="numero-turnos">0 turnos asignados</span>
+      </button>
+      <button type="button" class="boton boton--icono" id="dia-siguiente" aria-label="Día siguiente"><span class="icono" aria-hidden="true">chevron_right</span></button>
+    </section>
+
+    <!-- ===== Turnos del día ===== -->
+    <section class="flex flex-col gap-3" aria-label="Turnos del día">
+      <p id="citas-cargando" class="cargando">Cargando agenda…</p>
+      <div id="citas-vacio" class="estado-vacio" hidden>
+        <span class="icono" aria-hidden="true">event_available</span>
+        <span class="estado-vacio__titulo">Sin turnos asignados</span>
+        <span>No tienes citas para este día.</span>
+      </div>
+      <ul id="citas" class="flex flex-col gap-3" hidden></ul>
+    </section>
+  </main>
+
+  <!-- ===== Botón flotante: accesos rápidos ===== -->
+  <div class="flotante">
+    <div class="flex flex-col items-end gap-2" id="accesos" hidden>
+      <button type="button" class="boton" data-nav="agendar-cita.html"><span class="icono icono--sm" aria-hidden="true">add</span>Nueva cita</button>
+      <button type="button" class="boton" data-nav="nuevo-cliente.html"><span class="icono icono--sm" aria-hidden="true">person_add</span>Nuevo cliente</button>
+    </div>
+    <button type="button" class="flotante__principal" id="boton-flotante" aria-expanded="false" aria-controls="accesos" aria-label="Accesos rápidos">
+      <span class="icono" aria-hidden="true">add</span>
+    </button>
+  </div>
+
+  <navegacion-barbero activa="citas"></navegacion-barbero>
+
+  <!-- ===================== Plantillas ===================== -->
+  <template id="plantilla-aviso">
+    <div class="alerta">
+      <span class="icono" aria-hidden="true">info</span>
+      <div><strong data-campo="Tipo"></strong><span data-campo="Mensaje"></span></div>
+    </div>
+  </template>
+
+  <template id="plantilla-cita">
+    <li class="fila turno" data-campo-id="ID_Cita">
+      <span class="turno__hora numeros" data-campo="FechaHora" data-formato="hora"></span>
+      <button type="button" class="fila__cuerpo text-left bg-transparent border-0 p-0 cursor-pointer" data-accion="perfil" aria-label="Ver perfil del cliente">
+        <span class="fila__titulo block" data-campo="NombreCliente"></span>
+        <span class="fila__detalle block"><span data-campo="NombreServicio" data-vacio="Servicio por definir"></span> · <span data-campo="OrigenTexto"></span></span>
+      </button>
+      <div class="flex flex-col items-end gap-1.5">
+        <span class="insignia" data-campo="EstadoTexto"></span>
+        <button type="button" class="boton boton--pequeno" data-accion="atencion" hidden></button>
+      </div>
+    </li>
+  </template>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Perfil del cliente (móvil del barbero)  (CU-07)
+  ----------------------------------------------------------------------------
+  Versión para teléfono de la ficha del cliente: foto de referencia,
+  membresía, faltas, estilo, historial de servicios y fotos de cortes.
+  Usa el mismo controlador que perfil-cliente.html.
+
+  Parámetros de URL opcionales:
+    ?cliente=ID   abre directamente la ficha (viene de «Siguiente turno»).
+
+  Endpoints: GET /clientes?buscar= · GET /clientes/:id · GET /clientes/:id/servicios ·
+             GET /clientes/:id/fotos · POST /clientes/:id/fotos ·
+             DELETE /clientes/:id/fotos/:idFoto · PUT /clientes/:id/foto-referencia
+  Lógica:    assets/js/paginas/perfil-cliente.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Perfil del cliente · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Estilos exclusivos de esta pantalla -->
+  <style>
+    .foto-principal { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radio); overflow: hidden; background: var(--color-superficie-baja); border: 1px solid var(--color-borde); display: flex; align-items: center; justify-content: center; }
+    .foto-principal img { width: 100%; height: 100%; object-fit: cover; }
+    .miniatura { position: relative; aspect-ratio: 1; border-radius: var(--radio); overflow: hidden; border: 1px solid var(--color-borde); background: var(--color-superficie-baja); cursor: pointer; padding: 0; }
+    .miniatura img { width: 100%; height: 100%; object-fit: cover; }
+    .miniatura__pie { position: absolute; inset: auto 0 0 0; padding: 6px 8px; text-align: left; background: linear-gradient(transparent, rgba(0,0,0,.85)); font-size: 11px; }
+  </style>
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/componentes/navegacion-barbero.js" defer></script>
+  <script src="assets/js/paginas/perfil-cliente.js" defer></script>
+</head>
+
+<body>
+  <encabezado-app variante="modulo"></encabezado-app>
+
+  <main class="pagina pagina--movil flex flex-col gap-4">
+
+    <!-- ===== Título ===== -->
+    <div class="cabecera-pagina" style="margin-bottom:0">
+      <div>
+        <span class="cabecera-pagina__antetitulo">Clientes</span>
+        <h1 class="cabecera-pagina__titulo">Perfil del cliente</h1>
+      </div>
+    </div>
+
+    <!-- ===== Búsqueda ===== -->
+    <form id="formulario-busqueda" class="flex gap-2" role="search">
+      <div class="campo-icono flex-1">
+        <span class="icono" aria-hidden="true">search</span>
+        <input class="campo" id="buscar-cliente" type="search" placeholder="Nombre o teléfono" autocomplete="off" aria-label="Buscar cliente">
+      </div>
+      <button type="submit" class="boton boton--primario boton--icono" aria-label="Buscar"><span class="icono" aria-hidden="true">search</span></button>
+    </form>
+    <p id="clientes-sin-resultados" class="ayuda" hidden>Sin coincidencias.</p>
+    <div id="resultados-clientes" class="flex flex-col gap-2" hidden></div>
+
+    <div id="perfil-vacio" class="estado-vacio">
+      <span class="icono" aria-hidden="true">person_search</span>
+      <span class="estado-vacio__titulo">Busca a un cliente</span>
+      <span>Escribe su nombre o teléfono para ver su ficha.</span>
+    </div>
+    <p id="perfil-cargando" class="cargando" hidden>Cargando ficha…</p>
+
+    <!-- ===== Ficha ===== -->
+    <div id="perfil" class="flex flex-col gap-4" hidden>
+
+      <section class="tarjeta flex flex-col gap-4" aria-label="Datos del cliente">
+        <div class="foto-principal">
+          <img data-campo-src="FotoCorteReferencia" alt="Foto de corte de referencia" hidden>
+          <span class="flex flex-col items-center gap-1 text-sm texto-tenue" id="sin-foto-principal">
+            <span class="icono icono--xl" aria-hidden="true">no_photography</span>Sin foto de referencia
+          </span>
+        </div>
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="titulo-serif text-2xl font-bold text-white" data-campo="Nombre"></h2>
+          <span id="insignia-membresia" class="insignia"></span>
+        </div>
+        <p class="flex items-center gap-2 text-sm texto-suave">
+          <span class="icono icono--sm" aria-hidden="true">call</span>
+          <span class="numeros" data-campo="Telefono" data-formato="telefono"></span>
+        </p>
+        <dl class="grid grid-cols-2 gap-3 pt-3 border-t border-borde">
+          <div class="dato"><dt class="dato__etiqueta">Inicio</dt><dd class="dato__valor numeros" data-campo="FechaInicio" data-formato="fecha"></dd></div>
+          <div class="dato"><dt class="dato__etiqueta">Faltas consecutivas</dt><dd class="dato__valor numeros" data-campo="FaltasConsecutivas"></dd></div>
+        </dl>
+        <div class="bloque">
+          <div class="dato__etiqueta mb-1">Estilo preferido</div>
+          <p class="text-sm" data-campo="Descripcion" data-vacio="Sin descripción registrada."></p>
+        </div>
+        <div class="bloque">
+          <div class="dato__etiqueta mb-1">Observaciones</div>
+          <p class="text-sm texto-suave" data-campo="Observaciones" data-vacio="Sin observaciones."></p>
+        </div>
+        <button type="button" id="accion-cita" class="boton boton--bloque"><span class="icono icono--sm" aria-hidden="true">calendar_add_on</span>Agendar cita</button>
+      </section>
+
+      <!-- Historial -->
+      <section class="tarjeta" aria-labelledby="titulo-historial">
+        <div class="tarjeta__encabezado">
+          <h2 id="titulo-historial" class="tarjeta__titulo"><span class="icono" aria-hidden="true">history</span>Historial de servicios</h2>
+          <span class="insignia" id="total-visitas">0 visitas</span>
+        </div>
+        <div id="historial-vacio" class="estado-vacio"><span>Aún no hay servicios registrados.</span></div>
+        <div class="tabla-contenedor" id="historial-tabla" hidden>
+          <table class="tabla">
+            <thead><tr><th scope="col">Fecha</th><th scope="col">Servicio</th><th scope="col">Barbero</th></tr></thead>
+            <tbody id="historial-filas"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Fotos -->
+      <section class="tarjeta" aria-labelledby="titulo-fotos">
+        <div class="tarjeta__encabezado">
+          <h2 id="titulo-fotos" class="tarjeta__titulo"><span class="icono" aria-hidden="true">photo_library</span>Fotos de cortes</h2>
+          <label for="subir-foto" class="boton boton--pequeno" role="button" tabindex="0"><span class="icono icono--sm" aria-hidden="true">add_a_photo</span>Agregar</label>
+          <input type="file" id="subir-foto" accept="image/*" capture="environment" class="solo-lector">
+        </div>
+        <div id="fotos-vacio" class="estado-vacio"><span>Sin fotos de cortes anteriores.</span></div>
+        <div id="galeria" class="grid grid-cols-3 gap-2" hidden></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Barra inferior del barbero -->
+  <navegacion-barbero activa="clientes"></navegacion-barbero>
+
+  <!-- ===== Ventana de foto ampliada ===== -->
+  <div id="visor-foto" class="modal" role="dialog" aria-modal="true" aria-labelledby="visor-titulo" hidden>
+    <div class="modal__caja">
+      <img id="visor-imagen" alt="" class="w-full rounded-xl mb-4" style="max-height:55vh;object-fit:contain;background:#000">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 id="visor-titulo" class="titulo-serif text-xl font-bold text-white"></h3>
+        <span id="visor-fecha" class="text-xs texto-tenue numeros"></span>
+      </div>
+      <p id="visor-notas" class="text-sm texto-suave mt-2"></p>
+      <div class="grid grid-cols-2 gap-2 mt-5">
+        <button type="button" id="visor-referencia" class="boton boton--primario col-span-2">Usar como referencia</button>
+        <button type="button" id="visor-eliminar" class="boton boton--peligro">Eliminar</button>
+        <button type="button" id="visor-cerrar" class="boton">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== Plantillas ===================== -->
+  <template id="plantilla-cliente">
+    <button type="button" class="fila fila--seleccionable" data-campo-id="ID_Cliente">
+      <span class="avatar" style="width:34px;height:34px;font-size:13px" data-campo="Nombre" data-formato="iniciales"></span>
+      <span class="fila__cuerpo">
+        <span class="fila__titulo block text-sm" data-campo="Nombre"></span>
+        <span class="fila__detalle block numeros" data-campo="Telefono" data-formato="telefono"></span>
+      </span>
+    </button>
+  </template>
+
+  <template id="plantilla-servicio">
+    <tr>
+      <td class="numeros whitespace-nowrap" data-campo="FechaHoraCobro" data-formato="fecha"></td>
+      <td data-campo="NombreItem"></td>
+      <td data-campo="NombreBarbero"></td>
+    </tr>
+  </template>
+
+  <template id="plantilla-foto">
+    <button type="button" class="miniatura" data-campo-id="ID_Foto">
+      <img data-campo-src="Url" alt="Foto de corte" loading="lazy">
+      <span class="miniatura__pie"><span class="block font-semibold text-white" data-campo="Titulo" data-vacio="Corte"></span></span>
+    </button>
+  </template>
+</body>
+</html>

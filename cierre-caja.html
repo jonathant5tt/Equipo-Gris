@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Cierre de caja  (CU-06)
+  ----------------------------------------------------------------------------
+  Consolida las ventas del turno que aún no tienen corte, calcula totales por
+  método de pago, compara el efectivo esperado contra el contado (arqueo) y
+  registra el corte. Las ventas incluidas quedan cerradas y ya no se editan
+  (ver diagrama de secuencia 3.1.3).
+
+  Endpoints: GET /cierres/resumen · POST /cierres
+  Lógica:    assets/js/paginas/cierre-caja.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cierre de caja · Engreídos Barbershop</title>
+
+  <!-- Tipografías e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+  <!-- Tailwind CSS (distribución) + configuración compartida -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="assets/js/tailwind.config.js"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/api-sin-servidor.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/paginas/cierre-caja.js" defer></script>
+</head>
+
+<body>
+  <encabezado-app variante="modulo"></encabezado-app>
+
+  <main class="pagina">
+
+    <!-- ===== Título y datos del turno ===== -->
+    <div class="cabecera-pagina">
+      <div>
+        <span class="cabecera-pagina__antetitulo">Corte diario</span>
+        <h1 class="cabecera-pagina__titulo">Cierre de caja</h1>
+        <p class="cabecera-pagina__descripcion">Consolidación de transacciones y arqueo de valores.</p>
+      </div>
+      <dl class="flex flex-wrap gap-2" id="datos-turno">
+        <div class="pastilla"><dt class="pastilla__etiqueta">Fecha:</dt><dd class="pastilla__valor numeros" data-campo="Fecha" data-formato="fecha"></dd></div>
+        <div class="pastilla"><dt class="pastilla__etiqueta">Cajero:</dt><dd class="pastilla__valor" data-campo="NombreCajero"></dd></div>
+      </dl>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+      <!-- ===================== Ventas del turno ===================== -->
+      <div class="lg:col-span-8 flex flex-col gap-5 min-w-0">
+        <section class="tarjeta" aria-labelledby="titulo-ventas">
+          <div class="tarjeta__encabezado">
+            <h2 id="titulo-ventas" class="tarjeta__titulo"><span class="icono" aria-hidden="true">receipt_long</span>Ventas del turno</h2>
+            <span class="insignia" id="numero-tickets">0 tickets</span>
+          </div>
+
+          <!-- Filtros por método y búsqueda por folio -->
+          <div class="flex flex-col sm:flex-row gap-3 mb-4">
+            <div class="segmentado" role="group" aria-label="Filtrar por método de pago">
+              <button type="button" class="segmentado__opcion" data-filtro="" aria-pressed="true">Todos</button>
+              <button type="button" class="segmentado__opcion" data-filtro="Efectivo" aria-pressed="false">Efectivo</button>
+              <button type="button" class="segmentado__opcion" data-filtro="Tarjeta" aria-pressed="false">Tarjeta</button>
+              <button type="button" class="segmentado__opcion" data-filtro="Transferencia" aria-pressed="false">Transferencia</button>
+            </div>
+            <div class="campo-icono flex-1">
+              <span class="icono" aria-hidden="true">search</span>
+              <input class="campo" id="buscar-folio" type="search" placeholder="Buscar folio o cliente" aria-label="Buscar folio o cliente">
+            </div>
+          </div>
+
+          <p id="ventas-cargando" class="cargando">Cargando ventas del turno…</p>
+          <div id="ventas-vacio" class="estado-vacio" hidden>
+            <span class="icono" aria-hidden="true">point_of_sale</span>
+            <span class="estado-vacio__titulo">No hay ventas pendientes de corte</span>
+            <span>Las ventas cobradas en este turno aparecerán aquí.</span>
+          </div>
+          <div class="tabla-contenedor" id="ventas-tabla" hidden>
+            <table class="tabla">
+              <thead>
+                <tr><th scope="col">Hora</th><th scope="col">Folio</th><th scope="col">Cliente y concepto</th><th scope="col">Método</th><th scope="col" class="derecha">Total</th></tr>
+              </thead>
+              <tbody id="ventas-filas"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Indicadores del turno -->
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Indicadores" id="indicadores">
+          <div class="tarjeta"><div class="dato__etiqueta flex items-center gap-1"><span class="icono icono--sm" aria-hidden="true">content_cut</span>Servicios</div><div class="text-3xl font-bold numeros mt-1" data-campo="Servicios"></div></div>
+          <div class="tarjeta"><div class="dato__etiqueta flex items-center gap-1"><span class="icono icono--sm" aria-hidden="true">inventory_2</span>Productos</div><div class="text-3xl font-bold numeros mt-1" data-campo="Productos"></div></div>
+          <div class="tarjeta"><div class="dato__etiqueta flex items-center gap-1"><span class="icono icono--sm" aria-hidden="true">trending_up</span>Ticket medio</div><div class="text-3xl font-bold numeros mt-1" data-campo="TicketPromedio" data-formato="moneda"></div></div>
+        </section>
+      </div>
+
+      <!-- ===================== Resumen y arqueo ===================== -->
+      <aside class="tarjeta lg:col-span-4 columna-fija flex flex-col gap-4" aria-labelledby="titulo-resumen" id="resumen">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <h2 id="titulo-resumen" class="tarjeta__titulo"><span class="icono" aria-hidden="true">account_balance_wallet</span>Resumen del cierre</h2>
+        </div>
+
+        <div>
+          <div class="dato__etiqueta">Total de ingresos del turno</div>
+          <div class="total-final__importe" data-campo="TotalIngresos" data-formato="moneda"></div>
+          <div class="text-xs texto-tenue">IVA incluido: <span class="numeros" data-campo="TotalIVA" data-formato="moneda"></span></div>
+        </div>
+
+        <!-- Desglose por método de pago -->
+        <div class="bloque">
+          <div class="dato__etiqueta mb-2">Desglose por método de pago</div>
+          <div class="total-linea"><span>Efectivo</span><span data-campo="Efectivo" data-formato="moneda"></span></div>
+          <div class="total-linea"><span>Tarjeta</span><span data-campo="Tarjeta" data-formato="moneda"></span></div>
+          <div class="total-linea"><span>Transferencia</span><span data-campo="Transferencia" data-formato="moneda"></span></div>
+          <div class="total-final" style="padding-top:8px">
+            <span class="text-sm texto-suave">Fondo inicial</span><span class="numeros" data-campo="FondoInicial" data-formato="moneda"></span>
+          </div>
+          <div class="total-linea font-bold" style="color:var(--color-texto)"><span>Efectivo esperado en caja</span><span data-campo="EfectivoEsperado" data-formato="moneda"></span></div>
+        </div>
+
+        <!-- Arqueo: efectivo contado físicamente -->
+        <div>
+          <label class="etiqueta" for="efectivo-contado">Efectivo contado en caja (arqueo)</label>
+          <input class="campo numeros" id="efectivo-contado" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+          <p id="resultado-arqueo" class="ayuda" aria-live="polite"></p>
+        </div>
+
+        <button type="button" id="generar-cierre" class="boton boton--primario boton--bloque boton--grande" disabled>
+          <span class="icono" aria-hidden="true">lock_clock</span>Generar cierre de caja
+        </button>
+        <button type="button" id="imprimir" class="boton boton--bloque">
+          <span class="icono icono--sm" aria-hidden="true">print</span>Imprimir reporte
+        </button>
+      </aside>
+    </div>
+  </main>
+
+  <!-- ===== Ventana: cierre registrado ===== -->
+  <div id="cierre-exitoso" class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-exito" hidden>
+    <div class="modal__caja text-center flex flex-col items-center gap-3">
+      <span class="avatar" style="width:56px;height:56px;background:var(--color-exito-fondo);color:var(--color-exito);border-color:var(--color-exito-borde)">
+        <span class="icono icono--lg" aria-hidden="true">done_all</span>
+      </span>
+      <h3 id="titulo-exito" class="titulo-serif text-2xl font-bold text-white">Turno cerrado con éxito</h3>
+      <p class="texto-suave text-sm">Las ventas incluidas quedaron cerradas y ya no se pueden editar.</p>
+      <dl class="bloque w-full text-left">
+        <div class="total-linea"><dt>Folio del corte</dt><dd class="numeros" data-campo="ID_Corte"></dd></div>
+        <div class="total-linea"><dt>Total del turno</dt><dd data-campo="TotalIngresos" data-formato="moneda"></dd></div>
+        <div class="total-linea"><dt>Efectivo contado</dt><dd data-campo="EfectivoContado" data-formato="moneda"></dd></div>
+        <div class="total-linea"><dt>Diferencia</dt><dd data-campo="Diferencia" data-formato="moneda"></dd></div>
+      </dl>
+      <div class="grid grid-cols-2 gap-2 w-full">
+        <button type="button" class="boton boton--primario" data-nav="@panel">Ir al panel</button>
+        <button type="button" class="boton" id="cerrar-modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== Plantillas ===================== -->
+  <template id="plantilla-venta">
+    <tr>
+      <td class="numeros" data-campo="FechaHoraCobro" data-formato="hora"></td>
+      <td class="numeros texto-suave" data-campo="NumeroFactura"></td>
+      <td><span class="font-semibold" data-campo="NombreCliente" data-vacio="Público en general"></span><span class="tabla__secundario" data-campo="Concepto" data-vacio=""></span></td>
+      <td><span class="insignia" data-campo="MetodoPago"></span></td>
+      <td class="derecha numeros font-semibold" data-campo="ImporteTotal" data-formato="moneda"></td>
+    </tr>
+  </template>
+</body>
+</html>
