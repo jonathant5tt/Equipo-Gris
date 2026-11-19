@@ -38,7 +38,8 @@
   var eleccion = {};       // { ID_Detalle: piezas a devolver }
   var historial = [];
 
-  var redondear = function (n) { return Math.round(n * 100) / 100; };
+  // Mismo redondeo comercial que el servidor (servicios/validar.js).
+  var redondear = function (n) { return Math.round(Number((n * 100).toPrecision(12))) / 100; };
 
   // ---------------------------------------------------------------------------
   // 1. Buscar el ticket

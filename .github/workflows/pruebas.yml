@@ -1,0 +1,29 @@
+# Ejecuta la suite de pruebas en cada Pull Request hacia develop o main.
+# La revisión entre pares solo se aprueba si este check está en verde.
+name: Pruebas
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 22]
+    defaults:
+      run:
+        working-directory: servidor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Pruebas unitarias e integración
+        run: npm test
+      - name: Cobertura (solo Node 22)
+        if: matrix.node == 22
+        run: npm run test:cobertura
