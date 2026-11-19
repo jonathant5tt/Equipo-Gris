@@ -125,6 +125,15 @@ function crearBdMemoria(preparar) {
     [/^SELECT Nombre FROM (ADMINISTRADOR|CAJERO|BARBERO) WHERE (ID_\w+) = \? AND Activo = 1$/,
       (p, m) => t[m[1]].filter((x) => x[LLAVE[m[1]]] === Number(p[0]) && x.Activo).map((x) => ({ Nombre: x.Nombre }))],
     [/^SELECT .* FROM ESTABLECIMIENTO WHERE ID_Local = 1$/, () => [t.ESTABLECIMIENTO[0]]],
+    [/^INSERT INTO (CAJERO|BARBERO) \(Nombre, Usuario, Contrasena, Telefono\)/, (p, m) => insertar(m[1], LLAVE[m[1]], {
+      Nombre: p[0], Usuario: p[1], Contrasena: p[2], Telefono: p[3], Activo: 1,
+      ...(m[1] === 'BARBERO' ? { HoraEntrada: '09:00:00', HoraSalida: '19:00:00', ComidaInicio: '14:00:00', ComidaFin: '15:00:00', DiasTrabajo: 'L,M,X,J,V,S' } : {})
+    })],
+    [/^UPDATE (CAJERO|BARBERO) SET Activo = 0, Usuario = NULL WHERE (ID_\w+) = \? AND Activo = 1$/,
+      (p, m) => actualizar(t[m[1]].filter((x) => x[m[2]] === Number(p[0]) && x.Activo), (x) => { x.Activo = 0; x.Usuario = null; })],
+    [/^SELECT COUNT\(\*\) AS n FROM CITA WHERE ID_Barbero = \? AND Estado IN \('Agendada','EnEspera','EnAtencion'\) AND FechaHora >= NOW\(\)$/,
+      (p) => [{ n: t.CITA.filter((c) => c.ID_Barbero === Number(p[0]) && ['Agendada', 'EnEspera', 'EnAtencion'].includes(c.Estado) &&
+        c.FechaHora >= `${f.ahora().fecha} ${f.ahora().hora}`).length }]],
 
     // ---- Clientes ------------------------------------------------------------
     [/^SELECT 1 FROM CLIENTE WHERE Telefono = \?$/, (p) => t.CLIENTE.filter((c) => c.Telefono === p[0]).map(() => ({ 1: 1 }))],
@@ -139,6 +148,12 @@ function crearBdMemoria(preparar) {
         const m = porId('MEMBRESIA', 'ID_Membresia', c.ID_Membresia);
         return { ...c, NombrePlan: m ? m.NombrePlan : null, PlanActivo: m ? m.Activo : null };
       })],
+    [/^SELECT c\.ID_Cliente, c\.Nombre, c\.Lada, c\.Telefono, c\.FotoCorteReferencia, .* LIMIT \?$/, (p) => {
+      const texto = p.length > 1 ? String(p[0]).replace(/%/g, '').toLowerCase() : '';
+      const digitos = texto.replace(/\D/g, '');
+      return t.CLIENTE.filter((c) => !texto || c.Nombre.toLowerCase().includes(texto) || (digitos.length >= 3 && c.Telefono.includes(digitos)))
+        .slice(0, p[p.length - 1]).map(clienteCompleto);
+    }],
     [/^SELECT ID_Cliente FROM CLIENTE WHERE ID_Cliente = \?$/, (p) => t.CLIENTE.filter((c) => c.ID_Cliente === Number(p[0]))],
     [/^UPDATE CLIENTE SET FaltasConsecutivas = 0 WHERE ID_Cliente = \?$/,
       (p) => actualizar(t.CLIENTE.filter((c) => c.ID_Cliente === Number(p[0])), (c) => { c.FaltasConsecutivas = 0; })],
@@ -164,8 +179,29 @@ function crearBdMemoria(preparar) {
     [/^UPDATE PRODUCTO SET Stock = Stock - \? WHERE ID_Producto = \? AND Stock >= \?$/,
       (p) => actualizar(t.PRODUCTO.filter((x) => x.ID_Producto === Number(p[1]) && x.Stock >= p[2]), (x) => { x.Stock -= p[0]; })],
     [/^SELECT Stock FROM PRODUCTO WHERE ID_Producto = \?$/, (p) => t.PRODUCTO.filter((x) => x.ID_Producto === Number(p[0])).map((x) => ({ Stock: x.Stock }))],
+    [/^INSERT INTO MOVIMIENTO_INVENTARIO .* VALUES \(\?, 'Alta', \?, \?, 'Inventario inicial', \?\)$/, (p) => insertar('MOVIMIENTO_INVENTARIO', 'ID_Movimiento',
+      { ID_Producto: p[0], Tipo: 'Alta', Cantidad: p[1], StockFinal: p[2], Motivo: 'Inventario inicial', RealizadoPor: p[3], ID_Venta: null })],
     [/^INSERT INTO MOVIMIENTO_INVENTARIO/, (p) => insertar('MOVIMIENTO_INVENTARIO', 'ID_Movimiento',
       { ID_Producto: p[0], Tipo: 'Venta', Cantidad: p[1], StockFinal: p[2], Motivo: p[3], RealizadoPor: p[4], ID_Venta: p[5] })],
+    // Altas, consultas y bajas lógicas del catálogo (Ajustes del Dueño)
+    [/^SELECT (ID_\w+) AS id FROM (SERVICIO|PRODUCTO|MEMBRESIA) WHERE Activo = 1 AND LOWER\(TRIM\((\w+)\)\) = LOWER\(TRIM\(\?\)\)( AND ID_\w+ <> \?)? LIMIT 1$/,
+      (p, m) => t[m[2]].filter((x) => x.Activo && String(x[m[3]]).trim().toLowerCase() === String(p[0]).trim().toLowerCase() &&
+        (!m[4] || x[m[1]] !== Number(p[1]))).slice(0, 1).map((x) => ({ id: x[m[1]] }))],
+    [/^INSERT INTO SERVICIO \(NombreServicio, Descripcion, Precio, DuracionMin, DiasDisponibles\)/, (p) => insertar('SERVICIO', 'ID_Servicio',
+      { NombreServicio: p[0], Descripcion: p[1], Precio: p[2], DuracionMin: p[3], DiasDisponibles: p[4], Activo: 1 })],
+    [/^SELECT \* FROM SERVICIO WHERE ID_Servicio = \?$/, (p) => t.SERVICIO.filter((s) => s.ID_Servicio === Number(p[0]))],
+    [/^INSERT INTO PRODUCTO \(NombreProducto, Categoria, Precio, Descripcion, Stock\)/, (p) => insertar('PRODUCTO', 'ID_Producto',
+      { NombreProducto: p[0], Categoria: p[1], Precio: p[2], Descripcion: p[3], Stock: p[4], FotoProducto: null, Activo: 1 })],
+    [/^SELECT \* FROM PRODUCTO WHERE ID_Producto = \?$/, (p) => t.PRODUCTO.filter((x) => x.ID_Producto === Number(p[0]))],
+    [/^SELECT ID_Producto, NombreProducto, Categoria, Precio, Descripcion, FotoProducto, Stock FROM PRODUCTO WHERE Activo = 1/,
+      () => t.PRODUCTO.filter((x) => x.Activo).sort((a, b) => a.NombreProducto.localeCompare(b.NombreProducto))],
+    [/^UPDATE (SERVICIO|PRODUCTO) SET Activo = 0 WHERE (ID_\w+) = \? AND Activo = 1$/,
+      (p, m) => actualizar(t[m[1]].filter((x) => x[m[2]] === Number(p[0]) && x.Activo), (x) => { x.Activo = 0; })],
+    [/^DELETE FROM MEMBRESIA_BENEFICIO WHERE (ID_Servicio|ID_Producto) = \?$/, (p, m) => {
+      const antes = t.MEMBRESIA_BENEFICIO.length;
+      t.MEMBRESIA_BENEFICIO = t.MEMBRESIA_BENEFICIO.filter((b) => b[m[1]] !== Number(p[0]));
+      return { affectedRows: antes - t.MEMBRESIA_BENEFICIO.length };
+    }],
 
     // ---- Membresías, beneficios y promociones --------------------------------
     [/^SELECT ID_Membresia, NombrePlan, Precio, DuracionMeses FROM MEMBRESIA WHERE ID_Membresia = \? AND Activo = 1$/,
