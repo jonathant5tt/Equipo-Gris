@@ -359,9 +359,32 @@ servidor/src/
 ├── lib/web.js               Mini marco web (rutas, JSON, archivos estáticos)
 ├── middleware/              Sesión (JWT), roles, suspensión, errores
 ├── rutas/                   auth, clientes, citas, ventas, cierres, catálogos…
-├── servicios/               precios, disponibilidad, whatsapp, fotos, validación
+├── servicios/               precios, disponibilidad, caja, whatsapp, fotos, validación
 └── seguridad/               contraseñas (scrypt) y tokens (JWT HS256)
+servidor/pruebas/
+├── ejecutar.js              Ejecuta todas las pruebas con node:test (sin npm install)
+├── unitarias/               validar, fechas, precios, disponibilidad, caja, seguridad, middleware
+├── integracion/             Happy Path completo por la API y prueba del script E2E
+└── apoyo/                   Base de datos en memoria, reloj fijo e inyección de la BD
+servidor/scripts/probar-happy-path.js   Happy Path contra MySQL real (base de pruebas)
 ```
+
+### Pruebas
+```bash
+cd servidor
+npm test                     # 73 pruebas unitarias y de integración
+npm run test:cobertura       # además, reporte de cobertura (Node 20+)
+npm test -- precios          # solo los archivos cuya ruta contiene «precios»
+```
+Las pruebas no necesitan MySQL: usan una base de datos en memoria
+(`pruebas/apoyo/bd-memoria.js`) y un reloj fijo (jueves 19/11/2026). Para
+probar el flujo principal contra la base real, apunta el servidor a una base
+de **pruebas** (`BD_NOMBRE=engreidos_pruebas` en `.env`) y ejecuta:
+```bash
+node scripts/probar-happy-path.js --base-de-pruebas --usuario dueno --contrasena **** [--con-cierre]
+```
+Cada Pull Request a `develop` o `main` ejecuta las pruebas en GitHub Actions
+(`.github/workflows/pruebas.yml`) con Node 18 y 22.
 
 ### Pantallas y permisos
 | Pantalla | Dueño | Cajero | Barbero |
