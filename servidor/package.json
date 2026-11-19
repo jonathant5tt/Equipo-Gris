@@ -1,0 +1,17 @@
+{
+  "name": "engreidos-servidor",
+  "version": "3.4.0",
+  "description": "Servidor de Engreídos Barbershop (API REST + interfaz web). Sin dependencias externas: no necesita npm install.",
+  "main": "src/index.js",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "configurar": "node scripts/configurar.js",
+    "crear-dueno": "node scripts/crear-dueno.js",
+    "estilos": "npx --yes tailwindcss@3.4.17 -c ../herramientas/estilos/tailwind.config.cjs -i ../herramientas/estilos/entrada.css -o ../assets/css/tailwind.css --minify",
+    "idiomas": "python3 ../herramientas/idiomas/generar.py"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

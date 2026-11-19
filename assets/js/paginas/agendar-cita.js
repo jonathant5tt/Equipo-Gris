@@ -3,15 +3,20 @@
  * @description Controlador de «Agendar cita» (agendar-cita.html).
  *
  * Flujo:
- *   1. Carga barberos y servicios.                GET /barberos, GET /servicios
- *   2. Al elegir barbero o fecha, consulta horarios. GET /citas/disponibilidad
- *   3. El usuario elige un horario «Libre».
- *   4. Busca al cliente por nombre o teléfono.     GET /clientes?buscar=
- *   5. Confirma la cita.                            POST /citas
+ *   1. Carga barberos y servicios.                    GET /barberos · GET /servicios
+ *   2. Barbero (y servicio) → estado de la semana.    GET /citas/dias
+ *   3. Día → bloques del día.                         GET /citas/disponibilidad
+ *   4. Hora libre + cliente + servicio → confirmar.   POST /citas
+ *   5. El servidor envía el resumen por WhatsApp; si la API no está
+ *      configurada, se ofrece el botón «Enviar por WhatsApp» (enlace wa.me).
  *
- * Reglas (las valida también el back end):
- *   - Solo se pueden elegir horarios con Estado = "Libre".
- *   - Origen = "App" si agenda un barbero, "Caja" si agenda cajero o dueño.
+ * Si el cliente no existe se registra en nuevo-cliente.html y se regresa con
+ * ?cliente=ID; el barbero, día, hora y servicio elegidos se recuperan del
+ * borrador guardado en sessionStorage.
+ *
+ * Reglas (las valida también el servidor):
+ *   - Solo se eligen bloques «Libre» donde cabe la duración del servicio.
+ *   - Un servicio con días específicos solo se agenda esos días.
  */
 (function () {
   'use strict';
@@ -20,316 +25,380 @@
 
   var U = window.Utilidades;
   var Api = window.Api;
-  var CFG = window.APP_CONFIG;
+  var t = window.Idioma.t;
+  var LOCALE = window.Idioma.locale;
 
-  /** Texto que se muestra para cada estado de horario. */
-  var TEXTO_ESTADO = { Libre: 'Libre', Ocupado: 'Ocupado', NoDisponible: 'No disponible' };
+  var TEXTO_ESTADO = { Libre: 'Libre', Ocupado: 'Ocupado', Comida: 'Comida', NoDisponible: 'No disponible' };
+  var NOMBRE_DIA = { L: 'Lun', M: 'Mar', X: 'Mié', J: 'Jue', V: 'Vie', S: 'Sáb', D: 'Dom' };
 
-  /** Estado de la pantalla. */
+  var hoy = U.fechaISO();
   var estado = {
-    barberos: [],
-    servicios: [],
-    barbero: null,      // Barbero elegido
-    fecha: new Date(),  // Día consultado
-    horarios: [],       // Respuesta de disponibilidad
-    hora: null,         // "HH:MM" elegida
-    cliente: null       // Cliente elegido
+    barberos: [], servicios: [],
+    barbero: null, servicio: null, cliente: null,
+    semanaInicio: hoy, fecha: hoy, hora: null,
+    dia: null, ultimaCita: null
   };
+
+  // ---------------------------------------------------------------------------
+  // Borrador (se conserva al ir a registrar un cliente nuevo)
+  // ---------------------------------------------------------------------------
+  var CLAVE_BORRADOR = 'engreidos.borrador-cita';
+
+  function guardarBorrador() {
+    try {
+      window.sessionStorage.setItem(CLAVE_BORRADOR, JSON.stringify({
+        barbero: estado.barbero && estado.barbero.ID_Barbero, servicio: estado.servicio && estado.servicio.ID_Servicio,
+        fecha: estado.fecha, semanaInicio: estado.semanaInicio, hora: estado.hora, guardado: Date.now()
+      }));
+    } catch (e) { /* sin almacenamiento */ }
+  }
+
+  function borrarBorrador() { try { window.sessionStorage.removeItem(CLAVE_BORRADOR); } catch (e) { /* nada */ } }
+
+  /** Borrador reciente (30 min) solo al volver del registro de un cliente. */
+  function leerBorrador() {
+    if (!U.parametro('cliente')) return null;
+    try {
+      var b = JSON.parse(window.sessionStorage.getItem(CLAVE_BORRADOR) || 'null');
+      return b && Date.now() - b.guardado < 30 * 60 * 1000 ? b : null;
+    } catch (e) { return null; }
+  }
+
+  var borrador = leerBorrador();
+  if (borrador && borrador.fecha >= hoy) {
+    estado.fecha = borrador.fecha;
+    estado.semanaInicio = borrador.semanaInicio >= hoy ? borrador.semanaInicio : hoy;
+    estado.hora = borrador.hora;
+  }
 
   var $ = function (id) { return document.getElementById(id); };
   var el = {
-    jornada: $('jornada'),
-    barberosCargando: $('barberos-cargando'),
-    barberosVacio: $('barberos-vacio'),
-    listaBarberos: $('lista-barberos'),
-    fechaTexto: $('fecha-texto'),
-    diaAnterior: $('dia-anterior'),
-    diaSiguiente: $('dia-siguiente'),
-    diaHoy: $('dia-hoy'),
-    cuposLibres: $('cupos-libres'),
-    horariosCargando: $('horarios-cargando'),
-    horariosVacio: $('horarios-vacio'),
+    jornada: $('jornada'), jornadaHoras: $('jornada-horas'), jornadaComida: $('jornada-comida'),
+    barberosCargando: $('barberos-cargando'), barberosVacio: $('barberos-vacio'), listaBarberos: $('lista-barberos'),
+    fechaTexto: $('fecha-texto'), semana: $('semana'), diaMotivo: $('dia-motivo'),
+    semanaAnterior: $('semana-anterior'), semanaSiguiente: $('semana-siguiente'), diaHoy: $('dia-hoy'),
+    cuposLibres: $('cupos-libres'), horariosCargando: $('horarios-cargando'), horariosVacio: $('horarios-vacio'),
     listaHorarios: $('lista-horarios'),
-    ocupacion: $('ocupacion'),
-    barraOcupacion: $('barra-ocupacion'),
-    resumenHora: $('resumen-hora'),
-    resumenFecha: $('resumen-fecha'),
-    resumenBarbero: $('resumen-barbero'),
-    resumenDuracion: $('resumen-duracion'),
-    clienteElegido: $('cliente-elegido'),
-    cambiarCliente: $('cambiar-cliente'),
-    clienteBusqueda: $('cliente-busqueda'),
-    buscarCliente: $('buscar-cliente'),
-    sinResultados: $('clientes-sin-resultados'),
-    resultadosClientes: $('resultados-clientes'),
-    servicio: $('servicio'),
-    servicioDetalle: $('servicio-detalle'),
-    confirmar: $('confirmar'),
-    limpiar: $('limpiar')
+    comprobante: $('comprobante'), resumenHora: $('resumen-hora'), resumenFecha: $('resumen-fecha'),
+    resumenDuracion: $('resumen-duracion'), resumenBarbero: $('resumen-barbero'),
+    resumenCliente: $('resumen-cliente'), resumenServicio: $('resumen-servicio'),
+    clienteElegido: $('cliente-elegido'), cambiarCliente: $('cambiar-cliente'), buscador: $('buscador'),
+    serviciosCargando: $('servicios-cargando'), serviciosVacio: $('servicios-vacio'), listaServicios: $('lista-servicios'),
+    confirmar: $('confirmar'), limpiar: $('limpiar'),
+    modal: $('cita-lista'), estadoWhatsapp: $('estado-whatsapp'), comprobanteFinal: $('comprobante-final'),
+    enviarWhatsapp: $('enviar-whatsapp'), nuevaCita: $('nueva-cita')
   };
 
   // ---------------------------------------------------------------------------
   // Barberos
   // ---------------------------------------------------------------------------
 
-  /** Carga la lista de barberos y dibuja una opción por cada uno.  GET /barberos */
+  /** Carga los barberos registrados.  GET /barberos */
   async function cargarBarberos() {
     try { estado.barberos = (await Api.barberos.listar()) || []; }
     catch (error) { estado.barberos = []; U.aviso(error.message, 'error'); }
-
     el.barberosCargando.hidden = true;
     U.dibujarLista({
-      contenedor: el.listaBarberos,
-      plantilla: 'plantilla-barbero',
-      datos: estado.barberos,
-      vacio: el.barberosVacio,
-      alCrear: function (boton, barbero) {
-        boton.addEventListener('click', function () { elegirBarbero(barbero); });
-      }
+      contenedor: el.listaBarberos, plantilla: 'plantilla-barbero', datos: estado.barberos, vacio: el.barberosVacio,
+      alCrear: function (boton, barbero) { boton.addEventListener('click', function () { elegirBarbero(barbero); }); }
     });
-    if (estado.barberos.length === 1) elegirBarbero(estado.barberos[0]);
+    // El barbero del borrador, o el que agenda desde su app, se preselecciona.
+    var guardado = borrador && estado.barberos.find(function (b) { return b.ID_Barbero === borrador.barbero; });
+    var propio = window.Sesion.rol() === window.Sesion.ROLES.BARBERO
+      ? estado.barberos.find(function (b) { return b.ID_Barbero === window.Sesion.usuario().id; }) : null;
+    if (guardado || propio || estado.barberos.length === 1) elegirBarbero(guardado || propio || estado.barberos[0]);
   }
 
   /** @param {Object} barbero */
   function elegirBarbero(barbero) {
     estado.barbero = barbero;
     el.listaBarberos.querySelectorAll('.barbero-opcion').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(String(b.getAttribute('data-id')) === String(barbero.ID_Barbero)));
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-id') === String(barbero.ID_Barbero)));
     });
-
-    // Jornada: "09:00–19:00 · Comida 14:00–15:00"
-    U.llenar(el.jornada, {
-      Jornada: U.formatoHora(barbero.HoraEntrada) + '–' + U.formatoHora(barbero.HoraSalida),
-      Comida: barbero.ComidaInicio ? '· Comida ' + U.formatoHora(barbero.ComidaInicio) + '–' + U.formatoHora(barbero.ComidaFin) : ''
-    });
+    el.jornadaHoras.textContent = U.formatoHora(barbero.HoraEntrada) + ' – ' + U.formatoHora(barbero.HoraSalida);
+    el.jornadaComida.textContent = barbero.ComidaInicio
+      ? '· ' + t('Comida') + ' ' + U.formatoHora(barbero.ComidaInicio) + ' – ' + U.formatoHora(barbero.ComidaFin) : '';
     el.jornada.hidden = false;
+    cargarSemana();
     cargarHorarios();
   }
 
   // ---------------------------------------------------------------------------
-  // Fecha y horarios
+  // Semana y día
   // ---------------------------------------------------------------------------
 
-  /** @param {number} dias  Días a mover; 0 regresa a hoy. */
-  function moverFecha(dias) {
-    if (dias === 0) estado.fecha = new Date();
-    else estado.fecha = new Date(estado.fecha.getFullYear(), estado.fecha.getMonth(), estado.fecha.getDate() + dias);
-    el.fechaTexto.textContent = U.formatoFechaLarga(estado.fecha);
-    if (estado.barbero) cargarHorarios();
-    actualizarResumen();
+  /** Estado de cada día de la semana visible.  GET /citas/dias */
+  async function cargarSemana() {
+    var dias = [];
+    if (estado.barbero) {
+      try {
+        dias = (await Api.citas.dias(estado.barbero.ID_Barbero, estado.semanaInicio, 7,
+          estado.servicio && estado.servicio.ID_Servicio)) || [];
+      } catch (error) { U.aviso(error.message, 'error'); }
+    }
+    if (!dias.length) {
+      dias = Array.from({ length: 7 }, function (_, i) { return { Fecha: U.sumarDias(estado.semanaInicio, i), Estado: '' }; });
+    }
+    estado.dias = dias;
+    U.dibujarLista({
+      contenedor: el.semana, plantilla: 'plantilla-dia',
+      datos: dias.map(function (d) {
+        var f = U.aFecha(d.Fecha);
+        return {
+          Nombre: f.toLocaleDateString(LOCALE, { weekday: 'short' }).replace('.', ''),
+          Numero: f.getDate(),
+          EstadoTexto: TEXTO_ESTADO[d.Estado] || ''
+        };
+      }),
+      alCrear: function (boton, d, i) {
+        var dia = dias[i];
+        boton.setAttribute('data-estado', dia.Estado || '');
+        boton.setAttribute('data-fecha', dia.Fecha);
+        boton.setAttribute('aria-pressed', String(dia.Fecha === estado.fecha));
+        boton.title = U.formatoFechaLarga(dia.Fecha) + (dia.Motivo ? ' · ' + t(dia.Motivo) : '');
+        boton.addEventListener('click', function () { elegirDia(dia.Fecha); });
+      }
+    });
+    el.semana.hidden = false;
+    el.semanaAnterior.disabled = estado.semanaInicio <= hoy;
+    mostrarMotivoDia();
   }
 
-  /**
-   * Muestra un mensaje en lugar de la cuadrícula.
-   * @param {string} titulo
-   * @param {string} detalle
-   */
+  function mostrarMotivoDia() {
+    var dia = (estado.dias || []).find(function (d) { return d.Fecha === estado.fecha; });
+    el.fechaTexto.textContent = U.formatoFechaLarga(estado.fecha);
+    el.diaMotivo.hidden = !(dia && dia.Motivo);
+    if (dia && dia.Motivo) el.diaMotivo.textContent = t(dia.Motivo);
+  }
+
+  /** @param {string} fecha "AAAA-MM-DD" */
+  function elegirDia(fecha) {
+    estado.fecha = fecha;
+    el.semana.querySelectorAll('.dia').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-fecha') === fecha)); });
+    mostrarMotivoDia();
+    cargarHorarios();
+  }
+
+  /** @param {number} dias  +7 / −7; 0 = volver a hoy. */
+  function moverSemana(dias) {
+    estado.semanaInicio = dias === 0 ? hoy : U.sumarDias(estado.semanaInicio, dias);
+    if (estado.semanaInicio < hoy) estado.semanaInicio = hoy;
+    estado.fecha = estado.semanaInicio;
+    estado.hora = null;
+    cargarSemana();
+    cargarHorarios();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Horarios del día
+  // ---------------------------------------------------------------------------
+
   function mostrarVacioHorarios(titulo, detalle) {
-    el.horariosVacio.querySelector('[data-titulo]').textContent = titulo;
-    el.horariosVacio.querySelector('[data-detalle]').textContent = detalle;
+    el.horariosVacio.querySelector('[data-titulo]').textContent = t(titulo);
+    el.horariosVacio.querySelector('[data-detalle]').textContent = t(detalle);
     el.horariosVacio.hidden = false;
     el.listaHorarios.hidden = true;
-    el.ocupacion.hidden = true;
     el.cuposLibres.hidden = true;
   }
 
-  /** Consulta los bloques del barbero y día elegidos.  GET /citas/disponibilidad */
-  async function cargarHorarios() {
-    estado.hora = null;
-    actualizarResumen();
-    el.horariosCargando.hidden = false;
-    el.horariosVacio.hidden = true;
-
+  /** Bloques del barbero y día elegidos.  GET /citas/disponibilidad */
+  async function cargarHorarios(silencioso) {
+    if (!estado.barbero) { actualizarResumen(); return; }
+    if (silencioso !== true) {
+      el.horariosCargando.hidden = false;
+      el.horariosVacio.hidden = true;
+    }
+    var dia = null;
     try {
-      estado.horarios = (await Api.citas.disponibilidad(estado.barbero.ID_Barbero, U.fechaISO(estado.fecha))) || [];
-    } catch (error) {
-      estado.horarios = [];
-      U.aviso(error.message, 'error');
-    }
+      dia = await Api.citas.disponibilidad(estado.barbero.ID_Barbero, estado.fecha, estado.servicio && estado.servicio.ID_Servicio);
+    } catch (error) { U.aviso(error.message, 'error'); }
     el.horariosCargando.hidden = true;
+    estado.dia = dia;
 
-    if (!estado.horarios.length) {
-      mostrarVacioHorarios('Sin horarios para este día', 'El barbero no trabaja en esta fecha o la agenda aún no está configurada.');
-      return;
+    // La hora elegida se conserva solo si sigue disponible.
+    var bloques = (dia && dia.Bloques) || [];
+    if (estado.hora && !bloques.some(function (b) { return b.Hora === estado.hora && b.Cabe; })) estado.hora = null;
+
+    if (!dia || !bloques.length) {
+      mostrarVacioHorarios('Sin horarios para este día', (dia && dia.Motivo) || 'El barbero no trabaja en esta fecha.');
+    } else {
+      dibujarHorarios(dia);
     }
-    dibujarHorarios();
+    actualizarResumen();
   }
 
-  /** Dibuja la cuadrícula de horarios, los cupos libres y la barra de ocupación. */
-  function dibujarHorarios() {
+  /** Dibuja la cuadrícula: Libre, Ocupado, Comida y No disponible. */
+  function dibujarHorarios(dia) {
+    var duracion = dia.DuracionMin;
     U.dibujarLista({
-      contenedor: el.listaHorarios,
-      plantilla: 'plantilla-horario',
-      vacio: el.horariosVacio,
-      datos: estado.horarios.map(function (h) {
-        return {
-          Hora: U.formatoHora(h.Hora),
-          Estado: h.Estado,
-          EstadoTexto: TEXTO_ESTADO[h.Estado] || h.Estado,
-          // Ocupado: "Nombre · Origen"; No disponible: motivo (comida, descanso)
-          Detalle: h.Estado === 'Ocupado' ? [h.NombreCliente, h.Origen].filter(Boolean).join(' · ') : (h.Motivo || '')
-        };
+      contenedor: el.listaHorarios, plantilla: 'plantilla-horario', vacio: el.horariosVacio,
+      datos: dia.Bloques.map(function (b) {
+        var visual = b.Estado === 'NoDisponible' && b.Motivo === 'Comida' ? 'Comida' : b.Estado;
+        var detalle = '';
+        if (visual === 'Ocupado') detalle = [b.NombreCliente, b.NombreServicio].filter(Boolean).join(' · ');
+        else if (visual === 'Comida') detalle = t('Horario de comida');
+        else if (visual === 'NoDisponible') detalle = t(b.Motivo || '');
+        else if (!b.Cabe) detalle = t('Sin espacio para {n} min', { n: duracion });
+        return { Hora: U.formatoHora(b.Hora), Visual: visual, EstadoTexto: TEXTO_ESTADO[visual], Detalle: detalle };
       }),
-      alCrear: function (boton, h) {
-        boton.setAttribute('data-estado', h.Estado);
-        var libre = h.Estado === 'Libre';
-        boton.setAttribute('aria-disabled', String(!libre));
-        boton.setAttribute('aria-label', h.Hora + ', ' + h.EstadoTexto);
-        if (libre) boton.addEventListener('click', function () { elegirHora(h.Hora); });
+      alCrear: function (boton, h, i) {
+        var bloque = dia.Bloques[i];
+        boton.setAttribute('data-estado', h.Visual);
+        var elegible = bloque.Estado === 'Libre' && bloque.Cabe;
+        boton.setAttribute('aria-disabled', String(!elegible));
+        boton.setAttribute('aria-pressed', String(elegible && bloque.Hora === estado.hora));
+        boton.setAttribute('aria-label', h.Hora + ', ' + t(h.EstadoTexto) + (h.Detalle ? ', ' + h.Detalle : ''));
+        if (elegible) boton.addEventListener('click', function () { elegirHora(bloque.Hora, boton); });
       }
     });
-
-    // Métricas de ocupación
-    var total = estado.horarios.filter(function (h) { return h.Estado !== 'NoDisponible'; }).length;
-    var ocupados = estado.horarios.filter(function (h) { return h.Estado === 'Ocupado'; }).length;
-    var libres = total - ocupados;
-    var porcentaje = total ? Math.round((ocupados / total) * 100) : 0;
-    U.llenar(el.ocupacion, { Porcentaje: porcentaje + '% de capacidad', Resumen: ocupados + ' de ' + total + ' turnos asignados' });
-    el.barraOcupacion.style.width = porcentaje + '%';
-    el.ocupacion.hidden = false;
-    el.cuposLibres.querySelector('[data-texto]').textContent = libres + (libres === 1 ? ' cupo libre' : ' cupos libres');
+    el.cuposLibres.querySelector('[data-texto]').textContent = dia.Libres === 1 ? t('1 horario libre') : t('{n} horarios libres', { n: dia.Libres });
     el.cuposLibres.hidden = false;
   }
 
-  /** @param {string} hora "HH:MM" */
-  function elegirHora(hora) {
+  function elegirHora(hora, boton) {
     estado.hora = hora;
-    el.listaHorarios.querySelectorAll('.horario').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.querySelector('.horario__hora').textContent === hora));
-    });
+    el.listaHorarios.querySelectorAll('.horario').forEach(function (b) { b.setAttribute('aria-pressed', String(b === boton)); });
     actualizarResumen();
   }
 
   // ---------------------------------------------------------------------------
-  // Clientes
+  // Cliente
   // ---------------------------------------------------------------------------
 
-  var buscarClientes = U.retrasar(async function () {
-    var texto = el.buscarCliente.value.trim();
-    if (texto.length < 2) {
-      el.resultadosClientes.hidden = true;
-      el.sinResultados.hidden = true;
-      return;
-    }
-    var clientes = [];
-    try { clientes = (await Api.clientes.buscar(texto)) || []; }
-    catch (error) { U.aviso(error.message, 'error'); }
-
-    U.dibujarLista({
-      contenedor: el.resultadosClientes,
-      plantilla: 'plantilla-cliente',
-      datos: clientes.slice(0, 6),
-      vacio: el.sinResultados,
-      alCrear: function (boton, cliente) {
-        boton.addEventListener('click', function () { elegirCliente(cliente); });
-      }
-    });
-  }, 300);
-
-  /** @param {Object|null} cliente  null regresa a la búsqueda. */
+  /** @param {Object|null} cliente */
   function elegirCliente(cliente) {
     estado.cliente = cliente;
     el.clienteElegido.hidden = !cliente;
-    el.clienteBusqueda.hidden = !!cliente;
-    if (cliente) U.llenar(el.clienteElegido, cliente);
-    else { el.buscarCliente.value = ''; el.resultadosClientes.hidden = true; el.sinResultados.hidden = true; el.buscarCliente.focus(); }
+    el.buscador.hidden = !!cliente;
+    if (cliente) {
+      U.llenar(el.clienteElegido, cliente);
+      el.clienteElegido.querySelector('.fila__titulo').classList.toggle('texto-membresia', !!cliente.MembresiaActiva);
+    } else {
+      el.buscador.limpiar();
+      el.buscador.enfocar();
+    }
     actualizarResumen();
   }
 
-  /** Preselecciona al cliente si la URL trae ?cliente=ID. */
   async function clienteDesdeURL() {
     var id = U.parametro('cliente');
     if (!id) return;
-    try {
-      var cliente = await Api.clientes.obtener(id);
-      if (cliente) elegirCliente(cliente);
-    } catch (error) { U.aviso(error.message, 'error'); }
+    try { elegirCliente(await Api.clientes.obtener(id)); } catch (error) { U.aviso(error.message, 'error'); }
   }
 
   // ---------------------------------------------------------------------------
   // Servicios
   // ---------------------------------------------------------------------------
 
-  /** Llena el selector de servicios solicitados.  GET /servicios */
+  /** Catálogo de servicios.  GET /servicios */
   async function cargarServicios() {
     try { estado.servicios = (await Api.catalogos.servicios()) || []; }
     catch (error) { estado.servicios = []; U.aviso(error.message, 'error'); }
-
-    el.servicio.replaceChildren();
-    var primera = new Option(estado.servicios.length ? 'Selecciona un servicio' : 'No hay servicios registrados', '');
-    el.servicio.add(primera);
-    estado.servicios.forEach(function (s) {
-      el.servicio.add(new Option(s.NombreServicio + ' — ' + U.formatoMoneda(s.Precio), s.ID_Servicio));
+    el.serviciosCargando.hidden = true;
+    U.dibujarLista({
+      contenedor: el.listaServicios, plantilla: 'plantilla-servicio', vacio: el.serviciosVacio,
+      datos: estado.servicios.map(function (s) {
+        var dias = s.DiasDisponibles ? ' · ' + t('Solo') + ' ' + s.DiasDisponibles.split(',').map(function (d) { return t(NOMBRE_DIA[d]); }).join(', ') : '';
+        return Object.assign({}, s, { Detalle: s.DuracionMin + ' min' + dias });
+      }),
+      alCrear: function (boton, s) {
+        var servicio = estado.servicios.find(function (x) { return x.ID_Servicio === s.ID_Servicio; });
+        boton.addEventListener('click', function () { elegirServicio(servicio); });
+      }
     });
-    el.servicio.disabled = !estado.servicios.length;
+    var guardado = borrador && estado.servicios.find(function (x) { return x.ID_Servicio === borrador.servicio; });
+    if (guardado) elegirServicio(guardado);
   }
 
-  /** @returns {Object|null} Servicio elegido en la lista. */
-  function servicioElegido() {
-    var id = el.servicio.value;
-    return estado.servicios.find(function (s) { return String(s.ID_Servicio) === id; }) || null;
+  function elegirServicio(servicio) {
+    estado.servicio = servicio;
+    el.listaServicios.querySelectorAll('.servicio-opcion').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-id') === String(servicio.ID_Servicio)));
+    });
+    // La duración y los días del servicio cambian la disponibilidad.
+    cargarSemana();
+    cargarHorarios();
   }
 
   // ---------------------------------------------------------------------------
   // Resumen y confirmación
   // ---------------------------------------------------------------------------
 
-  /** Actualiza la tarjeta «Datos de la cita» y habilita «Confirmar» cuando está completa. */
   function actualizarResumen() {
-    var servicio = servicioElegido();
-    el.resumenHora.textContent = estado.hora || '--:--';
-    el.resumenFecha.textContent = U.formatoFecha(estado.fecha);
+    el.resumenHora.textContent = estado.hora ? U.formatoHora(estado.hora) : '--:--';
+    el.resumenFecha.textContent = U.formatoFechaLarga(estado.fecha);
+    el.resumenDuracion.textContent = estado.servicio ? estado.servicio.DuracionMin + ' ' + t('minutos') : '—';
     el.resumenBarbero.textContent = estado.barbero ? estado.barbero.Nombre : '—';
-    el.resumenDuracion.textContent = (servicio && servicio.DuracionMin ? servicio.DuracionMin : CFG.DURACION_CITA_MIN) + ' minutos';
-
-    el.servicioDetalle.hidden = !servicio;
-    if (servicio) U.llenar(el.servicioDetalle, servicio);
-
-    el.confirmar.disabled = !(estado.barbero && estado.hora && estado.cliente);
+    el.resumenCliente.textContent = estado.cliente ? estado.cliente.Nombre : '—';
+    el.resumenServicio.textContent = estado.servicio ? estado.servicio.NombreServicio : '—';
+    el.confirmar.disabled = !(estado.barbero && estado.servicio && estado.hora && estado.cliente);
+    guardarBorrador();
   }
 
-  /** Registra la cita y vuelve a consultar los horarios.  POST /citas (409 = horario ya ocupado) */
+  /** Guarda la cita.  POST /citas (409 = el horario se ocupó mientras tanto) */
   async function confirmarCita() {
-    var servicio = servicioElegido();
-    var datos = {
-      ID_Cliente: estado.cliente.ID_Cliente,
-      ID_Barbero: estado.barbero.ID_Barbero,
-      FechaHora: U.fechaISO(estado.fecha) + 'T' + estado.hora + ':00',
-      ID_Servicio: servicio ? servicio.ID_Servicio : null,
-      Origen: window.Sesion.rol() === window.Sesion.ROLES.BARBERO ? 'App' : 'Caja'
-    };
     try {
-      var cita = await U.conCarga(el.confirmar, Api.citas.crear(datos));
-      if (cita && !cita.simulado) U.aviso('Cita agendada para las ' + estado.hora + '.');
-      limpiar();
-      cargarHorarios();
+      var cita = await U.conCarga(el.confirmar, Api.citas.crear({
+        ID_Cliente: estado.cliente.ID_Cliente,
+        ID_Barbero: estado.barbero.ID_Barbero,
+        ID_Servicio: estado.servicio.ID_Servicio,
+        FechaHora: estado.fecha + 'T' + estado.hora
+      }));
+      estado.ultimaCita = cita;
+      borrarBorrador();
+      mostrarConfirmacion(cita);
     } catch (error) {
       U.aviso(error.message, 'error');
-      if (error.estado === 409) cargarHorarios();   // el horario se ocupó mientras tanto
+      if (error.estado === 409) { cargarSemana(); cargarHorarios(); }
     }
   }
 
-  /** Quita la hora, el cliente y el servicio elegidos. */
+  /** Ventana con el comprobante y el resultado del envío por WhatsApp. */
+  function mostrarConfirmacion(cita) {
+    el.comprobanteFinal.innerHTML = el.comprobante.innerHTML;
+    var w = cita.WhatsApp || {};
+    if (w.Enviado) {
+      el.estadoWhatsapp.textContent = t('El resumen se envió por WhatsApp al {tel}.', { tel: U.formatoTelefono(cita.TelefonoCliente) });
+      el.enviarWhatsapp.hidden = true;
+    } else {
+      el.estadoWhatsapp.textContent = w.Configurado
+        ? t('No se pudo enviar automáticamente ({error}). Envíalo con el botón.', { error: w.Error || '—' })
+        : t('Envía el resumen al cliente con el botón de WhatsApp.');
+      el.enviarWhatsapp.hidden = !w.Enlace;
+    }
+    el.modal.hidden = false;
+    el.nuevaCita.focus();
+  }
+
   function limpiar() {
+    borrarBorrador();
     estado.hora = null;
-    el.servicio.value = '';
+    estado.servicio = null;
+    el.listaServicios.querySelectorAll('.servicio-opcion').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
     elegirCliente(null);
-    el.listaHorarios.querySelectorAll('.horario').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
-    actualizarResumen();
+    cargarSemana();
+    cargarHorarios();
   }
 
   // ---- Arranque ---------------------------------------------------------------
-  el.diaAnterior.addEventListener('click', function () { moverFecha(-1); });
-  el.diaSiguiente.addEventListener('click', function () { moverFecha(1); });
-  el.diaHoy.addEventListener('click', function () { moverFecha(0); });
-  el.buscarCliente.addEventListener('input', buscarClientes);
+  el.semanaAnterior.addEventListener('click', function () { moverSemana(-7); });
+  el.semanaSiguiente.addEventListener('click', function () { moverSemana(7); });
+  el.diaHoy.addEventListener('click', function () { moverSemana(0); });
+  el.buscador.addEventListener('cliente:elegido', function (e) { elegirCliente(e.detail.cliente); });
   el.cambiarCliente.addEventListener('click', function () { elegirCliente(null); });
-  el.servicio.addEventListener('change', actualizarResumen);
   el.confirmar.addEventListener('click', confirmarCita);
   el.limpiar.addEventListener('click', limpiar);
+  el.enviarWhatsapp.addEventListener('click', function () {
+    if (estado.ultimaCita && estado.ultimaCita.WhatsApp) U.abrirExterno(estado.ultimaCita.WhatsApp.Enlace);
+  });
+  el.nuevaCita.addEventListener('click', function () { el.modal.hidden = true; limpiar(); });
 
-  moverFecha(0);
+  cargarSemana();
+  actualizarResumen();
   cargarBarberos();
   cargarServicios();
   clienteDesdeURL();
+
+  // Otra persona agendó o canceló: los horarios libres se actualizan solos.
+  Api.alCambiar(['citas'], function () { if (el.modal.hidden) { cargarSemana(); cargarHorarios(true); } });
 })();

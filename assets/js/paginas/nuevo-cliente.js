@@ -3,13 +3,14 @@
  * @description Controlador de «Registrar nuevo cliente» (nuevo-cliente.html).
  *
  * Flujo:
- *   1. Carga los planes de membresía.             GET /membresias
+ *   1. Precarga nombre o teléfono si vienen en la URL (desde el buscador).
  *   2. Valida nombre (≥ 3 letras) y teléfono (10 dígitos).
- *   3. Envía el formulario con la foto.           POST /clientes (multipart/form-data)
- *   4. Abre el perfil del cliente creado (tablet o móvil según el rol).
+ *   3. Reduce la foto (cámara o galería) y la envía en base64.
+ *      POST /clientes { Nombre, Lada, Telefono, Descripcion, Observaciones, foto }
+ *   4. Regresa a la pantalla de origen (?volver=) con ?cliente=ID, o abre el perfil.
  *
- * Campos enviados (FormData): Nombre, Lada, Telefono, Descripcion,
- * Observaciones, EstadoMembresia, ID_Membresia, FechaInicio, foto.
+ * Regla de negocio: el cliente se registra SIN membresía; solo se activa al
+ * cobrarla en caja (POST /ventas con un concepto «Membresía»).
  */
 (function () {
   'use strict';
@@ -19,71 +20,39 @@
   var U = window.Utilidades;
   var Api = window.Api;
 
+  /** Pantallas a las que se puede regresar después de registrar. */
+  var DESTINOS = ['agendar-cita.html', 'registrar-cobro.html', 'perfil-cliente.html', 'barbero-perfil-cliente.html'];
+
   var $ = function (id) { return document.getElementById(id); };
   var el = {
-    formulario: $('formulario-cliente'),
-    nombre: $('nombre'),
-    errorNombre: $('error-nombre'),
-    telefono: $('telefono'),
-    contadorTelefono: $('contador-telefono'),
-    errorTelefono: $('error-telefono'),
-    plan: $('plan'),
-    fechaInicio: $('fecha-inicio'),
-    foto: $('foto'),
-    vistaPrevia: $('vista-previa'),
-    sinFoto: $('sin-foto'),
-    quitarFoto: $('quitar-foto'),
-    guardar: $('guardar')
+    formulario: $('formulario-cliente'), nombre: $('nombre'), errorNombre: $('error-nombre'),
+    lada: $('lada'), telefono: $('telefono'), contadorTelefono: $('contador-telefono'), errorTelefono: $('error-telefono'),
+    descripcion: $('descripcion'), observaciones: $('observaciones'),
+    foto: $('foto'), vistaPrevia: $('vista-previa'), sinFoto: $('sin-foto'), quitarFoto: $('quitar-foto'),
+    guardar: $('guardar'), cancelar: $('cancelar')
   };
 
-  /** Estado de membresía elegido: "Activa" | "Inactiva". */
-  var estadoMembresia = 'Inactiva';
-
-  // ---------------------------------------------------------------------------
-  // Membresía
-  // ---------------------------------------------------------------------------
-
-  /** Llena el selector de planes de membresía.  GET /membresias */
-  async function cargarPlanes() {
-    var planes = [];
-    try { planes = (await Api.catalogos.membresias()) || []; }
-    catch (error) { U.aviso(error.message, 'error'); }
-    el.plan.replaceChildren(new Option(planes.length ? 'Selecciona un plan' : 'No hay planes registrados', ''));
-    planes.forEach(function (p) { el.plan.add(new Option(p.NombrePlan, p.ID_Membresia)); });
-    el.plan.setAttribute('data-hay-planes', String(planes.length > 0));
-    elegirMembresia(estadoMembresia);
-  }
-
-  /** @param {'Activa'|'Inactiva'} valor */
-  function elegirMembresia(valor) {
-    estadoMembresia = valor;
-    document.querySelectorAll('[data-membresia]').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.getAttribute('data-membresia') === valor));
-    });
-    var activa = valor === 'Activa';
-    el.plan.disabled = !activa || el.plan.getAttribute('data-hay-planes') !== 'true';
-    el.fechaInicio.disabled = !activa;
-    if (activa && !el.fechaInicio.value) el.fechaInicio.value = U.fechaISO();
-  }
+  var volver = DESTINOS.indexOf(U.parametro('volver')) !== -1 ? U.parametro('volver') : null;
+  var fotoPreparada = null;   // data URL ya reducida
 
   // ---------------------------------------------------------------------------
   // Foto
   // ---------------------------------------------------------------------------
 
-  var urlVistaPrevia = null;
-
-  /** Muestra la vista previa de la foto elegida (y libera la anterior de memoria). */
-  function mostrarFoto() {
+  /** Reduce la foto elegida y muestra la vista previa. */
+  async function mostrarFoto() {
     var archivo = el.foto.files && el.foto.files[0];
-    if (urlVistaPrevia) URL.revokeObjectURL(urlVistaPrevia);
-    urlVistaPrevia = archivo ? URL.createObjectURL(archivo) : null;
-    el.vistaPrevia.hidden = !archivo;
-    el.sinFoto.hidden = !!archivo;
-    el.quitarFoto.disabled = !archivo;
-    if (archivo) el.vistaPrevia.src = urlVistaPrevia; else el.vistaPrevia.removeAttribute('src');
+    fotoPreparada = null;
+    if (archivo) {
+      try { fotoPreparada = await U.prepararFoto(archivo); }
+      catch (error) { U.aviso(error.message, 'error'); el.foto.value = ''; }
+    }
+    el.vistaPrevia.hidden = !fotoPreparada;
+    el.sinFoto.hidden = !!fotoPreparada;
+    el.quitarFoto.disabled = !fotoPreparada;
+    if (fotoPreparada) el.vistaPrevia.src = fotoPreparada; else el.vistaPrevia.removeAttribute('src');
   }
 
-  /** Quita la foto elegida. */
   function quitarFoto() { el.foto.value = ''; mostrarFoto(); }
 
   // ---------------------------------------------------------------------------
@@ -94,12 +63,11 @@
   function limpiarTelefono() {
     var digitos = el.telefono.value.replace(/\D/g, '').slice(0, 10);
     el.telefono.value = digitos;
-    el.contadorTelefono.textContent = digitos.length + ' / 10 dígitos';
+    el.contadorTelefono.textContent = window.Idioma.t('{n} / 10 dígitos', { n: digitos.length });
     el.contadorTelefono.className = 'text-xs numeros ' + (digitos.length === 10 ? 'texto-exito' : 'texto-tenue');
     if (digitos.length === 10) marcarError(el.telefono, el.errorTelefono, false);
   }
 
-  /** @param {HTMLElement} campo @param {HTMLElement} mensaje @param {boolean} hayError */
   function marcarError(campo, mensaje, hayError) {
     campo.setAttribute('aria-invalid', String(hayError));
     mensaje.hidden = !hayError;
@@ -116,25 +84,25 @@
   }
 
   /**
-   * Valida y envía el formulario; al terminar abre el perfil del cliente.  POST /clientes
+   * Guarda al cliente y regresa a la pantalla de origen.  POST /clientes
    * @param {SubmitEvent} evento
    */
   async function guardar(evento) {
     evento.preventDefault();
     if (!validar()) return;
-
-    var datos = new FormData(el.formulario);          // incluye la foto si se eligió
-    datos.set('Nombre', el.nombre.value.trim());
-    datos.set('EstadoMembresia', estadoMembresia);
-    if (estadoMembresia !== 'Activa') { datos.delete('ID_Membresia'); datos.delete('FechaInicio'); }
-    if (!(el.foto.files && el.foto.files[0])) datos.delete('foto');
-
     try {
-      var cliente = await U.conCarga(el.guardar, Api.clientes.crear(datos));
-      if (cliente && cliente.ID_Cliente) {
-        U.aviso('Cliente guardado.');
-        window.location.href = window.Sesion.resolverDestino('@perfil?cliente=' + encodeURIComponent(cliente.ID_Cliente));
-      }
+      var cliente = await U.conCarga(el.guardar, Api.clientes.crear({
+        Nombre: el.nombre.value.trim(),
+        Lada: el.lada.value,
+        Telefono: el.telefono.value,
+        Descripcion: el.descripcion.value.trim(),
+        Observaciones: el.observaciones.value.trim(),
+        foto: fotoPreparada || undefined
+      }));
+      U.aviso('Cliente guardado.');
+      if (cliente.AvisoFoto) U.aviso(cliente.AvisoFoto, 'error');
+      var destino = (volver || window.Sesion.resolverDestino('@perfil')) + '?cliente=' + encodeURIComponent(cliente.ID_Cliente);
+      setTimeout(function () { window.location.href = destino; }, 400);
     } catch (error) {
       // 409: el teléfono ya está registrado (UNIQUE en CLIENTE.Telefono)
       U.aviso(error.message, 'error');
@@ -142,20 +110,22 @@
     }
   }
 
+  function cancelar() { window.location.href = volver || window.APP_CONFIG.PAGINA_PANEL; }
+
   // ---- Arranque ---------------------------------------------------------------
-  document.querySelectorAll('[data-membresia]').forEach(function (b) {
-    b.addEventListener('click', function () { elegirMembresia(b.getAttribute('data-membresia')); });
-  });
   el.telefono.addEventListener('input', limpiarTelefono);
   el.nombre.addEventListener('input', function () { if (el.nombre.value.trim().length >= 3) marcarError(el.nombre, el.errorNombre, false); });
   el.foto.addEventListener('change', mostrarFoto);
   el.quitarFoto.addEventListener('click', quitarFoto);
   el.formulario.addEventListener('submit', guardar);
+  el.cancelar.addEventListener('click', cancelar);
   // La etiqueta «Tomar / subir» también responde a Enter y Espacio.
   document.querySelector('label[for="foto"]').addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.foto.click(); }
   });
 
-  cargarPlanes();
-  el.nombre.focus();
+  if (U.parametro('nombre')) el.nombre.value = U.parametro('nombre');
+  if (U.parametro('telefono')) { el.telefono.value = U.parametro('telefono'); }
+  limpiarTelefono();
+  (U.parametro('nombre') ? el.telefono : el.nombre).focus();
 })();

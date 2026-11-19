@@ -14,6 +14,7 @@
 
   var U = window.Utilidades;
   var Api = window.Api;
+  var t = window.Idioma.t;
 
   /** Días en orden L…D. `indice` corresponde a Date.getDay() (0 = domingo). */
   var DIAS = [
@@ -48,10 +49,10 @@
 
     // Jornada
     U.llenar(el.jornada, Object.assign({}, barbero, {
-      Comida: barbero.ComidaInicio ? U.formatoHora(barbero.ComidaInicio) + ' – ' + U.formatoHora(barbero.ComidaFin) : 'Sin horario'
+      Comida: barbero.ComidaInicio ? U.formatoHora(barbero.ComidaInicio) + ' – ' + U.formatoHora(barbero.ComidaFin) : t('Sin horario')
     }));
     el.estadoHoy.className = 'insignia ' + (trabajaHoy ? 'insignia--exito' : 'insignia--alerta');
-    el.estadoHoy.querySelector('[data-texto]').textContent = trabajaHoy ? 'Hoy activo' : 'Hoy descansas';
+    el.estadoHoy.querySelector('[data-texto]').textContent = t(trabajaHoy ? 'Hoy activo' : 'Hoy descansas');
 
     // Días
     el.dias.replaceChildren();
@@ -60,14 +61,14 @@
       var laboral = trabajo.indexOf(d.letra) !== -1;
       li.className = 'dia' + (laboral ? ' dia--laboral' : '') + (d.indice === hoy ? ' dia--hoy' : '');
       li.textContent = d.letra;
-      li.title = d.nombre + (laboral ? ': laboral' : ': descanso');
+      li.title = t(d.nombre) + ': ' + t(laboral ? 'laboral' : 'descanso');
       li.setAttribute('aria-label', li.title);
       el.dias.appendChild(li);
     });
     var laborales = DIAS.filter(function (d) { return trabajo.indexOf(d.letra) !== -1; }).length;
-    el.numeroDias.textContent = laborales + (laborales === 1 ? ' día laboral' : ' días laborales');
-    var descanso = DIAS.filter(function (d) { return trabajo.indexOf(d.letra) === -1; }).map(function (d) { return d.nombre; });
-    el.diasDescanso.textContent = descanso.length ? descanso.join(', ') : 'Ninguno';
+    el.numeroDias.textContent = t(laborales === 1 ? '{n} día laboral' : '{n} días laborales', { n: laborales });
+    var descanso = DIAS.filter(function (d) { return trabajo.indexOf(d.letra) === -1; }).map(function (d) { return t(d.nombre); });
+    el.diasDescanso.textContent = descanso.length ? descanso.join(', ') : t('Ninguno');
 
     // Roles / actividades (texto separado por comas)
     var actividades = String(barbero.RolesActividades || '').split(',')
@@ -89,4 +90,5 @@
   }
 
   cargar();
+  Api.alCambiar(['citas'], cargar);
 })();

@@ -34,7 +34,7 @@
 
   /** @param {{MensajeMantenimiento?:string}|null} estado */
   function pintarMensaje(estado) {
-    el.mensaje.textContent = (estado && estado.MensajeMantenimiento) || CFG.MENSAJE_MANTENIMIENTO;
+    el.mensaje.textContent = (estado && estado.MensajeMantenimiento) || window.Idioma.t(CFG.MENSAJE_MANTENIMIENTO);
   }
 
   /**

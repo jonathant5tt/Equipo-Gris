@@ -7,7 +7,8 @@
  *   - Mostrar el nombre del usuario y el estado del servicio.
  *   - (Barbero) Mostrar el siguiente turno y permitir iniciar o finalizar la
  *     atención, siguiendo el diagrama de estados de la Cita:
- *     Agendada/EnEspera → EnAtencion → Atendida.
+ *     Agendada/EnEspera → EnAtencion → Atendida (o NoAsistio).
+ *     Al finalizar, la cita queda «pendiente de pago» y aparece sola en caja.
  */
 (function () {
   'use strict';
@@ -19,6 +20,7 @@
   var Sesion = window.Sesion;
   var ROLES = Sesion.ROLES;
   var rol = Sesion.rol();
+  var t = window.Idioma.t;
 
   var el = {
     nombre: document.getElementById('nombre-usuario'),
@@ -29,7 +31,8 @@
     turnoVacio: document.getElementById('turno-vacio'),
     turnoDatos: document.getElementById('turno-datos'),
     turnoFicha: document.getElementById('turno-ficha'),
-    turnoAtencion: document.getElementById('turno-atencion')
+    turnoAtencion: document.getElementById('turno-atencion'),
+    turnoFalta: document.getElementById('turno-falta')
   };
 
   /** Cita mostrada en «Siguiente turno». @type {Object|null} */
@@ -62,14 +65,14 @@
   function pintarEstadoServicio(estado) {
     var suspendido = estado && estado.EstadoServicio === 'Suspendido';
     el.estadoServicio.className = 'insignia ' + (suspendido ? 'insignia--error' : 'insignia--exito');
-    el.estadoServicio.querySelector('[data-texto]').textContent = suspendido ? 'SUSPENDIDO' : 'ACTIVO';
+    el.estadoServicio.querySelector('[data-texto]').textContent = t(suspendido ? 'SUSPENDIDO' : 'ACTIVO');
 
     // Solo el Dueño puede ir a suspender o reanudar.
     var esDueno = rol === ROLES.DUENO;
     el.estadoServicio.disabled = !esDueno;
     if (esDueno) {
       el.estadoServicio.setAttribute('data-nav', 'suspender-servicio.html');
-      el.estadoServicio.title = 'Suspender o reanudar el servicio';
+      el.estadoServicio.title = t('Suspender o reanudar el servicio');
       el.estadoServicio.style.cursor = 'pointer';
     }
   }
@@ -88,8 +91,9 @@
   /** Ajusta el botón según el estado de la cita. */
   function pintarBotonAtencion() {
     var enAtencion = citaActual && citaActual.Estado === 'EnAtencion';
-    el.turnoAtencion.querySelector('[data-texto]').textContent = enAtencion ? 'Finalizar atención' : 'Iniciar atención';
+    el.turnoAtencion.querySelector('[data-texto]').textContent = t(enAtencion ? 'Finalizar atención' : 'Iniciar atención');
     el.turnoAtencion.querySelector('.icono').textContent = enAtencion ? 'check' : 'play_arrow';
+    el.turnoFalta.hidden = !!enAtencion;
   }
 
   /** Muestra la cita en atención o la siguiente del barbero.  GET /citas/proxima */
@@ -130,6 +134,17 @@
     }
   }
 
+  /** Marca la cita como «No asistió» (suma una falta consecutiva al cliente). */
+  async function marcarFalta() {
+    if (!citaActual) return;
+    if (!(await U.confirmar(t('¿Marcar que {cliente} no asistió a su cita?', { cliente: citaActual.NombreCliente })))) return;
+    try {
+      await U.conCarga(el.turnoFalta, Api.citas.cambiarEstado(citaActual.ID_Cita, 'NoAsistio'));
+      U.aviso('Cita marcada como «No asistió».');
+      cargarSiguienteTurno();
+    } catch (error) { U.aviso(error.message, 'error'); }
+  }
+
   // ---- Arranque ---------------------------------------------------------------
   var usuario = Sesion.usuario();
   el.nombre.textContent = usuario ? usuario.nombre : '';
@@ -139,6 +154,9 @@
   cargarEstadoServicio();
   if (rol === ROLES.BARBERO) {
     el.turnoAtencion.addEventListener('click', cambiarAtencion);
+    el.turnoFalta.addEventListener('click', marcarFalta);
     cargarSiguienteTurno();
+    // Una cita nueva o cancelada desde otro equipo actualiza el turno al momento.
+    Api.alCambiar(['citas'], cargarSiguienteTurno);
   }
 })();

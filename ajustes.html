@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Engreídos Barbershop · Ajustes  (menú ☰ del panel)
+  ----------------------------------------------------------------------------
+  Cada rol ve solo sus secciones:
+    Dueño   Servicios · Productos e inventario · Membresías · Cuentas ·
+            Datos del negocio · Impresora · WhatsApp · Idioma · Servidor
+    Cajero  Inventario (agregar / dar de baja) · Impresora · Idioma · Servidor
+    Barbero Idioma · Servidor
+
+  Menú «Ajustes del sistema» (componentes/menu-ajustes.js): a la izquierda
+  en computadora; en teléfono se ve primero el menú y luego la sección.
+  Se puede abrir una sección directamente: ajustes.html#impresora
+
+  Endpoints: /servicios · /productos (+ /entrada, /baja, /movimientos) ·
+             /membresias · /cuentas · /establecimiento · /ajustes/whatsapp
+  Lógica:    assets/js/paginas/ajustes.js
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ajustes · Engreídos Barbershop</title>
+
+  <!-- Ícono de la pestaña y de «Agregar a pantalla de inicio» (logotipo oficial) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icono-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icono-192.png">
+  <link rel="apple-touch-icon" href="assets/img/icono-180.png">
+  <meta name="theme-color" content="#0d0f13">
+
+  <!-- Tipografías e íconos (se cargan sin bloquear: la pantalla aparece aunque no haya internet) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
+
+  <!-- Tailwind CSS compilado (funciona sin internet). Regenerar: cd servidor && npm run estilos -->
+  <link rel="stylesheet" href="assets/css/tailwind.css">
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="assets/css/comun.css">
+
+  <!-- Estilos exclusivos de esta pantalla -->
+  <style>
+    .seccion[hidden] { display: none; }
+    .opcion-radio { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--color-borde); border-radius: var(--radio); background: var(--color-superficie-baja); cursor: pointer; }
+    .opcion-radio:has(input:checked) { border-color: var(--color-oro); background: var(--color-oro-fondo); }
+    .opcion-radio:has(input:disabled) { opacity: .45; cursor: not-allowed; }
+    .opcion-radio input { margin-top: 3px; accent-color: var(--color-oro); }
+    .pasos { counter-reset: paso; display: flex; flex-direction: column; gap: 6px; padding-left: 0; list-style: none; }
+    .pasos li { counter-increment: paso; display: flex; gap: 8px; font-size: 13px; color: var(--color-texto-suave); }
+    .pasos li::before { content: counter(paso); flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--color-superficie-alta); color: #fff; font: 700 11px/20px var(--fuente-numeros); text-align: center; }
+  </style>
+
+  <!-- Núcleo de la aplicación (el orden importa) -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/idioma.js"></script>
+  <script src="assets/js/utilidades.js"></script>
+  <script src="assets/js/sesion.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/impresora.js"></script>
+
+  <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/logo-engreidos.js" defer></script>
+  <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/componentes/menu-ajustes.js" defer></script>
+  <script src="assets/js/paginas/ajustes.js" defer></script>
+</head>
+
+<body>
+  <encabezado-app variante="modulo"></encabezado-app>
+
+  <main class="pagina">
+
+    <div class="cabecera-pagina">
+      <div>
+        <span class="cabecera-pagina__antetitulo" id="rol-ajustes"></span>
+        <h1 class="cabecera-pagina__titulo">Ajustes</h1>
+        <p class="cabecera-pagina__descripcion">Catálogos, descuentos, cuentas, impresora, WhatsApp, idioma y conexión con el servidor.</p>
+      </div>
+    </div>
+
+    <div class="ajustes" id="ajustes" data-vista="menu">
+    <!-- Menú numerado (solo las secciones del rol) -->
+    <aside class="ajustes__menu">
+      <menu-ajustes modo="lateral" id="menu-ajustes"></menu-ajustes>
+    </aside>
+
+    <div class="ajustes__contenido">
+    <button type="button" class="ajustes__volver" id="volver-menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Ajustes del sistema
+    </button>
+
+    <!-- =================================================================== -->
+    <!-- Servicios (Dueño)                                                    -->
+    <!-- =================================================================== -->
+    <section class="seccion grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" data-seccion="servicios" hidden>
+      <form class="tarjeta lg:col-span-5 flex flex-col gap-4" id="formulario-servicio" novalidate>
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">add_circle</span><span data-titulo-formulario>Nuevo servicio</span></h2>
+            <p class="tarjeta__subtitulo">Aparecerá en agenda y en caja.</p>
+          </div>
+        </div>
+        <div>
+          <label class="etiqueta" for="servicio-nombre">Nombre <span class="etiqueta__requerido">*</span></label>
+          <input class="campo" id="servicio-nombre" maxlength="100" required placeholder="Ej. Corte clásico">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="etiqueta" for="servicio-precio">Precio <span class="etiqueta__requerido">*</span></label>
+            <input class="campo numeros" id="servicio-precio" type="number" inputmode="decimal" min="0" step="0.01" required placeholder="0.00">
+          </div>
+          <div>
+            <label class="etiqueta" for="servicio-duracion">Duración</label>
+            <select class="campo" id="servicio-duracion">
+              <option value="15">15 min</option><option value="20">20 min</option><option value="30" selected>30 min</option>
+              <option value="45">45 min</option><option value="60">1 h</option><option value="90">1 h 30 min</option>
+              <option value="120">2 h</option><option value="180">3 h</option>
+            </select>
+          </div>
+        </div>
+        <fieldset>
+          <legend class="etiqueta">Días en que existe el servicio <span class="etiqueta__opcional">(opcional)</span></legend>
+          <div class="dias-semana" id="servicio-dias"></div>
+          <p class="ayuda">Sin días marcados, el servicio se ofrece todos los días.</p>
+        </fieldset>
+        <div>
+          <label class="etiqueta" for="servicio-descripcion">Descripción <span class="etiqueta__opcional">(opcional)</span></label>
+          <input class="campo" id="servicio-descripcion" maxlength="255">
+        </div>
+        <div class="flex gap-2">
+          <button type="submit" class="boton boton--primario flex-1" id="servicio-guardar"><span class="icono icono--sm" aria-hidden="true">save</span>Guardar servicio</button>
+          <button type="button" class="boton" id="servicio-cancelar" hidden>Cancelar</button>
+        </div>
+      </form>
+
+      <section class="tarjeta lg:col-span-7 min-w-0" aria-label="Servicios registrados">
+        <div class="tarjeta__encabezado">
+          <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">list</span>Servicios registrados</h2>
+          <span class="insignia" id="servicios-total"></span>
+        </div>
+        <div class="estado-vacio" id="servicios-vacio" hidden><span class="icono" aria-hidden="true">content_cut</span><span>Aún no hay servicios. Crea el primero.</span></div>
+        <div class="tabla-contenedor" id="servicios-tabla" hidden>
+          <table class="tabla">
+            <thead><tr><th scope="col">Servicio</th><th scope="col" class="derecha">Precio</th><th scope="col">Duración</th><th scope="col">Días</th><th scope="col"><span class="solo-lector">Acciones</span></th></tr></thead>
+            <tbody id="servicios-filas"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- Productos e inventario (Dueño: todo · Cajero: entradas y bajas)      -->
+    <!-- =================================================================== -->
+    <section class="seccion grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" data-seccion="productos" hidden>
+      <form class="tarjeta lg:col-span-5 flex flex-col gap-4" id="formulario-producto" data-roles="Dueño" novalidate>
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">add_circle</span><span data-titulo-formulario>Nuevo producto</span></h2>
+            <p class="tarjeta__subtitulo">Se vende desde «Registrar cobro» y descuenta existencias.</p>
+          </div>
+        </div>
+        <div>
+          <label class="etiqueta" for="producto-nombre">Nombre <span class="etiqueta__requerido">*</span></label>
+          <input class="campo" id="producto-nombre" maxlength="100" required placeholder="Ej. Pomada mate">
+        </div>
+        <div>
+          <label class="etiqueta" for="producto-categoria">Categoría <span class="etiqueta__opcional">(opcional)</span></label>
+          <input class="campo" id="producto-categoria" maxlength="40" list="lista-categorias" autocomplete="off" placeholder="Ej. Bebida">
+          <p class="ayuda">Sirve para beneficios de membresía como «1 bebida por visita».</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="etiqueta" for="producto-precio">Precio <span class="etiqueta__requerido">*</span></label>
+            <input class="campo numeros" id="producto-precio" type="number" inputmode="decimal" min="0" step="0.01" required placeholder="0.00">
+          </div>
+          <div id="producto-stock-bloque">
+            <label class="etiqueta" for="producto-stock">Cantidad inicial</label>
+            <input class="campo numeros" id="producto-stock" type="number" inputmode="numeric" min="0" step="1" value="0">
+          </div>
+        </div>
+        <div>
+          <label class="etiqueta" for="producto-descripcion">Descripción <span class="etiqueta__opcional">(opcional)</span></label>
+          <input class="campo" id="producto-descripcion" maxlength="255">
+        </div>
+        <p class="ayuda" id="producto-ayuda-edicion" hidden>Las existencias se cambian con «Agregar inventario» o «Dar de baja» en la lista.</p>
+        <div class="flex gap-2">
+          <button type="submit" class="boton boton--primario flex-1" id="producto-guardar"><span class="icono icono--sm" aria-hidden="true">save</span>Guardar producto</button>
+          <button type="button" class="boton" id="producto-cancelar" hidden>Cancelar</button>
+        </div>
+      </form>
+
+      <section class="tarjeta lg:col-span-7 min-w-0" id="productos-lista" aria-label="Inventario">
+        <div class="tarjeta__encabezado">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">inventory</span>Inventario</h2>
+            <p class="tarjeta__subtitulo">Dar de baja pide la contraseña del dueño o del cajero con sesión.</p>
+          </div>
+          <span class="insignia" id="productos-total"></span>
+        </div>
+        <div class="estado-vacio" id="productos-vacio" hidden><span class="icono" aria-hidden="true">inventory_2</span><span>No hay productos registrados.</span></div>
+        <div class="flex flex-col gap-2" id="productos-filas"></div>
+      </section>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- Membresías (Dueño)                                                   -->
+    <!-- =================================================================== -->
+    <section class="seccion flex flex-col gap-5" data-seccion="membresias" hidden>
+      <form class="tarjeta flex flex-col gap-4" id="formulario-membresia" novalidate>
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">workspace_premium</span><span data-titulo-formulario>Nueva membresía</span></h2>
+            <p class="tarjeta__subtitulo">Se activa al cobrarla en caja; sus beneficios aplican desde esa misma venta.</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="sm:col-span-2">
+            <label class="etiqueta" for="membresia-nombre">Nombre <span class="etiqueta__requerido">*</span></label>
+            <input class="campo" id="membresia-nombre" maxlength="100" required placeholder="Ej. Premier">
+          </div>
+          <div>
+            <label class="etiqueta" for="membresia-precio">Precio <span class="etiqueta__requerido">*</span></label>
+            <input class="campo numeros" id="membresia-precio" type="number" inputmode="decimal" min="0" step="0.01" required placeholder="0.00">
+          </div>
+          <div>
+            <label class="etiqueta" for="membresia-duracion">Duración</label>
+            <select class="campo" id="membresia-duracion">
+              <option value="1">1 mes</option><option value="2">2 meses</option><option value="3">3 meses</option>
+              <option value="6">6 meses</option><option value="12">12 meses</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2 lg:col-span-4">
+            <label class="etiqueta" for="membresia-descripcion">Descripción <span class="etiqueta__opcional">(opcional)</span></label>
+            <input class="campo" id="membresia-descripcion" maxlength="255" placeholder="Ej. Para el caballero que cuida cada detalle">
+          </div>
+        </div>
+
+        <fieldset class="bloque">
+          <legend class="dato__etiqueta mb-2">Beneficios</legend>
+          <p class="ayuda" style="margin-top:0">Agrégalos como aparecen en tu cartel y en el mismo orden. Cada uno puede ser gratis o con descuento, ilimitado o con un número de usos por visita o por mes. Los de «solo texto» se muestran pero no cambian el precio (ej. «Pase preferente»).</p>
+          <div class="flex flex-col gap-2" id="membresia-beneficios"></div>
+          <div class="estado-vacio" id="membresia-sin-beneficios" hidden><span>Sin beneficios. Usa «Agregar beneficio».</span></div>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button type="button" class="boton boton--pequeno" id="membresia-agregar"><span class="icono icono--sm" aria-hidden="true">add</span>Agregar beneficio</button>
+            <button type="button" class="boton boton--pequeno" id="membresia-agregar-texto"><span class="icono icono--sm" aria-hidden="true">notes</span>Agregar beneficio de solo texto</button>
+          </div>
+          <p class="ayuda">«Corte para amigo»: deja los cortes del socio en «1 por visita» y agrega otro corte gratis con límite «1 por mes».</p>
+          <p class="ayuda" id="membresia-sin-servicios" hidden>Primero registra servicios en la sección «Servicios».</p>
+        </fieldset>
+
+        <div class="flex gap-2">
+          <button type="submit" class="boton boton--primario" id="membresia-guardar"><span class="icono icono--sm" aria-hidden="true">save</span>Guardar membresía</button>
+          <button type="button" class="boton" id="membresia-cancelar" hidden>Cancelar</button>
+        </div>
+      </form>
+
+      <section aria-label="Membresías registradas">
+        <div class="estado-vacio" id="membresias-vacio" hidden><span class="icono" aria-hidden="true">workspace_premium</span><span>Aún no hay membresías.</span></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="membresias-lista"></div>
+      </section>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- Descuentos y promociones (Dueño)                                     -->
+    <!-- =================================================================== -->
+    <section class="seccion grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" data-seccion="descuentos" hidden>
+      <form class="tarjeta lg:col-span-5 flex flex-col gap-4" id="formulario-descuento" novalidate>
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">sell</span><span data-titulo-formulario>Nuevo descuento</span></h2>
+            <p class="tarjeta__subtitulo">Se aplica solo en caja mientras esté vigente.</p>
+          </div>
+        </div>
+        <div>
+          <label class="etiqueta" for="descuento-nombre">Nombre <span class="etiqueta__requerido">*</span></label>
+          <input class="campo" id="descuento-nombre" maxlength="80" required placeholder="Ej. Martes de barba">
+        </div>
+        <div>
+          <label class="etiqueta" for="descuento-descripcion">Descripción <span class="etiqueta__opcional">(opcional)</span></label>
+          <textarea class="campo" id="descuento-descripcion" rows="2" maxlength="255" placeholder="Ej. Todos los martes la barba tiene 20 % de descuento."></textarea>
+          <p class="ayuda">El bot de WhatsApp la usa cuando preguntan por promociones.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="etiqueta" for="descuento-aplica">Sección <span class="etiqueta__requerido">*</span></label>
+            <select class="campo" id="descuento-aplica">
+              <option value="Todo">Toda la venta</option>
+              <option value="Servicios">Servicios</option>
+              <option value="Productos">Productos</option>
+              <option value="Membresias">Membresías</option>
+            </select>
+          </div>
+          <div id="descuento-fila-detalle">
+            <label class="etiqueta" for="descuento-detalle">Aplica a</label>
+            <select class="campo" id="descuento-detalle"></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="etiqueta" for="descuento-tipo">Tipo</label>
+            <select class="campo" id="descuento-tipo">
+              <option value="Porcentaje">Porcentaje (%)</option>
+              <option value="Monto">Cantidad en pesos ($)</option>
+            </select>
+          </div>
+          <div>
+            <label class="etiqueta" for="descuento-valor"><span id="descuento-etiqueta-valor">Porcentaje</span> <span class="etiqueta__requerido">*</span></label>
+            <input class="campo numeros" id="descuento-valor" type="number" inputmode="decimal" min="0" step="0.01" required placeholder="10">
+          </div>
+        </div>
+        <p class="ayuda" id="descuento-ayuda-monto" hidden>La cantidad se descuenta a cada pieza o servicio.</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="etiqueta" for="descuento-inicio">Empieza <span class="etiqueta__opcional">(opcional)</span></label>
+            <input class="campo numeros" id="descuento-inicio" type="date">
+          </div>
+          <div>
+            <label class="etiqueta" for="descuento-fin">Termina <span class="etiqueta__opcional">(opcional)</span></label>
+            <input class="campo numeros" id="descuento-fin" type="date">
+          </div>
+        </div>
+        <p class="ayuda">Sin fechas, el descuento se aplica hasta que lo pongas en pausa o lo elimines.</p>
+        <label class="interruptor"><input type="checkbox" id="descuento-activo" checked> Descuento activo</label>
+        <div class="flex gap-2">
+          <button type="submit" class="boton boton--primario flex-1" id="descuento-guardar"><span class="icono icono--sm" aria-hidden="true">save</span>Guardar descuento</button>
+          <button type="button" class="boton" id="descuento-cancelar" hidden>Cancelar</button>
+        </div>
+      </form>
+
+      <section class="tarjeta lg:col-span-7 min-w-0" aria-label="Descuentos registrados">
+        <div class="tarjeta__encabezado">
+          <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">list</span>Descuentos registrados</h2>
+          <span class="insignia" id="descuentos-total"></span>
+        </div>
+        <div class="estado-vacio" id="descuentos-vacio" hidden><span class="icono" aria-hidden="true">sell</span><span>Aún no hay descuentos. Crea el primero.</span></div>
+        <div class="flex flex-col gap-2" id="descuentos-lista"></div>
+        <p class="ayuda mt-3">Si un cliente con membresía compra algo que también tiene promoción, se aplica el descuento que más le conviene (no se suman).</p>
+      </section>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- Cuentas (Dueño)                                                      -->
+    <!-- =================================================================== -->
+    <section class="seccion grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" data-seccion="cuentas" hidden>
+      <form class="tarjeta lg:col-span-5 flex flex-col gap-4" id="formulario-cuenta" novalidate autocomplete="off">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">person_add</span>Agregar cuenta</h2>
+            <p class="tarjeta__subtitulo">Cajeros y barberos entran con su usuario y contraseña.</p>
+          </div>
+        </div>
+        <div>
+          <span class="etiqueta">Rol</span>
+          <div class="segmentado" role="group" aria-label="Rol de la cuenta">
+            <button type="button" class="segmentado__opcion" data-rol="Cajero" aria-pressed="true">Cajero</button>
+            <button type="button" class="segmentado__opcion" data-rol="Barbero" aria-pressed="false">Barbero</button>
+          </div>
+        </div>
+        <div>
+          <label class="etiqueta" for="cuenta-nombre">Nombre completo <span class="etiqueta__requerido">*</span></label>
+          <input class="campo" id="cuenta-nombre" maxlength="100" required>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="etiqueta" for="cuenta-usuario">Usuario <span class="etiqueta__requerido">*</span></label>
+            <input class="campo" id="cuenta-usuario" maxlength="40" required autocapitalize="none" spellcheck="false" autocomplete="off">
+          </div>
+          <div>
+            <label class="etiqueta" for="cuenta-contrasena">Contraseña <span class="etiqueta__requerido">*</span></label>
+            <input class="campo" id="cuenta-contrasena" type="password" required autocomplete="new-password">
+          </div>
+        </div>
+        <div>
+          <label class="etiqueta" for="cuenta-telefono">Teléfono <span class="etiqueta__opcional">(opcional)</span></label>
+          <input class="campo numeros" id="cuenta-telefono" type="tel" inputmode="numeric" maxlength="10" placeholder="10 dígitos">
+        </div>
+        <button type="submit" class="boton boton--primario" id="cuenta-guardar"><span class="icono icono--sm" aria-hidden="true">person_add</span>Agregar cuenta</button>
+        <p class="ayuda" style="margin-top:0">Los barberos nuevos inician con horario 9:00 a. m. – 7:00 p. m.; ajústalo en «Personal y horarios».</p>
+      </form>
+
+      <section class="tarjeta lg:col-span-7 min-w-0" aria-label="Cuentas activas">
+        <div class="tarjeta__encabezado">
+          <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">group</span>Cuentas activas</h2>
+        </div>
+        <div class="flex flex-col gap-2" id="cuentas-lista"></div>
+      </section>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- Datos del negocio (Dueño)                                            -->
+    <!-- =================================================================== -->
+    <section class="seccion" data-seccion="negocio" hidden>
+      <form class="tarjeta flex flex-col gap-4" id="formulario-negocio" novalidate style="max-width:820px">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">storefront</span>Datos del negocio</h2>
+            <p class="tarjeta__subtitulo">Aparecen en el ticket y son los datos que da el bot de WhatsApp (dirección, horario, teléfono).</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label class="etiqueta" for="negocio-nombre">Nombre del negocio <span class="etiqueta__requerido">*</span></label><input class="campo" id="negocio-nombre" maxlength="100" required></div>
+          <div><label class="etiqueta" for="negocio-eslogan">Eslogan</label><input class="campo" id="negocio-eslogan" maxlength="120"></div>
+          <div class="sm:col-span-2"><label class="etiqueta" for="negocio-direccion">Dirección</label><input class="campo" id="negocio-direccion" maxlength="255"></div>
+          <div><label class="etiqueta" for="negocio-telefono">Teléfono</label><input class="campo numeros" id="negocio-telefono" maxlength="15"></div>
+          <div><label class="etiqueta" for="negocio-redes">Redes sociales</label><input class="campo" id="negocio-redes" maxlength="120" placeholder="@engreidosbarbershop"></div>
+          <div class="sm:col-span-2"><label class="etiqueta" for="negocio-mensaje">Mensaje al pie del ticket</label><input class="campo" id="negocio-mensaje" maxlength="255"></div>
+          <div class="sm:col-span-2"><label class="etiqueta" for="negocio-fiscales">Datos fiscales <span class="etiqueta__opcional">(opcional)</span></label><input class="campo" id="negocio-fiscales" maxlength="255"></div>
+          <div><label class="etiqueta" for="negocio-fondo">Fondo inicial de caja</label><input class="campo numeros" id="negocio-fondo" type="number" inputmode="decimal" min="0" step="0.01"></div>
+          <div class="sm:col-span-2">
+            <label class="etiqueta" for="negocio-mapa">Enlace del mapa <span class="etiqueta__opcional">(opcional)</span></label>
+            <input class="campo" id="negocio-mapa" maxlength="255" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://maps.app.goo.gl/…">
+            <p class="ayuda">En Google Maps: Compartir → Copiar vínculo. El bot lo manda cuando preguntan dónde están.</p>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="etiqueta" for="negocio-citas">Cómo agendar una cita <span class="etiqueta__opcional">(opcional)</span></label>
+            <input class="campo" id="negocio-citas" maxlength="300" placeholder="Ej. Agenda por llamada o directamente en la barbería.">
+          </div>
+        </div>
+
+        <fieldset>
+          <legend class="etiqueta">Horario de atención</legend>
+          <div class="horario-negocio" id="negocio-horario"></div>
+          <p class="ayuda">Desmarca los días que no abren. Es el horario que responde el bot cuando preguntan «¿a qué hora cierran?».</p>
+        </fieldset>
+        <button type="submit" class="boton boton--primario self-start" id="negocio-guardar"><span class="icono icono--sm" aria-hidden="true">save</span>Guardar datos</button>
+      </form>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- Impresora térmica 58 mm (Dueño y Cajero)                             -->
+    <!-- =================================================================== -->
+    <section class="seccion grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" data-seccion="impresora" hidden>
+      <div class="tarjeta lg:col-span-7 flex flex-col gap-4">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">print</span>Impresora térmica de 58 mm</h2>
+            <p class="tarjeta__subtitulo">La configuración se guarda en este equipo.</p>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2" role="radiogroup" aria-label="Forma de conexión">
+          <label class="opcion-radio"><input type="radio" name="tipo-impresora" value="android">
+            <span><strong class="block text-white">Bluetooth (app de Android)</strong><span class="text-sm texto-suave">Imprime directo en la impresora vinculada con el teléfono o tableta.</span></span></label>
+          <label class="opcion-radio"><input type="radio" name="tipo-impresora" value="sistema">
+            <span><strong class="block text-white">Impresora del sistema (USB o Bluetooth)</strong><span class="text-sm texto-suave">Abre el diálogo de impresión con formato de 58 mm. Instala la impresora en la computadora con su controlador.</span></span></label>
+          <label class="opcion-radio"><input type="radio" name="tipo-impresora" value="serie">
+            <span><strong class="block text-white">USB / Bluetooth directo (Chrome o Edge en PC)</strong><span class="text-sm texto-suave">Envía el ticket por el puerto COM de la impresora sin diálogo de impresión.</span></span></label>
+          <label class="opcion-radio"><input type="radio" name="tipo-impresora" value="ble">
+            <span><strong class="block text-white">Bluetooth BLE (Chrome)</strong><span class="text-sm texto-suave">Para impresoras con Bluetooth de baja energía.</span></span></label>
+        </div>
+
+        <div id="impresora-android" class="bloque flex flex-col gap-3" hidden>
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0"><div class="dato__etiqueta">Impresora elegida</div><div class="font-semibold" id="impresora-elegida" translate="no"></div></div>
+            <button type="button" class="boton boton--pequeno" id="buscar-impresoras"><span class="icono icono--sm" aria-hidden="true">bluetooth_searching</span>Buscar vinculadas</button>
+          </div>
+          <div class="flex flex-col gap-2" id="lista-impresoras"></div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="boton boton--pequeno" id="impresora-bluetooth"><span class="icono icono--sm" aria-hidden="true">settings_bluetooth</span>Abrir Bluetooth del teléfono</button>
+            <button type="button" class="boton boton--pequeno" id="impresora-conexion"><span class="icono icono--sm" aria-hidden="true">link</span>Probar conexión</button>
+          </div>
+        </div>
+
+        <div id="impresora-serie" class="bloque flex flex-col gap-3" hidden>
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0"><div class="dato__etiqueta">Puerto</div><div class="font-semibold" id="serie-puerto"></div></div>
+            <button type="button" class="boton boton--pequeno" id="serie-elegir"><span class="icono icono--sm" aria-hidden="true">usb</span>Elegir puerto</button>
+          </div>
+          <div>
+            <label class="etiqueta" for="serie-velocidad">Velocidad</label>
+            <select class="campo" id="serie-velocidad">
+              <option value="9600">9600 (la más común)</option><option value="19200">19200</option><option value="38400">38400</option><option value="115200">115200</option>
+            </select>
+            <p class="ayuda">Si la prueba imprime símbolos raros, cambia la velocidad.</p>
+          </div>
+        </div>
+
+        <div id="impresora-ble" class="bloque flex flex-col gap-3" hidden>
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0"><div class="dato__etiqueta">Impresora</div><div class="font-semibold" id="ble-nombre" translate="no"></div></div>
+            <button type="button" class="boton boton--pequeno" id="ble-elegir"><span class="icono icono--sm" aria-hidden="true">bluetooth_searching</span>Buscar impresora</button>
+          </div>
+        </div>
+
+        <p class="ayuda" id="impresora-estado" aria-live="polite"></p>
+
+        <label class="interruptor"><input type="checkbox" id="impresora-logo" checked> Imprimir el logotipo en el ticket</label>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="boton boton--primario" id="impresora-guardar"><span class="icono icono--sm" aria-hidden="true">save</span>Guardar</button>
+          <button type="button" class="boton" id="impresora-prueba"><span class="icono icono--sm" aria-hidden="true">receipt</span>Imprimir prueba</button>
+        </div>
+      </div>
+      <aside class="tarjeta lg:col-span-5">
+        <h3 class="tarjeta__titulo mb-3"><span class="icono" aria-hidden="true">help</span>Conectar la impresora</h3>
+        <ol class="pasos">
+          <li>Enciende la impresora y carga papel de 58 mm.</li>
+          <li>Teléfono o tableta: toca «Abrir Bluetooth del teléfono» y vincúlala (PIN 0000 o 1234).</li>
+          <li>Regresa a la app, toca «Buscar vinculadas» y selecciónala.</li>
+          <li>Toca «Probar conexión»: debe decir «Impresora conectada».</li>
+          <li>Computadora con USB: instala el controlador y usa «Impresora del sistema» o «USB / Bluetooth directo».</li>
+          <li>Toca «Imprimir prueba»: deben salir acentos y ñ correctamente.</li>
+        </ol>
+        <p class="ayuda mt-3">Si no conecta: apaga y enciende la impresora, revisa que no esté conectada a otro teléfono o computadora (solo acepta uno a la vez) y acércala. Si sigue igual, en el Bluetooth del teléfono elige «Olvidar» y vuelve a vincularla.</p>
+      </aside>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WhatsApp (Dueño)                                                     -->
+    <!-- =================================================================== -->
+    <section class="seccion grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" data-seccion="whatsapp" hidden>
+      <form class="tarjeta lg:col-span-7 flex flex-col gap-4" id="formulario-whatsapp" novalidate autocomplete="off">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">chat</span>API de WhatsApp (Meta Cloud API)</h2>
+            <p class="tarjeta__subtitulo">Conecta el número del negocio para enviar confirmaciones de citas, tickets y las respuestas del bot.</p>
+          </div>
+        </div>
+        <label class="interruptor"><input type="checkbox" id="whatsapp-activo"> Envío automático de citas y tickets</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="sm:col-span-2">
+            <label class="etiqueta" for="whatsapp-phone-id">Identificador del número (Phone number ID)</label>
+            <input class="campo numeros" id="whatsapp-phone-id" maxlength="40" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="etiqueta" for="whatsapp-token">Token de acceso</label>
+            <input class="campo" id="whatsapp-token" type="password" maxlength="600" autocomplete="new-password" spellcheck="false">
+            <p class="ayuda" id="whatsapp-token-ayuda"></p>
+          </div>
+          <div>
+            <label class="etiqueta" for="whatsapp-plantilla">Plantilla para citas <span class="etiqueta__opcional">(opcional)</span></label>
+            <input class="campo" id="whatsapp-plantilla" maxlength="60" placeholder="confirmacion_cita" spellcheck="false">
+          </div>
+          <div>
+            <label class="etiqueta" for="whatsapp-idioma">Idioma de la plantilla</label>
+            <input class="campo" id="whatsapp-idioma" maxlength="10" placeholder="es_MX" spellcheck="false">
+          </div>
+          <div>
+            <label class="etiqueta" for="whatsapp-lada">Lada del país</label>
+            <input class="campo numeros" id="whatsapp-lada" maxlength="4" inputmode="numeric" placeholder="52">
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="submit" class="boton boton--primario" id="whatsapp-guardar"><span class="icono icono--sm" aria-hidden="true">save</span>Guardar configuración</button>
+          <button type="button" class="boton" id="whatsapp-conexion"><span class="icono icono--sm" aria-hidden="true">link</span>Probar conexión</button>
+        </div>
+        <p class="ayuda" id="whatsapp-conexion-resultado" aria-live="polite"></p>
+
+        <div class="bloque flex flex-col gap-2">
+          <label class="etiqueta" for="whatsapp-prueba-telefono">Enviar mensaje de prueba a</label>
+          <div class="flex gap-2">
+            <input class="campo numeros flex-1" id="whatsapp-prueba-telefono" type="tel" inputmode="numeric" maxlength="10" placeholder="10 dígitos">
+            <button type="button" class="boton" id="whatsapp-probar"><span class="icono icono--sm" aria-hidden="true">send</span>Probar</button>
+          </div>
+          <p class="ayuda" id="whatsapp-resultado" aria-live="polite"></p>
+        </div>
+      </form>
+      <aside class="tarjeta lg:col-span-5">
+        <h3 class="tarjeta__titulo mb-3"><span class="icono" aria-hidden="true">help</span>Cómo conectarla</h3>
+        <ol class="pasos">
+          <li>Entra a developers.facebook.com, crea una app de tipo «Empresa» y agrega el producto WhatsApp.</li>
+          <li>En WhatsApp → Configuración de la API copia el «Identificador de número de teléfono» (no el número).</li>
+          <li>Crea un usuario del sistema en el Business Manager y genera un token permanente con los permisos whatsapp_business_messaging y whatsapp_business_management.</li>
+          <li>Pega los datos aquí, guarda y toca «Probar conexión»: debe aparecer el número del negocio.</li>
+          <li>Para avisar citas a clientes que no te han escrito en 24 h, crea una plantilla aprobada con 6 variables: {{1}} cliente, {{2}} fecha, {{3}} hora, {{4}} servicio, {{5}} duración, {{6}} barbero.</li>
+        </ol>
+        <p class="ayuda">Sin configurar, el sistema abre WhatsApp con el mensaje ya escrito para enviarlo a mano.</p>
+      </aside>
+
+      <!-- ---- Bot que responde a los clientes ---- -->
+      <form class="tarjeta lg:col-span-7 flex flex-col gap-4" id="formulario-bot" novalidate autocomplete="off">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">smart_toy</span>Bot de respuestas</h2>
+            <p class="tarjeta__subtitulo">Contesta solo cuando preguntan por servicios, productos, membresías, descuentos, horario, dirección o citas.</p>
+          </div>
+        </div>
+        <label class="interruptor"><input type="checkbox" id="bot-activo"> Responder automáticamente a los clientes</label>
+        <div>
+          <label class="etiqueta" for="bot-bienvenida">Saludo <span class="etiqueta__opcional">(opcional)</span></label>
+          <textarea class="campo" id="bot-bienvenida" rows="2" maxlength="500" placeholder="¡Hola! 👋 Gracias por escribir a Engreídos Barbershop."></textarea>
+          <p class="ayuda">Los precios, promociones, horario y dirección salen de los catálogos y de «Datos del negocio».</p>
+        </div>
+
+        <div class="bloque flex flex-col gap-3">
+          <div class="dato__etiqueta">Datos para el webhook de Meta</div>
+          <div>
+            <label class="etiqueta" for="bot-url-publica">Dirección pública del servidor (https)</label>
+            <input class="campo" id="bot-url-publica" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://mi-barberia.trycloudflare.com">
+            <p class="ayuda">Meta solo puede avisar a una dirección https de internet. Se guarda en este equipo solo para armar la URL de abajo.</p>
+          </div>
+          <div>
+            <label class="etiqueta" for="bot-webhook">URL de devolución de llamada</label>
+            <div class="flex gap-2">
+              <input class="campo flex-1" id="bot-webhook" readonly spellcheck="false">
+              <button type="button" class="boton boton--icono" data-copiar="bot-webhook" aria-label="Copiar" title="Copiar"><span class="icono icono--sm" aria-hidden="true">content_copy</span></button>
+            </div>
+          </div>
+          <div>
+            <label class="etiqueta" for="bot-verificacion">Token de verificación</label>
+            <div class="flex gap-2">
+              <input class="campo flex-1" id="bot-verificacion" maxlength="80" spellcheck="false" autocapitalize="none">
+              <button type="button" class="boton boton--icono" data-copiar="bot-verificacion" aria-label="Copiar" title="Copiar"><span class="icono icono--sm" aria-hidden="true">content_copy</span></button>
+            </div>
+          </div>
+          <div>
+            <label class="etiqueta" for="bot-secreto">Clave secreta de la app <span class="etiqueta__opcional">(opcional, recomendada)</span></label>
+            <input class="campo" id="bot-secreto" type="password" maxlength="80" autocomplete="new-password" spellcheck="false">
+            <p class="ayuda" id="bot-secreto-ayuda"></p>
+          </div>
+        </div>
+        <button type="submit" class="boton boton--primario self-start" id="bot-guardar"><span class="icono icono--sm" aria-hidden="true">save</span>Guardar bot</button>
+
+        <div class="bloque flex flex-col gap-2">
+          <label class="etiqueta" for="bot-mensaje">Probar el bot aquí (no envía nada)</label>
+          <div class="flex gap-2">
+            <input class="campo flex-1" id="bot-mensaje" maxlength="500" placeholder="Ej. ¿A qué hora cierran?">
+            <button type="button" class="boton" id="bot-simular"><span class="icono icono--sm" aria-hidden="true">chat</span>Preguntar</button>
+          </div>
+          <div class="flex flex-wrap gap-1.5" id="bot-ejemplos">
+            <button type="button" class="boton boton--pequeno" data-ejemplo="Hola">Hola</button>
+            <button type="button" class="boton boton--pequeno" data-ejemplo="¿Qué servicios tienen?">Servicios</button>
+            <button type="button" class="boton boton--pequeno" data-ejemplo="¿Qué productos venden?">Productos</button>
+            <button type="button" class="boton boton--pequeno" data-ejemplo="Info de membresías">Membresías</button>
+            <button type="button" class="boton boton--pequeno" data-ejemplo="¿Tienen descuentos?">Descuentos</button>
+            <button type="button" class="boton boton--pequeno" data-ejemplo="¿A qué hora cierran?">Horario</button>
+            <button type="button" class="boton boton--pequeno" data-ejemplo="¿Dónde están?">Dirección</button>
+          </div>
+          <div class="chat-bot" id="bot-chat" hidden></div>
+        </div>
+      </form>
+      <aside class="tarjeta lg:col-span-5 flex flex-col gap-4">
+        <div>
+          <h3 class="tarjeta__titulo mb-3"><span class="icono" aria-hidden="true">help</span>Cómo activar el bot</h3>
+          <ol class="pasos">
+            <li>Conecta primero la API (arriba) y comprueba la conexión.</li>
+            <li><div class="min-w-0">El servidor necesita una dirección https pública. Lo más sencillo es un túnel gratuito: instala «cloudflared», ejecuta el comando de abajo y pega aquí la dirección que te da.<code class="comando" translate="no">cloudflared tunnel --url http://localhost:3000</code></div></li>
+            <li>En developers.facebook.com → tu app → WhatsApp → Configuración → Webhook, pega la «URL de devolución de llamada» y el «Token de verificación» y toca «Verificar y guardar».</li>
+            <li>En «Campos del webhook» suscríbete al campo «messages».</li>
+            <li>Enciende «Responder automáticamente» y escribe al número desde otro WhatsApp.</li>
+          </ol>
+          <p class="ayuda">La computadora del servidor y el túnel deben estar encendidos para que el bot conteste.</p>
+        </div>
+        <div>
+          <div class="tarjeta__encabezado">
+            <h3 class="tarjeta__titulo"><span class="icono" aria-hidden="true">forum</span>Mensajes recientes</h3>
+            <button type="button" class="boton boton--icono boton--pequeno" id="bot-actualizar" aria-label="Actualizar" title="Actualizar"><span class="icono icono--sm" aria-hidden="true">refresh</span></button>
+          </div>
+          <div class="estado-vacio" id="bot-chats-vacio"><span class="icono" aria-hidden="true">forum</span><span>Aún no ha escrito nadie.</span></div>
+          <div class="chat-bot chat-bot--registro" id="bot-chats" hidden></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- Idioma (todos)                                                       -->
+    <!-- =================================================================== -->
+    <section class="seccion" data-seccion="idioma" hidden>
+      <div class="tarjeta flex flex-col gap-4" style="max-width:560px">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">translate</span>Idioma del programa</h2>
+            <p class="tarjeta__subtitulo">Se aplica a todas las pantallas de este equipo.</p>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2" role="radiogroup" aria-label="Idioma" id="lista-idiomas"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- Servidor (todos)                                                     -->
+    <!-- =================================================================== -->
+    <section class="seccion" data-seccion="servidor" hidden>
+      <form class="tarjeta flex flex-col gap-4" id="formulario-servidor" novalidate style="max-width:620px">
+        <div class="tarjeta__encabezado" style="margin-bottom:0">
+          <div>
+            <h2 class="tarjeta__titulo"><span class="icono" aria-hidden="true">dns</span>Servidor</h2>
+            <p class="tarjeta__subtitulo">Computadora donde están el back end (Node.js) y la base de datos (MySQL).</p>
+          </div>
+        </div>
+        <div class="bloque">
+          <div class="dato__etiqueta">Dirección actual</div>
+          <div class="font-semibold numeros" id="servidor-actual" translate="no"></div>
+          <div class="text-xs mt-1" id="servidor-estado"></div>
+        </div>
+        <div>
+          <label class="etiqueta" for="servidor-direccion">Nueva dirección</label>
+          <input class="campo numeros" id="servidor-direccion" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="192.168.1.70:3000">
+          <p class="ayuda">Al cambiarla se cierra la sesión para entrar en el nuevo servidor.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="submit" class="boton boton--primario" id="servidor-guardar"><span class="icono icono--sm" aria-hidden="true">save</span>Probar y guardar</button>
+          <button type="button" class="boton" id="servidor-automatico" hidden>Usar la dirección de esta página</button>
+        </div>
+      </form>
+    </section>
+    </div><!-- /.ajustes__contenido -->
+    </div><!-- /.ajustes -->
+  </main>
+
+  <!-- ===== Ventana: agregar o dar de baja inventario ===== -->
+  <div id="modal-inventario" class="modal" role="dialog" aria-modal="true" aria-labelledby="inventario-titulo" hidden>
+    <form class="modal__caja flex flex-col gap-4" id="formulario-inventario" novalidate autocomplete="off">
+      <div>
+        <h3 class="modal__titulo" id="inventario-titulo"></h3>
+        <p class="texto-suave text-sm"><span id="inventario-producto" translate="no"></span> · <span id="inventario-existencias"></span></p>
+      </div>
+      <div>
+        <label class="etiqueta" for="inventario-cantidad">Cantidad (piezas)</label>
+        <input class="campo numeros" id="inventario-cantidad" type="number" inputmode="numeric" min="1" step="1" value="1" required>
+      </div>
+      <div>
+        <label class="etiqueta" for="inventario-motivo">Motivo</label>
+        <input class="campo" id="inventario-motivo" maxlength="255" placeholder="Ej. Compra a proveedor">
+      </div>
+      <div id="inventario-autorizacion" hidden>
+        <div class="alerta alerta--alerta mb-3"><span class="icono" aria-hidden="true">lock</span><div><strong>Se requiere autorización</strong><span>Escribe tu contraseña (dueño o cajero) para confirmar la baja.</span></div></div>
+        <label class="etiqueta" for="inventario-contrasena">Contraseña</label>
+        <input class="campo" id="inventario-contrasena" type="password" autocomplete="current-password">
+      </div>
+      <div class="modal__acciones">
+        <button type="button" class="boton" data-cerrar-modal>Cancelar</button>
+        <button type="submit" class="boton boton--primario" id="inventario-confirmar"></button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ===== Ventana: movimientos de inventario ===== -->
+  <div id="modal-movimientos" class="modal" role="dialog" aria-modal="true" aria-labelledby="movimientos-titulo" hidden>
+    <div class="modal__caja" style="width:min(100%,720px)">
+      <h3 class="modal__titulo" id="movimientos-titulo">Movimientos de inventario</h3>
+      <p class="texto-suave text-sm mb-3" id="movimientos-producto" translate="no"></p>
+      <div class="estado-vacio" id="movimientos-vacio" hidden><span>Sin movimientos.</span></div>
+      <div class="tabla-contenedor" id="movimientos-tabla" hidden>
+        <table class="tabla">
+          <thead><tr><th scope="col">Fecha</th><th scope="col">Tipo</th><th scope="col" class="derecha">Cant.</th><th scope="col" class="derecha">Queda</th><th scope="col">Motivo · Quién</th></tr></thead>
+          <tbody id="movimientos-filas"></tbody>
+        </table>
+      </div>
+      <div class="modal__acciones"><button type="button" class="boton" data-cerrar-modal>Cerrar</button></div>
+    </div>
+  </div>
+
+  <!-- ===== Ventana: cambiar contraseña de una cuenta ===== -->
+  <div id="modal-contrasena" class="modal" role="dialog" aria-modal="true" aria-labelledby="contrasena-titulo" hidden>
+    <form class="modal__caja flex flex-col gap-4" id="formulario-contrasena" novalidate autocomplete="off">
+      <div>
+        <h3 class="modal__titulo" id="contrasena-titulo">Cambiar contraseña</h3>
+        <p class="texto-suave text-sm" id="contrasena-cuenta" translate="no"></p>
+      </div>
+      <div>
+        <label class="etiqueta" for="contrasena-nueva">Nueva contraseña</label>
+        <input class="campo" id="contrasena-nueva" type="password" autocomplete="new-password" required>
+      </div>
+      <div class="modal__acciones">
+        <button type="button" class="boton" data-cerrar-modal>Cancelar</button>
+        <button type="submit" class="boton boton--primario" id="contrasena-guardar">Guardar contraseña</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Categorías sugeridas (se completan con las de los productos) -->
+  <datalist id="lista-categorias"></datalist>
+
+  <!-- ===================== Plantillas ===================== -->
+  <template id="plantilla-descuento">
+    <div class="fila" style="align-items:flex-start">
+      <span class="fila__cuerpo">
+        <span class="fila__titulo block"><span data-campo="Nombre" translate="no"></span> <span class="insignia" data-estado></span></span>
+        <span class="fila__detalle block"><strong class="texto-oro numeros" data-valor></strong> · <span data-alcance></span></span>
+        <span class="fila__detalle block" data-campo="Descripcion" data-vacio="" translate="no"></span>
+        <span class="fila__detalle block numeros" data-fechas></span>
+      </span>
+      <span class="flex gap-1.5">
+        <button type="button" class="boton boton--icono boton--pequeno" data-accion="pausar" title="Pausar o reanudar" aria-label="Pausar o reanudar"><span class="icono icono--sm" aria-hidden="true">pause</span></button>
+        <button type="button" class="boton boton--icono boton--pequeno" data-accion="editar" title="Editar" aria-label="Editar"><span class="icono icono--sm" aria-hidden="true">edit</span></button>
+        <button type="button" class="boton boton--icono boton--pequeno boton--peligro" data-accion="eliminar" title="Eliminar" aria-label="Eliminar"><span class="icono icono--sm" aria-hidden="true">delete</span></button>
+      </span>
+    </div>
+  </template>
+
+  <template id="plantilla-servicio">
+    <tr>
+      <td><span class="font-semibold" data-campo="NombreServicio"></span><span class="tabla__secundario" data-campo="Descripcion" data-vacio=""></span></td>
+      <td class="derecha numeros" data-campo="Precio" data-formato="moneda"></td>
+      <td class="numeros whitespace-nowrap" data-campo="Duracion"></td>
+      <td><span class="insignia" data-campo="Dias"></span></td>
+      <td>
+        <div class="flex gap-1.5 justify-end">
+          <button type="button" class="boton boton--icono boton--pequeno" data-accion="editar" title="Editar" aria-label="Editar"><span class="icono icono--sm" aria-hidden="true">edit</span></button>
+          <button type="button" class="boton boton--icono boton--pequeno boton--peligro" data-accion="eliminar" title="Eliminar" aria-label="Eliminar"><span class="icono icono--sm" aria-hidden="true">delete</span></button>
+        </div>
+      </td>
+    </tr>
+  </template>
+
+  <template id="plantilla-producto">
+    <div class="fila flex-wrap">
+      <div class="fila__cuerpo" style="min-width:160px">
+        <span class="fila__titulo block" data-campo="NombreProducto"></span>
+        <span class="fila__detalle block numeros"><span class="insignia mr-1" data-categoria translate="no" hidden></span><span data-campo="Precio" data-formato="moneda"></span> · <span data-existencias></span></span>
+      </div>
+      <div class="flex flex-wrap gap-1.5 justify-end">
+        <button type="button" class="boton boton--pequeno" data-accion="entrada"><span class="icono icono--sm" aria-hidden="true">add</span>Agregar inventario</button>
+        <button type="button" class="boton boton--pequeno boton--peligro" data-accion="baja"><span class="icono icono--sm" aria-hidden="true">remove</span>Dar de baja</button>
+        <button type="button" class="boton boton--pequeno boton--icono" data-accion="movimientos" title="Movimientos" aria-label="Movimientos"><span class="icono icono--sm" aria-hidden="true">history</span></button>
+        <button type="button" class="boton boton--pequeno boton--icono" data-accion="editar" data-roles="Dueño" title="Editar" aria-label="Editar"><span class="icono icono--sm" aria-hidden="true">edit</span></button>
+        <button type="button" class="boton boton--pequeno boton--icono boton--peligro" data-accion="eliminar" data-roles="Dueño" title="Eliminar producto" aria-label="Eliminar producto"><span class="icono icono--sm" aria-hidden="true">delete</span></button>
+      </div>
+    </div>
+  </template>
+
+  <template id="plantilla-movimiento">
+    <tr>
+      <td class="numeros whitespace-nowrap" data-campo="Fecha" data-formato="fechaHora"></td>
+      <td><span class="insignia" data-campo="Tipo" data-traducir></span></td>
+      <td class="derecha numeros" data-campo="Cantidad"></td>
+      <td class="derecha numeros" data-campo="StockFinal"></td>
+      <td><span data-campo="Motivo"></span><span class="tabla__secundario" data-campo="RealizadoPor"></span></td>
+    </tr>
+  </template>
+
+  <template id="plantilla-beneficio">
+    <div class="beneficio" data-beneficio>
+      <div class="beneficio__encabezado">
+        <span class="beneficio__numero numeros" data-numero></span>
+        <input class="campo" data-b-etiqueta maxlength="80" placeholder="Texto del cartel, ej. Cortes ilimitados" aria-label="Texto que ve el cliente">
+        <div class="beneficio__acciones">
+          <button type="button" class="beneficio__boton" data-mover="-1" title="Subir" aria-label="Subir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+          <button type="button" class="beneficio__boton" data-mover="1" title="Bajar" aria-label="Bajar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>
+          <button type="button" class="beneficio__boton beneficio__boton--peligro" data-quitar title="Quitar beneficio" aria-label="Quitar beneficio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>
+        </div>
+      </div>
+      <div class="beneficio__regla">
+        <label class="beneficio__campo beneficio__campo--aplica"><span class="etiqueta">Aplica a</span><select class="campo" data-b-aplica></select></label>
+        <label class="beneficio__campo" data-campo-categoria hidden><span class="etiqueta">Categoría</span><input class="campo" data-b-categoria list="lista-categorias" maxlength="40" autocomplete="off" placeholder="Ej. Bebida"></label>
+        <label class="beneficio__campo"><span class="etiqueta">Beneficio</span>
+          <select class="campo" data-b-tipo><option value="Gratis">Gratis</option><option value="Descuento">Descuento %</option></select></label>
+        <label class="beneficio__campo" data-campo-porcentaje><span class="etiqueta">%</span><input class="campo numeros" data-b-porcentaje type="number" inputmode="numeric" min="1" max="100" step="1" placeholder="—"></label>
+        <label class="beneficio__campo"><span class="etiqueta">Límite</span>
+          <select class="campo" data-b-limite><option value="">Ilimitado</option><option value="Visita">Por visita</option><option value="Mes">Por mes</option></select></label>
+        <label class="beneficio__campo" data-campo-usos><span class="etiqueta">Usos</span><input class="campo numeros" data-b-usos type="number" inputmode="numeric" min="1" max="999" step="1" placeholder="—"></label>
+      </div>
+      <p class="beneficio__resumen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-resumen translate="no"></span></p>
+    </div>
+  </template>
+
+  <template id="plantilla-membresia">
+    <article class="tarjeta flex flex-col gap-3">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h3 class="titulo-serif text-xl font-bold texto-membresia" data-campo="NombrePlan"></h3>
+          <p class="text-xs texto-tenue" data-campo="Descripcion" data-vacio=""></p>
+        </div>
+        <div class="text-right"><div class="text-2xl font-bold numeros" data-campo="Precio" data-formato="moneda"></div><div class="text-xs texto-tenue" data-campo="Duracion"></div></div>
+      </div>
+      <ul class="lista-beneficios" data-beneficios translate="no"></ul>
+      <div class="flex gap-2 mt-auto">
+        <button type="button" class="boton boton--pequeno flex-1" data-accion="editar"><span class="icono icono--sm" aria-hidden="true">edit</span>Editar</button>
+        <button type="button" class="boton boton--pequeno boton--peligro" data-accion="eliminar"><span class="icono icono--sm" aria-hidden="true">delete</span>Eliminar</button>
+      </div>
+    </article>
+  </template>
+
+  <template id="plantilla-cuenta">
+    <div class="fila">
+      <span class="avatar" style="width:36px;height:36px;font-size:13px" data-campo="Nombre" data-formato="iniciales"></span>
+      <div class="fila__cuerpo">
+        <span class="fila__titulo block" data-campo="Nombre"></span>
+        <span class="fila__detalle block"><span class="insignia" data-campo="Rol" data-traducir></span> <span class="numeros" data-campo="Usuario"></span> <span class="numeros texto-tenue" data-campo="TelefonoTexto"></span></span>
+      </div>
+      <div class="flex gap-1.5">
+        <button type="button" class="boton boton--pequeno boton--icono" data-accion="contrasena" title="Cambiar contraseña" aria-label="Cambiar contraseña"><span class="icono icono--sm" aria-hidden="true">key</span></button>
+        <button type="button" class="boton boton--pequeno boton--icono boton--peligro" data-accion="eliminar" title="Eliminar cuenta" aria-label="Eliminar cuenta"><span class="icono icono--sm" aria-hidden="true">person_remove</span></button>
+      </div>
+    </div>
+  </template>
+</body>
+</html>

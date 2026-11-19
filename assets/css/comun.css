@@ -57,7 +57,6 @@
   --color-error-borde: rgba(239, 68, 68, 0.35);
 
   /* Tipografías */
-  --fuente-logo: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --fuente-titulo: "Playfair Display", Georgia, "Times New Roman", serif;
   --fuente-cuerpo: "Plus Jakarta Sans", "Segoe UI", Roboto, system-ui, sans-serif;
   --fuente-numeros: "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
@@ -141,6 +140,10 @@ body::before {
   user-select: none;
 }
 .icono--relleno { font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24; }
+/* Sin conexión la fuente de íconos no carga y se verían sus nombres
+   («calendar_today»…). utilidades.js agrega .sin-iconos a <html> y aquí se
+   ocultan conservando el espacio, para que la pantalla no se desacomode. */
+.sin-iconos .icono { width: 1em; height: 1em; overflow: hidden; color: transparent !important; }
 .icono--sm { font-size: 16px; }
 .icono--lg { font-size: 24px; }
 .icono--xl { font-size: 32px; }
@@ -212,31 +215,27 @@ encabezado-app {
 .encabezado__boton-icono:hover { color: #fff; background: rgba(39, 39, 42, 0.6); }
 .encabezado__boton-icono svg { width: 24px; height: 24px; }
 
-/* Logotipo: mismo diseño que el panel principal */
+/* Logotipo oficial (<logo-engreidos>, ver assets/js/componentes/logo-engreidos.js).
+   El alto se fija aquí y el ancho sale de la proporción del dibujo, así el
+   espacio queda reservado antes de que se inserte el SVG. */
+logo-engreidos {
+  display: block;
+  height: 48px;
+  aspect-ratio: 2.838 / 1;
+}
+logo-engreidos svg { display: block; width: 100%; height: 100%; }
+
+/* Enlace del logotipo en el encabezado: mismo diseño en todas las pantallas */
 .marca {
   display: inline-flex;
-  flex-direction: column;
+  align-items: center;
+  color: #fff;
   text-decoration: none;
   user-select: none;
+  border-radius: var(--radio-sm);
+  transition: opacity 0.15s ease;
 }
-.marca__nombre {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  line-height: 1;
-  font-family: var(--fuente-logo);
-  font-size: 24px;
-}
-.marca__corchete { color: #a1a1aa; font-weight: 300; }
-.marca__texto { color: #fff; font-weight: 500; letter-spacing: 0.025em; }
-.marca__subtitulo {
-  padding: 4px 0 0 4px;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: #a1a1aa;
-}
+.marca:hover { opacity: 0.85; }
 
 /* Pastillas del lado derecho (conexión y rol) */
 .pastilla {
@@ -297,7 +296,7 @@ encabezado-app {
 /* En teléfono se compacta: se ocultan textos secundarios, quedan los íconos */
 @media (max-width: 640px) {
   .encabezado { padding: 8px 14px; }
-  .marca__nombre { font-size: 21px; }
+  .marca logo-engreidos { height: 36px; }
   .pastilla { padding: 6px 10px; }
   .conexion .pastilla__valor,
   .rol .pastilla__etiqueta,
@@ -566,7 +565,7 @@ select.campo {
 .segmentado__opcion[aria-pressed="true"] { background: var(--color-blanco); color: var(--color-texto-invertido); }
 
 /* ---- Tabla ------------------------------------------------------------- */
-.tabla-contenedor { width: 100%; overflow-x: auto; border-radius: var(--radio); border: 1px solid var(--color-borde); }
+.tabla-contenedor { position: relative; width: 100%; overflow-x: auto; border-radius: var(--radio); border: 1px solid var(--color-borde); }
 .tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .tabla th {
   padding: 10px 14px;
@@ -820,6 +819,7 @@ navegacion-barbero { display: block; }
 .texto-tenue { color: var(--color-texto-tenue); }
 .texto-exito { color: var(--color-exito); }
 .texto-error { color: var(--color-error); }
+.texto-aviso { color: #fbbf24; }
 .titulo-serif { font-family: var(--fuente-titulo); }
 
 /* Impresión: se ocultan encabezado, navegación y botones */
@@ -844,11 +844,292 @@ navegacion-barbero { display: block; }
    ========================================================================== */
 
 /* Logotipo grande (inicio de sesión y mantenimiento) */
-.marca--grande { align-items: center; }
-.marca--grande .marca__nombre { font-size: clamp(34px, 6vw, 44px); gap: 10px; }
-.marca--grande .marca__subtitulo { font-size: 11px; padding-left: 0; letter-spacing: 0.34em; }
+.marca--grande logo-engreidos { height: clamp(78px, 22vw, 104px); }
 
 /* Columna lateral fija en pantallas anchas (resúmenes de venta y cita) */
 @media (min-width: 1024px) {
   .columna-fija { position: sticky; top: calc(var(--alto-encabezado) + 16px); }
 }
+
+/* ==========================================================================
+   8. Componentes de la versión 3
+   ========================================================================== */
+
+/* Buscador de clientes con vista previa (<buscador-cliente>) */
+buscador-cliente { display: block; position: relative; }
+.sugerencias {
+  position: absolute; z-index: 60; left: 0; right: 0; top: calc(100% + 6px);
+  margin: 0; padding: 6px; list-style: none; max-height: 340px; overflow-y: auto;
+  background: var(--color-superficie-alta); border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+.sugerencia {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radio-sm);
+  cursor: pointer; color: var(--color-texto);
+}
+.sugerencia:hover, .sugerencia--activa { background: var(--color-superficie-resalte); }
+.sugerencia .icono { color: var(--color-texto-tenue); }
+.sugerencia__cuerpo { display: flex; flex-direction: column; min-width: 0; }
+.sugerencia__titulo { font-weight: 600; overflow-wrap: anywhere; }
+.sugerencia__detalle { font-size: 12px; color: var(--color-texto-tenue); }
+.sugerencia--oro .sugerencia__titulo, .sugerencia--oro .icono { color: var(--color-oro-claro); }
+.sugerencia--cero { border-bottom: 1px solid var(--color-borde-suave); border-radius: var(--radio-sm) var(--radio-sm) 0 0; margin-bottom: 4px; }
+.sugerencia--nuevo .sugerencia__titulo, .sugerencia--nuevo .icono { color: #fff; }
+.sugerencia--nada { cursor: default; color: var(--color-texto-tenue); }
+.sugerencia--nada:hover { background: none; }
+
+/* La pastilla larga se acomoda en dos renglones en pantallas angostas */
+.pastilla--flexible { flex-wrap: wrap; row-gap: 2px; border-radius: var(--radio); max-width: 100%; }
+
+/* Nombre de cliente con membresía vigente */
+.texto-membresia { color: var(--color-oro-claro) !important; }
+
+/* Ventana emergente genérica */
+.modal[hidden] { display: none; }
+.modal__titulo { font-family: var(--fuente-titulo); font-size: 22px; font-weight: 700; color: #fff; margin: 0 0 6px; }
+.modal__acciones { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+
+/* Pestañas de una pantalla */
+.pestanas { position: relative; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.pestana {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 9px 14px;
+  border-radius: 999px; border: 1px solid var(--color-borde); background: var(--color-superficie);
+  color: var(--color-texto-suave); font-weight: 600; font-size: 13px; cursor: pointer;
+}
+.pestana:hover { color: #fff; border-color: var(--color-borde-fuerte); }
+.pestana[aria-selected="true"] { background: var(--color-blanco); border-color: var(--color-blanco); color: var(--color-texto-invertido); }
+
+/* Interruptor (checkbox con estilo) */
+.interruptor { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; }
+.interruptor input { appearance: none; width: 42px; height: 24px; border-radius: 999px; background: var(--color-superficie-alta);
+  border: 1px solid var(--color-borde-fuerte); position: relative; cursor: pointer; transition: background .15s; flex: none; }
+.interruptor input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #a1a1aa; transition: transform .15s, background .15s; }
+.interruptor input:checked { background: var(--color-exito-fondo); border-color: var(--color-exito-borde); }
+.interruptor input:checked::after { transform: translateX(18px); background: #34d399; }
+
+/* Casillas de días de la semana */
+.dias-semana { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.dias-semana label { display: flex; align-items: center; justify-content: center; padding: 9px 0; border-radius: var(--radio-sm);
+  border: 1px solid var(--color-borde); background: var(--color-superficie-baja); color: var(--color-texto-tenue);
+  font: 700 14px/1 var(--fuente-numeros); cursor: pointer; user-select: none; }
+.dias-semana input { position: absolute; opacity: 0; pointer-events: none; }
+.dias-semana input:checked + span { color: var(--color-texto-invertido); }
+.dias-semana label:has(input:checked) { background: var(--color-blanco); border-color: var(--color-blanco); color: var(--color-texto-invertido); }
+.dias-semana label:has(input:focus-visible) { outline: 2px solid var(--color-oro); outline-offset: 2px; }
+
+/* =============================================================================
+   Menú «Ajustes del sistema» (componentes/menu-ajustes.js)
+   ============================================================================= */
+menu-ajustes { display: block; }
+.menu-ajustes {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: linear-gradient(180deg, #171a20 0%, #111318 100%);
+  border: 1px solid var(--color-borde); border-radius: var(--radio-xl); box-shadow: var(--sombra);
+}
+.menu-ajustes__cabecera { display: flex; align-items: center; gap: 12px; padding: 18px 18px 16px; border-bottom: 1px solid var(--color-borde); }
+.menu-ajustes__engrane {
+  flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center;
+  background: var(--color-oro-fondo); color: var(--color-oro); border: 1px solid rgba(229, 184, 66, 0.35);
+}
+.menu-ajustes__engrane svg { width: 24px; height: 24px; }
+.menu-ajustes__titulos { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.menu-ajustes__titulo { font: 800 15px/1.2 var(--fuente-cuerpo); letter-spacing: .08em; text-transform: uppercase; color: #fff; }
+.menu-ajustes__subtitulo { font: 600 12.5px/1.3 var(--fuente-cuerpo); color: var(--color-oro); margin-top: 4px; }
+.menu-ajustes__cerrar {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  color: var(--color-texto-suave); background: var(--color-superficie-alta); border: 1px solid var(--color-borde);
+}
+.menu-ajustes__cerrar:hover { color: #fff; background: var(--color-superficie-resalte); }
+.menu-ajustes__cerrar svg { width: 18px; height: 18px; }
+.menu-ajustes__lista { list-style: none; margin: 0; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.menu-ajustes__opcion {
+  position: relative; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 12px;
+  border-radius: var(--radio); color: var(--color-texto); text-decoration: none; transition: background .15s;
+}
+.menu-ajustes__lista li + li .menu-ajustes__opcion::after {
+  content: ""; position: absolute; left: 12px; right: 12px; top: -1px; height: 1px; background: var(--color-borde-suave);
+}
+.menu-ajustes__opcion:hover { background: var(--color-superficie-alta); }
+.menu-ajustes__opcion:focus-visible { outline: 2px solid var(--color-oro); outline-offset: -2px; }
+.menu-ajustes__opcion--activa { background: var(--color-oro-fondo); }
+.menu-ajustes__opcion--activa::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--color-oro); }
+.menu-ajustes__opcion--activa .menu-ajustes__flecha { color: var(--color-oro); }
+.menu-ajustes__numero { flex: none; width: 22px; text-align: right; font-size: 13px; font-weight: 700; color: var(--color-texto-tenue); }
+.menu-ajustes__opcion-icono { flex: none; width: 22px; height: 22px; color: var(--color-oro); }
+.menu-ajustes__opcion-texto { flex: 1; min-width: 0; font: 600 15px/1.25 var(--fuente-cuerpo); }
+.menu-ajustes__insignia {
+  flex: none; padding: 5px 9px; border-radius: 999px; font: 600 11.5px/1 var(--fuente-cuerpo);
+  background: var(--color-superficie-alta); border: 1px solid var(--color-borde); color: var(--color-texto-suave);
+}
+.menu-ajustes__insignia--estado { display: inline-flex; align-items: center; gap: 6px; }
+.menu-ajustes__insignia--estado[data-estado="en-linea"] { color: var(--color-exito); background: var(--color-exito-fondo); border-color: var(--color-exito-borde); }
+.menu-ajustes__insignia--estado[data-estado="sin-conexion"] { color: var(--color-error); background: var(--color-error-fondo); border-color: var(--color-error-borde); }
+.menu-ajustes__punto { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+.menu-ajustes__flecha { flex: none; width: 18px; height: 18px; color: var(--color-texto-tenue); }
+.menu-ajustes__pie {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 18px;
+  border-top: 1px solid var(--color-borde); font: 600 12.5px/1 var(--fuente-cuerpo); color: var(--color-texto-suave);
+}
+.menu-ajustes__marca { display: inline-flex; align-items: center; gap: 8px; }
+.menu-ajustes__marca .menu-ajustes__punto { color: var(--color-exito); }
+.menu-ajustes__version {
+  padding: 4px 9px; border-radius: 999px; font-size: 11.5px;
+  background: var(--color-oro-fondo); color: var(--color-oro); border: 1px solid rgba(229, 184, 66, 0.35);
+}
+
+/* Panel flotante sobre la pantalla actual (botón ☰ del panel) */
+.cajon-ajustes {
+  position: fixed; inset: 0; z-index: 95; display: flex; align-items: flex-start; padding: 12px;
+  background: rgba(5, 6, 8, 0); transition: background .18s;
+}
+.cajon-ajustes[hidden] { display: none; }
+.cajon-ajustes--abierto { background: rgba(5, 6, 8, 0.55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.cajon-ajustes menu-ajustes { width: min(100%, 390px); transform: translateX(-24px); opacity: 0; transition: transform .18s ease-out, opacity .18s; }
+.cajon-ajustes--abierto menu-ajustes { transform: none; opacity: 1; }
+.cajon-ajustes .menu-ajustes { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+.cajon-ajustes .menu-ajustes__lista { overflow-y: auto; }
+.sin-desplazamiento, .sin-desplazamiento body { overflow: hidden; }
+@media (max-width: 480px) {
+  .cajon-ajustes { padding: 8px; }
+  .cajon-ajustes menu-ajustes { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cajon-ajustes, .cajon-ajustes menu-ajustes { transition: none; }
+}
+
+/* =============================================================================
+   Pantalla de ajustes: menú a la izquierda y sección a la derecha.
+   En teléfono se ve primero el menú y, al elegir, la sección con «‹ Ajustes».
+   ============================================================================= */
+.ajustes { display: grid; gap: 20px; align-items: start; }
+.ajustes__contenido { min-width: 0; }
+.ajustes__volver {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; padding: 8px 12px 8px 8px; cursor: pointer;
+  border-radius: 999px; border: 1px solid var(--color-borde); background: var(--color-superficie);
+  color: var(--color-texto-suave); font-weight: 600; font-size: 13px;
+}
+.ajustes__volver:hover { color: #fff; border-color: var(--color-borde-fuerte); }
+.ajustes__volver svg { width: 18px; height: 18px; }
+@media (min-width: 1024px) {
+  .ajustes { grid-template-columns: 320px minmax(0, 1fr); }
+  .ajustes__menu { position: sticky; top: calc(var(--alto-encabezado) + 16px); }
+  .ajustes__volver { display: none; }
+}
+@media (max-width: 1023.98px) {
+  .ajustes[data-vista="menu"] .ajustes__contenido { display: none; }
+  .ajustes[data-vista="seccion"] .ajustes__menu { display: none; }
+}
+
+/* =============================================================================
+   Editor de beneficios de membresía (ajustes.html)
+   ============================================================================= */
+.beneficio {
+  display: flex; flex-direction: column; gap: 10px; padding: 12px;
+  border: 1px solid var(--color-borde); border-radius: var(--radio); background: var(--color-superficie-baja);
+}
+.beneficio__encabezado { display: flex; align-items: center; gap: 8px; }
+.beneficio__numero {
+  flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--color-oro-fondo); color: var(--color-oro); font-size: 12px; font-weight: 800;
+}
+.beneficio__encabezado .campo { flex: 1; min-width: 0; font-weight: 600; }
+.beneficio__acciones { display: flex; gap: 4px; flex: none; }
+.beneficio__boton {
+  width: 34px; height: 34px; display: grid; place-items: center; border-radius: var(--radio-sm); cursor: pointer;
+  border: 1px solid var(--color-borde); background: var(--color-superficie); color: var(--color-texto-suave);
+}
+.beneficio__boton:hover:not(:disabled) { color: #fff; border-color: var(--color-borde-fuerte); }
+.beneficio__boton:disabled { opacity: .35; cursor: default; }
+.beneficio__boton--peligro:hover:not(:disabled) { color: var(--color-error); border-color: var(--color-error-borde); }
+.beneficio__boton svg { width: 16px; height: 16px; }
+.beneficio__regla { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.beneficio__campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.beneficio__campo[hidden] { display: none; }
+.beneficio__campo .etiqueta { margin: 0; font-size: 11.5px; }
+.beneficio__campo .campo { min-height: 38px; padding-top: 6px; padding-bottom: 6px; }
+.beneficio__campo--aplica { grid-column: 1 / -1; }
+@media (min-width: 768px) {
+  /* Aplica a · Beneficio · % · Límite · Usos  (con «Otra categoría»: + Categoría) */
+  .beneficio__regla { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.3fr) 76px minmax(0, 1.3fr) 76px; }
+  .beneficio__campo--aplica { grid-column: auto; }
+  .beneficio__regla[data-categoria] { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 70px minmax(0, 1.2fr) 70px; }
+}
+@media (max-width: 560px) {
+  .beneficio__encabezado { flex-wrap: wrap; }
+  .beneficio__acciones { margin-left: auto; }
+  .beneficio__encabezado .campo { order: 3; flex-basis: 100%; }
+}
+.beneficio__resumen { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--color-texto-suave); }
+.beneficio__resumen svg { width: 15px; height: 15px; color: var(--color-oro); flex: none; }
+.beneficio--texto .beneficio__regla > :not(.beneficio__campo--aplica) { display: none; }
+.beneficio--error { border-color: var(--color-error-borde); }
+
+/* Lista de beneficios en la tarjeta de una membresía */
+.lista-beneficios { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.lista-beneficios li { display: flex; gap: 8px; align-items: flex-start; }
+.lista-beneficios svg { width: 16px; height: 16px; color: var(--color-oro); flex: none; margin-top: 2px; }
+.lista-beneficios__texto { color: var(--color-texto); font-size: 14px; font-weight: 600; line-height: 1.3; }
+.lista-beneficios__regla { display: block; color: var(--color-texto-tenue); font-size: 12px; font-weight: 500; margin-top: 1px; }
+
+/* =============================================================================
+   Foto de corte de referencia en avatares y visor rápido
+   ============================================================================= */
+.avatar { position: relative; overflow: hidden; }
+.avatar--foto { cursor: zoom-in; }
+.avatar__foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.avatar--grande { width: 64px; height: 64px; font-size: 20px; border-radius: 16px; }
+.sugerencia__foto { flex: none; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid var(--color-borde); }
+.visor-rapido {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; cursor: zoom-out;
+  background: rgba(5, 6, 8, 0.85); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.visor-rapido__marco { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 100%; }
+.visor-rapido__marco img { max-width: min(92vw, 720px); max-height: 80vh; border-radius: var(--radio-lg); object-fit: contain; box-shadow: var(--sombra); }
+.visor-rapido__marco figcaption { color: var(--color-texto-suave); font-size: 13px; text-align: center; }
+
+/* ---------------------------------------------------------------------------
+   Arqueo por billetes y monedas (cierre de caja)
+   --------------------------------------------------------------------------- */
+.arqueo { margin-top: 8px; border: 1px solid var(--color-borde); border-radius: 12px; padding: 8px 12px; }
+.arqueo > summary { cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--color-oro-claro); padding: 4px 0; }
+.arqueo__lista { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.arqueo__fila { display: grid; grid-template-columns: 84px 12px minmax(0, 1fr) 92px; align-items: center; gap: 8px; font-size: 13.5px; }
+.arqueo__fila .campo { padding: 6px 10px; min-height: 36px; text-align: right; }
+.arqueo__subtotal { text-align: right; color: var(--color-texto-suave); }
+
+/* ---------------------------------------------------------------------------
+   Reembolsos: un renglón por concepto de la venta
+   --------------------------------------------------------------------------- */
+.renglon-reembolso { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--color-borde); border-radius: 12px; }
+.renglon-reembolso[data-marcado="true"] { border-color: var(--color-oro); background: var(--color-oro-fondo); }
+.renglon-reembolso[data-agotado="true"] { opacity: 0.55; }
+.renglon-reembolso__marca { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; }
+.renglon-reembolso__marca input { width: 20px; height: 20px; flex: none; accent-color: var(--color-oro); }
+.renglon-reembolso__cantidad { display: flex; align-items: center; gap: 8px; flex: none; }
+.renglon-reembolso__importe { flex: none; min-width: 78px; text-align: right; }
+
+/* ---------------------------------------------------------------------------
+   Horario de atención (Datos del negocio)
+   --------------------------------------------------------------------------- */
+.horario-negocio { display: flex; flex-direction: column; gap: 6px; }
+.horario-negocio__dia { display: grid; grid-template-columns: minmax(104px, 1fr) minmax(0, 1.1fr) 14px minmax(0, 1.1fr); align-items: center; gap: 8px; font-size: 13.5px; }
+.horario-negocio__dia label { display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
+.horario-negocio__dia input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--color-oro); }
+.horario-negocio__dia .campo { padding: 6px 8px; min-height: 38px; }
+.horario-negocio__dia[data-cerrado="true"] .campo { visibility: hidden; }
+.horario-negocio__cerrado { display: none; grid-column: 2 / -1; color: var(--color-texto-tenue, #8b909b); }
+.horario-negocio__dia[data-cerrado="true"] .horario-negocio__cerrado { display: block; }
+.horario-negocio__dia[data-cerrado="true"] .campo, .horario-negocio__dia[data-cerrado="true"] .horario-negocio__a { display: none; }
+
+/* ---------------------------------------------------------------------------
+   Conversación del bot de WhatsApp (simulador y mensajes recientes)
+   --------------------------------------------------------------------------- */
+.chat-bot { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 12px; background: #0b141a; max-height: 420px; overflow-y: auto; }
+.chat-bot--registro { max-height: 520px; }
+.chat-bot__globo { max-width: 88%; padding: 8px 11px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; color: #e9edef; }
+.chat-bot__globo--cliente { align-self: flex-end; background: #005c4b; border-top-right-radius: 3px; }
+.chat-bot__globo--bot { align-self: flex-start; background: #202c33; border-top-left-radius: 3px; }
+.chat-bot__globo strong { color: #fff; }
+.chat-bot__pie { display: block; margin-top: 4px; font-size: 11px; color: #8696a0; }
+.chat-bot__pie--error { color: #fca5a5; }
+.comando { display: block; margin-top: 6px; padding: 8px 10px; border-radius: 8px; background: var(--color-superficie-alta); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; color: var(--color-texto); overflow-wrap: anywhere; user-select: all; }

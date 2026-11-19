@@ -3,15 +3,20 @@
   ============================================================================
   Engreídos Barbershop · Agendar cita  (CU-01 / CU-16)
   ----------------------------------------------------------------------------
-  Permite reservar un horario con un barbero desde la caja o desde la app del
-  barbero. Pasos: elegir barbero → elegir fecha → elegir un horario libre →
-  buscar al cliente → elegir el servicio → confirmar.
+  Reserva un horario con un barbero desde la caja o desde la app del barbero:
+    1. Barbero (registrados en el sistema).
+    2. Día: la semana muestra si cada día está Libre, Ocupado o No disponible.
+    3. Horario: bloques Libres, Ocupados, de Comida o No disponibles.
+    4. Cliente: búsqueda por nombre o teléfono, o «Cliente nuevo».
+    5. Servicio solicitado (catálogo de servicios registrados).
+    6. Confirmar: se guarda la cita y el resumen se envía al cliente por
+       WhatsApp automáticamente (si la API está configurada en Ajustes).
 
   Parámetros de URL opcionales:
-    ?cliente=ID   preselecciona al cliente (viene de «Perfil del cliente»).
+    ?cliente=ID   preselecciona al cliente (perfil o regreso de «Cliente nuevo»).
 
-  Endpoints: GET /barberos · GET /servicios · GET /clientes?buscar= ·
-             GET /clientes/:id · GET /citas/disponibilidad · POST /citas
+  Endpoints: GET /barberos · GET /servicios · GET /clientes · GET /clientes/:id ·
+             GET /citas/dias · GET /citas/disponibilidad · POST /citas
   Lógica:    assets/js/paginas/agendar-cita.js
   ============================================================================
 -->
@@ -21,15 +26,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Agendar cita · Engreídos Barbershop</title>
 
-  <!-- Tipografías e íconos -->
+  <!-- Ícono de la pestaña y de «Agregar a pantalla de inicio» (logotipo oficial) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icono-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icono-192.png">
+  <link rel="apple-touch-icon" href="assets/img/icono-180.png">
+  <meta name="theme-color" content="#0d0f13">
+
+  <!-- Tipografías e íconos (se cargan sin bloquear: la pantalla aparece aunque no haya internet) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
 
-  <!-- Tailwind CSS (distribución) + configuración compartida -->
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="assets/js/tailwind.config.js"></script>
+  <!-- Tailwind CSS compilado (funciona sin internet). Regenerar: cd servidor && npm run estilos -->
+  <link rel="stylesheet" href="assets/css/tailwind.css">
 
   <!-- Sistema de diseño propio -->
   <link rel="stylesheet" href="assets/css/comun.css">
@@ -42,45 +52,63 @@
     .barbero-opcion[aria-pressed="true"] .fila__detalle { color: #52525b; }
     .barbero-opcion[aria-pressed="true"] .avatar { background: #0c0d0e; color: #fff; border-color: #0c0d0e; }
 
-    /* Cuadro de horario: el estado lo pone el controlador en data-estado */
-    .horario {
-      display: flex; flex-direction: column; justify-content: space-between; gap: 6px;
-      min-height: 76px; padding: 10px 12px; text-align: left;
-      border-radius: var(--radio-sm); border: 1px solid var(--color-borde);
-      background: var(--color-superficie-baja); color: var(--color-texto);
-      font: inherit; cursor: pointer; transition: border-color .15s, background-color .15s;
-    }
-    .horario__hora { font: 700 16px/1 var(--fuente-numeros); }
+    /* Día de la semana con su estado (data-estado = Libre | Ocupado | NoDisponible) */
+    .dia { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: var(--radio-sm);
+      border: 1px solid var(--color-borde); background: var(--color-superficie-baja); color: var(--color-texto); cursor: pointer; min-width: 0; }
+    .dia__nombre { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--color-texto-tenue); }
+    .dia__numero { font: 700 20px/1 var(--fuente-numeros); }
+    .dia__estado { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .dia__estado::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+    .dia[data-estado="Libre"] .dia__estado { color: var(--color-exito); }
+    .dia[data-estado="Ocupado"] .dia__estado { color: var(--color-error); }
+    .dia[data-estado="NoDisponible"] { opacity: .55; }
+    .dia[data-estado="NoDisponible"] .dia__estado { color: var(--color-texto-tenue); }
+    .dia[aria-pressed="true"] { background: var(--color-blanco); border-color: var(--color-blanco); color: var(--color-texto-invertido); opacity: 1; }
+    .dia[aria-pressed="true"] .dia__nombre { color: #52525b; }
+
+    /* Cuadro de horario: data-estado = Libre | Ocupado | Comida | NoDisponible */
+    .horario { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-height: 72px; padding: 10px 12px;
+      text-align: left; border-radius: var(--radio-sm); border: 1px solid var(--color-borde); background: var(--color-superficie-baja);
+      color: var(--color-texto); font: inherit; cursor: pointer; transition: border-color .15s, background-color .15s; }
+    .horario__hora { font: 700 15px/1 var(--fuente-numeros); white-space: nowrap; }
     .horario__estado { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
     .horario__detalle { font-size: 11.5px; color: var(--color-texto-tenue); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .horario[data-estado="Libre"] .horario__estado { color: var(--color-exito); }
-    .horario[data-estado="Libre"]:hover { border-color: var(--color-texto-suave); background: var(--color-superficie-alta); }
-    .horario[data-estado="Ocupado"] { background: var(--color-superficie-alta); opacity: .75; cursor: not-allowed; }
-    .horario[data-estado="Ocupado"] .horario__estado { color: var(--color-texto-suave); }
-    .horario[data-estado="NoDisponible"] { opacity: .45; cursor: not-allowed; }
+    .horario[data-estado="Libre"]:hover:not([aria-disabled="true"]) { border-color: var(--color-texto-suave); background: var(--color-superficie-alta); }
+    .horario[data-estado="Libre"][aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+    .horario[data-estado="Ocupado"] { background: var(--color-error-fondo); border-color: var(--color-error-borde); cursor: not-allowed; }
+    .horario[data-estado="Ocupado"] .horario__estado { color: #fca5a5; }
+    .horario[data-estado="Comida"] { background: var(--color-alerta-fondo); border-color: var(--color-alerta-borde); cursor: not-allowed; }
+    .horario[data-estado="Comida"] .horario__estado { color: #fcd34d; }
+    .horario[data-estado="NoDisponible"] { opacity: .4; cursor: not-allowed; }
     .horario[data-estado="NoDisponible"] .horario__estado { color: var(--color-texto-tenue); }
-    .horario[data-estado][aria-pressed="true"] { background: var(--color-blanco); border-color: var(--color-blanco); color: var(--color-texto-invertido); box-shadow: 0 0 20px rgba(255,255,255,.25); }
+    .horario[data-estado][aria-pressed="true"] { background: var(--color-blanco); border-color: var(--color-blanco); color: var(--color-texto-invertido); box-shadow: 0 0 20px rgba(255,255,255,.25); opacity: 1; }
     .horario[data-estado][aria-pressed="true"] .horario__estado { color: var(--color-texto-invertido); }
+
+    /* Servicio solicitado */
+    .servicio-opcion { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; }
+    .servicio-opcion[aria-pressed="true"] { border-color: var(--color-oro); box-shadow: 0 0 0 1px var(--color-oro) inset; background: var(--color-oro-fondo); }
+    .servicio-opcion[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 
     /* Comprobante de la cita (papel claro) */
     .comprobante { background: #f8f7f4; color: #111; border-radius: var(--radio); padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.5); }
     .comprobante .dato__etiqueta { color: #71717a; }
     .comprobante .dato__valor { color: #111; }
 
-    /* Barra de ocupación */
-    .barra { height: 8px; border-radius: 999px; background: var(--color-superficie-alta); overflow: hidden; border: 1px solid var(--color-borde); }
-    .barra__relleno { height: 100%; width: 0; background: #fff; border-radius: 999px; transition: width .3s ease; }
+    .leyenda-punto { width: 10px; height: 10px; border-radius: 3px; display: inline-block; border: 1px solid var(--color-borde-fuerte); }
   </style>
 
   <!-- Núcleo de la aplicación (el orden importa) -->
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/idioma.js"></script>
   <script src="assets/js/utilidades.js"></script>
   <script src="assets/js/sesion.js"></script>
   <script src="assets/js/api.js"></script>
-  <script src="assets/js/api-sin-servidor.js"></script>
 
   <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/logo-engreidos.js" defer></script>
   <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/componentes/buscador-cliente.js" defer></script>
   <script src="assets/js/paginas/agendar-cita.js" defer></script>
 </head>
 
@@ -95,17 +123,17 @@
       <div>
         <span class="cabecera-pagina__antetitulo">Gestión de turnos</span>
         <h1 class="cabecera-pagina__titulo">Agendar cita</h1>
-        <p class="cabecera-pagina__descripcion">Elige barbero, fecha y horario; después asigna al cliente y el servicio.</p>
+        <p class="cabecera-pagina__descripcion">Elige barbero, día y horario; después el cliente y el servicio.</p>
       </div>
-      <!-- Jornada del barbero seleccionado (HoraEntrada–HoraSalida · comida) -->
-      <span id="jornada" class="pastilla" hidden>
+      <!-- Jornada del barbero seleccionado -->
+      <span id="jornada" class="pastilla pastilla--flexible" hidden>
         <span class="icono icono--sm texto-suave" aria-hidden="true">schedule</span>
-        <span>Jornada <strong class="text-white" data-campo="Jornada"></strong></span>
-        <span class="texto-tenue" data-campo="Comida"></span>
+        <span><span>Jornada</span> <strong class="text-white" id="jornada-horas" translate="no"></strong></span>
+        <span class="texto-tenue" id="jornada-comida"></span>
       </span>
     </div>
 
-    <!-- ===== Paso 1 y 2: barbero y fecha ===== -->
+    <!-- ===== Paso 1 y 2: barbero y día ===== -->
     <section class="tarjeta mb-4" aria-labelledby="titulo-barbero">
       <div class="tarjeta__encabezado">
         <h2 id="titulo-barbero" class="tarjeta__titulo"><span class="icono" aria-hidden="true">content_cut</span>Barbero</h2>
@@ -116,27 +144,31 @@
       <div id="barberos-vacio" class="estado-vacio" hidden>
         <span class="icono" aria-hidden="true">person_off</span>
         <span class="estado-vacio__titulo">No hay barberos registrados</span>
-        <span>El Dueño los da de alta en «Personal y horarios».</span>
+        <span>El Dueño los da de alta en Ajustes → Cuentas.</span>
       </div>
-      <!-- Lista de barberos (plantilla #plantilla-barbero) -->
       <div id="lista-barberos" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2" role="group" aria-label="Barberos" hidden></div>
 
-      <!-- Navegación de fecha y leyenda -->
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-4 mt-4 border-t border-borde">
-        <div class="flex flex-wrap items-center gap-2">
-          <button type="button" id="dia-anterior" class="boton boton--icono" aria-label="Día anterior"><span class="icono" aria-hidden="true">chevron_left</span></button>
-          <span class="flex items-center gap-2 px-2 font-semibold text-white">
-            <span class="icono icono--sm" aria-hidden="true">calendar_today</span>
-            <span id="fecha-texto" class="first-letter:uppercase"></span>
-          </span>
-          <button type="button" id="dia-siguiente" class="boton boton--icono" aria-label="Día siguiente"><span class="icono" aria-hidden="true">chevron_right</span></button>
-          <button type="button" id="dia-hoy" class="boton boton--pequeno">Hoy</button>
+      <!-- Semana con el estado de cada día -->
+      <div class="pt-4 mt-4 border-t border-borde">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div class="flex items-center gap-2">
+            <button type="button" id="semana-anterior" class="boton boton--icono" aria-label="Semana anterior"><span class="icono" aria-hidden="true">chevron_left</span></button>
+            <span class="flex items-center gap-2 px-1 font-semibold text-white">
+              <span class="icono icono--sm" aria-hidden="true">calendar_today</span>
+              <span id="fecha-texto" class="first-letter:uppercase"></span>
+            </span>
+            <button type="button" id="semana-siguiente" class="boton boton--icono" aria-label="Semana siguiente"><span class="icono" aria-hidden="true">chevron_right</span></button>
+            <button type="button" id="dia-hoy" class="boton boton--pequeno">Hoy</button>
+          </div>
+          <ul class="flex flex-wrap items-center gap-4 text-xs texto-suave" aria-label="Leyenda">
+            <li class="flex items-center gap-2"><span class="leyenda-punto" style="background:var(--color-exito)"></span>Libre</li>
+            <li class="flex items-center gap-2"><span class="leyenda-punto" style="background:var(--color-error)"></span>Ocupado</li>
+            <li class="flex items-center gap-2"><span class="leyenda-punto" style="background:var(--color-alerta)"></span>Comida</li>
+            <li class="flex items-center gap-2"><span class="leyenda-punto" style="background:var(--color-superficie-alta)"></span>No disponible</li>
+          </ul>
         </div>
-        <ul class="flex flex-wrap items-center gap-4 text-xs texto-suave" aria-label="Leyenda">
-          <li class="flex items-center gap-2"><span class="insignia__punto texto-exito"></span>Libre</li>
-          <li class="flex items-center gap-2"><span class="insignia__punto texto-tenue"></span>Ocupado</li>
-          <li class="flex items-center gap-2"><span class="icono icono--sm texto-tenue" aria-hidden="true">block</span>No disponible</li>
-        </ul>
+        <div id="semana" class="grid grid-cols-7 gap-1.5 sm:gap-2" role="group" aria-label="Días de la semana"></div>
+        <p id="dia-motivo" class="ayuda" hidden></p>
       </div>
     </section>
 
@@ -153,92 +185,52 @@
         <div id="horarios-vacio" class="estado-vacio">
           <span class="icono" aria-hidden="true">event_busy</span>
           <span class="estado-vacio__titulo" data-titulo>Selecciona un barbero</span>
-          <span data-detalle>Se mostrarán sus horarios libres y ocupados del día.</span>
+          <span data-detalle>Se mostrarán sus horarios libres, ocupados y de comida.</span>
         </div>
-        <!-- Cuadrícula de horarios (plantilla #plantilla-horario) -->
         <div id="lista-horarios" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2.5" hidden></div>
-
-        <!-- Ocupación calculada con los horarios recibidos -->
-        <div id="ocupacion" class="bloque mt-4 flex flex-wrap items-center justify-between gap-3" hidden>
-          <div class="flex flex-wrap items-center gap-4">
-            <div class="dato"><span class="dato__etiqueta">Ocupación</span><span class="dato__valor numeros" data-campo="Porcentaje"></span></div>
-            <div class="barra w-40 sm:w-48"><div class="barra__relleno" id="barra-ocupacion"></div></div>
-          </div>
-          <span class="text-sm texto-suave" data-campo="Resumen"></span>
-        </div>
       </section>
 
-      <!-- ===== Paso 4 y 5: cliente, servicio y confirmación ===== -->
+      <!-- ===== Pasos 4 a 6: datos, cliente, servicio y confirmación ===== -->
       <aside class="tarjeta lg:col-span-5 xl:col-span-4 columna-fija flex flex-col gap-4" aria-labelledby="titulo-datos">
         <div class="tarjeta__encabezado" style="margin-bottom:0">
           <h2 id="titulo-datos" class="tarjeta__titulo"><span class="icono" aria-hidden="true">event_available</span>Datos de la cita</h2>
         </div>
 
-        <!-- Resumen de la reserva -->
-        <div class="comprobante" aria-live="polite">
-          <div class="flex items-baseline gap-2">
-            <span id="resumen-hora" class="titulo-serif text-3xl font-bold">--:--</span>
-            <span class="text-sm font-semibold" style="color:#52525b">hrs</span>
-          </div>
+        <!-- Resumen que también se envía por WhatsApp -->
+        <div class="comprobante" aria-live="polite" id="comprobante">
+          <div class="titulo-serif text-3xl font-bold" id="resumen-hora" translate="no">--:--</div>
           <div class="grid grid-cols-2 gap-3 pt-3 mt-2" style="border-top:1px solid #d4d4d8">
-            <div class="dato"><span class="dato__etiqueta">Fecha</span><span class="dato__valor text-sm" id="resumen-fecha">—</span></div>
-            <div class="dato"><span class="dato__etiqueta">Barbero</span><span class="dato__valor text-sm" id="resumen-barbero">—</span></div>
-            <div class="dato col-span-2"><span class="dato__etiqueta">Duración</span><span class="dato__valor text-sm" id="resumen-duracion">—</span></div>
+            <div class="dato col-span-2"><span class="dato__etiqueta">Fecha</span><span class="dato__valor text-sm first-letter:uppercase" id="resumen-fecha" translate="no">—</span></div>
+            <div class="dato"><span class="dato__etiqueta">Duración</span><span class="dato__valor text-sm" id="resumen-duracion">—</span></div>
+            <div class="dato"><span class="dato__etiqueta">Barbero</span><span class="dato__valor text-sm" id="resumen-barbero" translate="no">—</span></div>
+            <div class="dato"><span class="dato__etiqueta">Cliente</span><span class="dato__valor text-sm" id="resumen-cliente" translate="no">—</span></div>
+            <div class="dato"><span class="dato__etiqueta">Servicio</span><span class="dato__valor text-sm" id="resumen-servicio" translate="no">—</span></div>
           </div>
         </div>
 
         <!-- Cliente -->
         <div>
-          <div class="flex items-center justify-between gap-2 mb-1.5">
-            <label class="etiqueta" for="buscar-cliente" style="margin:0">Cliente <span class="etiqueta__requerido">*</span></label>
-            <button type="button" class="boton boton--fantasma boton--pequeno" data-nav="nuevo-cliente.html">
-              <span class="icono icono--sm" aria-hidden="true">person_add</span>Cliente nuevo
-            </button>
-          </div>
-
-          <!-- Cliente elegido -->
+          <span class="etiqueta">Cliente <span class="etiqueta__requerido">*</span></span>
           <div id="cliente-elegido" class="fila" hidden>
-            <span class="avatar" data-campo="Nombre" data-formato="iniciales"></span>
+            <span class="avatar" data-campo="Nombre" data-formato="iniciales" data-avatar-foto="FotoCorteReferencia"></span>
             <div class="fila__cuerpo">
               <div class="fila__titulo" data-campo="Nombre"></div>
               <div class="fila__detalle numeros" data-campo="Telefono" data-formato="telefono"></div>
             </div>
             <button type="button" id="cambiar-cliente" class="boton boton--pequeno">Cambiar</button>
           </div>
-
-          <!-- Búsqueda -->
-          <div id="cliente-busqueda">
-            <div class="campo-icono">
-              <span class="icono" aria-hidden="true">search</span>
-              <input class="campo" id="buscar-cliente" type="search" placeholder="Nombre o teléfono" autocomplete="off">
-            </div>
-            <p id="clientes-sin-resultados" class="ayuda" hidden>Sin coincidencias. Registra al cliente con «Cliente nuevo».</p>
-            <div id="resultados-clientes" class="flex flex-col gap-2 mt-2" hidden></div>
-          </div>
+          <buscador-cliente id="buscador" nuevo="agendar-cita.html" placeholder="Buscar por nombre o teléfono"></buscador-cliente>
+          <p class="ayuda">¿No está registrado? Escribe su nombre y elige «Registrar cliente nuevo».</p>
         </div>
 
-        <!-- Servicio solicitado (catálogo GET /servicios) -->
+        <!-- Servicios solicitados (catálogo de Ajustes → Servicios) -->
         <div>
-          <label class="etiqueta" for="servicio">Servicio solicitado</label>
-          <select class="campo" id="servicio" disabled>
-            <option value="">Cargando servicios…</option>
-          </select>
-          <div id="servicio-detalle" class="bloque mt-2 flex items-center justify-between gap-3" hidden>
-            <div class="min-w-0">
-              <div class="font-bold text-white text-sm" data-campo="NombreServicio"></div>
-              <div class="text-xs texto-tenue" data-campo="Descripcion" data-vacio=""></div>
-            </div>
-            <div class="text-right">
-              <div class="numeros font-bold text-white" data-campo="Precio" data-formato="moneda"></div>
-              <div class="text-xs texto-exito"><span data-campo="DuracionMin"></span> min</div>
-            </div>
+          <span class="etiqueta">Servicio solicitado <span class="etiqueta__requerido">*</span></span>
+          <p id="servicios-cargando" class="cargando">Cargando servicios…</p>
+          <div id="servicios-vacio" class="estado-vacio" hidden>
+            <span>Aún no hay servicios registrados. El Dueño los agrega en Ajustes → Servicios.</span>
           </div>
-        </div>
-
-        <!-- Información para el usuario -->
-        <div class="alerta">
-          <span class="icono texto-exito" aria-hidden="true">chat</span>
-          <p>La agenda se sincroniza con las citas y cancelaciones recibidas por WhatsApp.</p>
+          <div id="lista-servicios" class="flex flex-col gap-2" role="group" aria-label="Servicios" hidden></div>
         </div>
 
         <!-- Acciones -->
@@ -248,13 +240,31 @@
           </button>
           <button type="button" id="limpiar" class="boton">Cancelar</button>
         </div>
+        <p class="ayuda flex items-center gap-1.5"><span class="icono icono--sm texto-exito" aria-hidden="true">chat</span>Al confirmar, el resumen se envía al cliente por WhatsApp.</p>
       </aside>
     </div>
   </main>
 
-  <!-- ===================== Plantillas ===================== -->
+  <!-- ===== Ventana: cita confirmada ===== -->
+  <div id="cita-lista" class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-cita-lista" hidden>
+    <div class="modal__caja flex flex-col gap-4">
+      <div class="flex items-center gap-3">
+        <span class="avatar" style="background:var(--color-exito-fondo);color:var(--color-exito);border-color:var(--color-exito-borde)"><span class="icono" aria-hidden="true">event_available</span></span>
+        <div>
+          <h3 id="titulo-cita-lista" class="modal__titulo" style="margin:0">Cita agendada</h3>
+          <p class="text-sm texto-suave" id="estado-whatsapp"></p>
+        </div>
+      </div>
+      <div class="comprobante" id="comprobante-final"></div>
+      <div class="modal__acciones">
+        <button type="button" class="boton" id="enviar-whatsapp" hidden><span class="icono icono--sm" aria-hidden="true">chat</span>Enviar por WhatsApp</button>
+        <button type="button" class="boton" data-nav="@panel">Ir al panel</button>
+        <button type="button" class="boton boton--primario" id="nueva-cita">Agendar otra cita</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Barbero en la lista de selección -->
+  <!-- ===================== Plantillas ===================== -->
   <template id="plantilla-barbero">
     <button type="button" class="fila fila--seleccionable barbero-opcion" aria-pressed="false" data-campo-id="ID_Barbero">
       <span class="avatar" style="width:34px;height:34px;font-size:13px" data-campo="Nombre" data-formato="iniciales"></span>
@@ -265,25 +275,31 @@
     </button>
   </template>
 
-  <!-- Cuadro de horario: data-estado = Libre | Ocupado | NoDisponible -->
+  <template id="plantilla-dia">
+    <button type="button" class="dia" aria-pressed="false">
+      <span class="dia__nombre" data-campo="Nombre"></span>
+      <span class="dia__numero" data-campo="Numero"></span>
+      <span class="dia__estado" data-campo="EstadoTexto" data-traducir></span>
+    </button>
+  </template>
+
   <template id="plantilla-horario">
     <button type="button" class="horario" aria-pressed="false">
       <span class="horario__hora" data-campo="Hora"></span>
       <span>
-        <span class="horario__estado block" data-campo="EstadoTexto"></span>
+        <span class="horario__estado block" data-campo="EstadoTexto" data-traducir></span>
         <span class="horario__detalle block" data-campo="Detalle" data-vacio=""></span>
       </span>
     </button>
   </template>
 
-  <!-- Resultado de búsqueda de clientes -->
-  <template id="plantilla-cliente">
-    <button type="button" class="fila fila--seleccionable" data-campo-id="ID_Cliente">
-      <span class="avatar" style="width:34px;height:34px;font-size:13px" data-campo="Nombre" data-formato="iniciales"></span>
+  <template id="plantilla-servicio">
+    <button type="button" class="fila fila--seleccionable servicio-opcion" aria-pressed="false" data-campo-id="ID_Servicio">
       <span class="fila__cuerpo">
-        <span class="fila__titulo block text-sm" data-campo="Nombre"></span>
-        <span class="fila__detalle block numeros" data-campo="Telefono" data-formato="telefono"></span>
+        <span class="fila__titulo block text-sm" data-campo="NombreServicio"></span>
+        <span class="fila__detalle block" data-campo="Detalle" data-vacio=""></span>
       </span>
+      <span class="numeros font-bold text-white" data-campo="Precio" data-formato="moneda"></span>
     </button>
   </template>
 </body>

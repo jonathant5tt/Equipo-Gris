@@ -3,13 +3,21 @@
   ============================================================================
   Engreídos Barbershop · Ticket digital  (CU-05)
   ----------------------------------------------------------------------------
-  Muestra el comprobante de una venta ya registrada y permite imprimirlo,
-  enviarlo al cliente o iniciar una venta nueva.
+  Comprobante de una venta registrada (sin IVA): conceptos con su barbero,
+  precio normal, descuento y precio con descuento, total, método de pago,
+  monto recibido y cambio, y vencimiento de la membresía si se pagó una.
+
+  Acciones:
+    · Imprimir ticket físico: impresora térmica de 58 mm por Bluetooth, USB o
+      la impresora del sistema (ver assets/js/impresora.js y Ajustes → Impresora).
+    · Compartir ticket digital por WhatsApp o SMS.
+    · Finalizar y nueva venta.
 
   Parámetros de URL:
-    ?venta=ID   (obligatorio) venta a mostrar; lo envía «Registrar cobro».
+    ?venta=ID   (obligatorio) venta a mostrar.
+    ?nueva=1    muestra el aviso «¡Cobro registrado con éxito!».
 
-  Endpoints: GET /ventas/:id · GET /establecimiento · POST /ventas/:id/enviar
+  Endpoints: GET /ventas/:id · POST /ventas/:id/enviar
   Lógica:    assets/js/paginas/ticket-digital.js
   ============================================================================
 -->
@@ -19,45 +27,73 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ticket digital · Engreídos Barbershop</title>
 
-  <!-- Tipografías e íconos -->
+  <!-- Ícono de la pestaña y de «Agregar a pantalla de inicio» (logotipo oficial) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icono-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icono-192.png">
+  <link rel="apple-touch-icon" href="assets/img/icono-180.png">
+  <meta name="theme-color" content="#0d0f13">
+
+  <!-- Tipografías e íconos (se cargan sin bloquear: la pantalla aparece aunque no haya internet) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
 
-  <!-- Tailwind CSS (distribución) + configuración compartida -->
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="assets/js/tailwind.config.js"></script>
+  <!-- Tailwind CSS compilado (funciona sin internet). Regenerar: cd servidor && npm run estilos -->
+  <link rel="stylesheet" href="assets/css/tailwind.css">
 
   <!-- Sistema de diseño propio -->
   <link rel="stylesheet" href="assets/css/comun.css">
 
   <!-- Estilos exclusivos de esta pantalla: papel del ticket -->
   <style>
-    .ticket { background: #faf8f3; color: #1d1f23; border-radius: var(--radio-lg) var(--radio-lg) 0 0; padding: 26px 28px 30px; font-size: 13px; box-shadow: var(--sombra); }
-    .ticket__marca { font-family: var(--fuente-logo); font-size: 30px; letter-spacing: .14em; font-weight: 600; }
-    .ticket__marca span { color: #b0563c; font-weight: 300; }
+    .ticket { background: #faf8f3; color: #1d1f23; border-radius: var(--radio-lg) var(--radio-lg) 0 0; padding: 26px 26px 30px; font-size: 13px; box-shadow: var(--sombra); }
+    .ticket__logo { height: 64px; margin: 0 auto; color: #161c34; }
     .ticket__separador { border: 0; border-top: 1px dashed #c9c4b8; margin: 14px 0; }
+    .ticket .texto-gris { color: #6a6f78; }
+    .ticket__mono { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 12px; }
+    .ticket__columnas { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #6a6f78; margin-bottom: 6px; }
+    .ticket__linea { padding: 6px 0; }
+    .ticket__linea + .ticket__linea { border-top: 1px dotted #e1ddd2; }
+    .ticket__importe { font-family: var(--fuente-numeros); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+    .ticket__tachado { display: block; text-decoration: line-through; color: #8a8f97; font-size: 11.5px; }
+    .ticket__descuento { color: #16835a; font-size: 12px; }
     .ticket .total-linea { color: #4b5058; }
     .ticket .total-linea span:last-child { color: #1d1f23; }
     .ticket .total-linea--descuento span { color: #16835a !important; }
     .ticket__total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; margin-top: 8px; border-top: 2px solid #2b2e33; font-weight: 800; }
-    .ticket__total span:last-child { font: 800 26px/1 var(--fuente-numeros); }
-    .ticket__pago { margin-top: 12px; padding: 10px 12px; border-radius: var(--radio-sm); background: #eef1f5; font-family: var(--fuente-numeros); font-size: 12px; }
-    .ticket .texto-gris { color: #6a6f78; }
-    /* Borde dentado inferior del ticket */
+    .ticket__total span:last-child { font: 800 28px/1 var(--fuente-numeros); }
+    .ticket__pago { margin-top: 12px; padding: 10px 12px; border-radius: var(--radio-sm); background: #eef1f5; }
+    .ticket__membresia { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #fdf3cf; border: 1px solid #e6c55a; color: #7a5a07; font-size: 11px; font-weight: 700; }
     .ticket-borde { height: 12px; background: linear-gradient(-45deg, transparent 8px, #faf8f3 0) 0 0 / 16px 12px repeat-x, linear-gradient(45deg, transparent 8px, #faf8f3 0) 0 0 / 16px 12px repeat-x; }
-    @media print { .ticket { box-shadow: none; } .ticket-borde { display: none; } }
+    .accion { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
+    .accion__icono { width: 44px; height: 44px; border-radius: var(--radio); display: grid; place-items: center; background: var(--color-superficie-alta); border: 1px solid var(--color-borde); flex: none; }
+
+    /* Impresión con el diálogo del sistema: solo el ticket, en papel de 58 mm (48 mm útiles) */
+    @media print {
+      @page { size: 58mm auto; margin: 0; }
+      html, body { background: #fff !important; width: 58mm; }
+      body::before, encabezado-app, .no-imprimir, .avisos { display: none !important; }
+      .pagina { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+      #ticket-contenido { display: block !important; }
+      .ticket { width: 48mm; margin: 0 auto; padding: 2mm 0; box-shadow: none; border-radius: 0; font-size: 9pt; background: #fff; color: #000; }
+      .ticket__logo { height: 14mm; color: #000; }
+      .ticket__total span:last-child { font-size: 13pt; }
+      .ticket__mono { font-size: 8pt; }
+      .ticket-borde { display: none; }
+    }
   </style>
 
   <!-- Núcleo de la aplicación (el orden importa) -->
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/idioma.js"></script>
   <script src="assets/js/utilidades.js"></script>
   <script src="assets/js/sesion.js"></script>
   <script src="assets/js/api.js"></script>
-  <script src="assets/js/api-sin-servidor.js"></script>
+  <script src="assets/js/impresora.js"></script>
 
   <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/logo-engreidos.js" defer></script>
   <script src="assets/js/componentes/encabezado-app.js" defer></script>
   <script src="assets/js/paginas/ticket-digital.js" defer></script>
 </head>
@@ -78,95 +114,96 @@
       </button>
     </div>
 
-    <!-- Mientras se consulta la venta -->
     <p id="ticket-cargando" class="cargando">Cargando ticket…</p>
-
-    <!-- Sin venta (falta ?venta= o no existe) -->
     <div id="ticket-vacio" class="estado-vacio" hidden>
       <span class="icono" aria-hidden="true">receipt_long</span>
       <span class="estado-vacio__titulo">No hay un ticket para mostrar</span>
       <span>El ticket aparece aquí al terminar un cobro en «Registrar cobro».</span>
     </div>
 
-    <!-- ===== Ticket + acciones ===== -->
     <div id="ticket-contenido" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start" hidden>
 
-      <section class="lg:col-span-7 min-w-0" aria-label="Comprobante de venta">
-        <!-- Confirmación -->
-        <div class="alerta alerta--exito mb-3 no-imprimir">
+      <section class="lg:col-span-7 min-w-0 max-w-xl w-full mx-auto" aria-label="Comprobante de venta">
+        <!-- Confirmación (solo al terminar un cobro) -->
+        <div id="aviso-exito" class="alerta alerta--exito mb-3 no-imprimir" hidden>
           <span class="icono icono--relleno" aria-hidden="true">check_circle</span>
           <div class="flex-1"><strong>¡Cobro registrado con éxito!</strong>Venta guardada e inventario actualizado.</div>
-          <span class="insignia insignia--exito numeros">Folio <span data-campo="NumeroFactura"></span></span>
+          <span class="insignia insignia--exito numeros"><span>Folio</span>&nbsp;<span data-campo="NumeroFactura"></span></span>
         </div>
 
         <!-- Papel del ticket -->
         <article class="ticket" id="ticket">
           <header class="text-center">
-            <div class="ticket__marca"><span>[</span>ENGREÍDOS<span>]</span></div>
-            <div class="text-[10px] tracking-[0.3em] font-semibold" style="color:#9a6a2a">BARBERSHOP</div>
-            <p class="texto-gris mt-2" id="ticket-direccion" hidden></p>
+            <logo-engreidos class="ticket__logo"></logo-engreidos>
+            <p class="font-semibold mt-2" style="color:#3b3f46" id="ticket-eslogan" translate="no" hidden></p>
+            <p class="texto-gris text-xs" id="ticket-direccion" translate="no" hidden></p>
           </header>
 
           <hr class="ticket__separador">
 
-          <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-            <div><dt class="inline texto-gris">Folio: </dt><dd class="inline numeros" data-campo="NumeroFactura"></dd></div>
-            <div class="text-right"><dt class="inline texto-gris">Fecha: </dt><dd class="inline numeros" data-campo="FechaHoraCobro" data-formato="fecha"></dd></div>
-            <div><dt class="inline texto-gris">Cajero: </dt><dd class="inline" data-campo="NombreCajero"></dd></div>
-            <div class="text-right"><dt class="inline texto-gris">Hora: </dt><dd class="inline numeros" data-campo="FechaHoraCobro" data-formato="hora"></dd></div>
-            <div class="col-span-2"><dt class="inline texto-gris">Cliente: </dt><dd class="inline" data-campo="NombreCliente" data-vacio="Público en general"></dd></div>
-          </dl>
+          <div class="ticket__mono grid grid-cols-2 gap-x-3 gap-y-1">
+            <div><span class="texto-gris">Folio:</span> <span data-campo="NumeroFactura"></span></div>
+            <div class="text-right"><span class="texto-gris">Fecha:</span> <span data-campo="FechaHoraCobro" data-formato="fecha"></span></div>
+            <div><span class="texto-gris">Atendió:</span> <span id="ticket-cajero" translate="no"></span></div>
+            <div class="text-right"><span class="texto-gris">Hora:</span> <span data-campo="FechaHoraCobro" data-formato="hora"></span></div>
+          </div>
+          <div class="ticket__mono flex flex-wrap items-center justify-between gap-2 mt-2 pt-2" style="border-top:1px dotted #d9d4c7">
+            <div><span class="texto-gris">Cliente:</span> <span id="ticket-cliente" translate="no"></span> <span class="texto-gris" id="ticket-telefono"></span></div>
+            <span class="ticket__membresia" id="ticket-plan" hidden></span>
+          </div>
 
           <hr class="ticket__separador">
 
-          <!-- Conceptos (plantilla #plantilla-linea) -->
-          <div class="flex justify-between text-[11px] font-bold tracking-wider uppercase texto-gris mb-1">
-            <span>Concepto</span><span>Importe</span>
-          </div>
-          <ul id="ticket-lineas" class="flex flex-col"></ul>
+          <div class="ticket__columnas"><span>Concepto / especialista</span><span>Importe</span></div>
+          <ul id="ticket-lineas"></ul>
 
-          <!-- Totales -->
           <div class="mt-3 pt-2" style="border-top:2px solid #2b2e33">
-            <div class="total-linea"><span>Subtotal</span><span data-campo="Subtotal" data-formato="moneda"></span></div>
-            <div class="total-linea total-linea--descuento" id="ticket-descuento"><span>Descuento membresía</span><span>−<span data-campo="Descuento" data-formato="moneda"></span></span></div>
-            <div class="total-linea"><span>IVA incluido (16 %)</span><span data-campo="IVA" data-formato="moneda"></span></div>
-            <div class="ticket__total"><span>TOTAL</span><span data-campo="ImporteTotal" data-formato="moneda"></span></div>
+            <div class="total-linea"><span>Subtotal de conceptos</span><span data-campo="Subtotal" data-formato="moneda"></span></div>
+            <div class="total-linea total-linea--descuento" id="ticket-descuento"><span>Descuentos</span><span>−<span data-campo="Descuento" data-formato="moneda"></span></span></div>
+            <div class="ticket__total"><span>TOTAL A PAGAR</span><span data-campo="ImporteTotal" data-formato="moneda"></span></div>
           </div>
 
-          <!-- Pago -->
-          <div class="ticket__pago">
-            <div class="total-linea"><span>Método de pago</span><span data-campo="MetodoPago" data-formato="mayusculas"></span></div>
+          <div class="ticket__pago ticket__mono">
+            <div class="total-linea"><span>Método de pago:</span><span data-campo="MetodoPago" data-traducir></span></div>
             <div id="ticket-efectivo">
-              <div class="total-linea"><span>Recibido</span><span data-campo="MontoRecibido" data-formato="moneda"></span></div>
-              <div class="total-linea total-linea--descuento"><span>Cambio</span><span data-campo="Cambio" data-formato="moneda"></span></div>
+              <div class="total-linea"><span>Monto recibido:</span><span data-campo="MontoRecibido" data-formato="moneda"></span></div>
+              <div class="total-linea total-linea--descuento font-bold"><span>Cambio entregado:</span><span data-campo="Cambio" data-formato="moneda"></span></div>
             </div>
           </div>
+          <p id="ticket-reembolso" class="text-center mt-3 font-semibold" style="color:#b42318" hidden></p>
+          <p id="ticket-vence" class="text-center mt-3 font-semibold" style="color:#7a5a07" hidden></p>
 
           <p class="text-center mt-4 titulo-serif italic" style="color:#444" id="ticket-mensaje">¡Gracias por su preferencia!</p>
+          <p class="text-center text-xs texto-gris" id="ticket-redes" translate="no" hidden></p>
         </article>
         <div class="ticket-borde" aria-hidden="true"></div>
       </section>
 
-      <!-- Acciones de mostrador -->
-      <aside class="lg:col-span-5 tarjeta flex flex-col gap-3 no-imprimir" aria-label="Acciones">
-        <button type="button" id="imprimir" class="fila fila--seleccionable">
-          <span class="avatar" style="border-radius:var(--radio)"><span class="icono" aria-hidden="true">print</span></span>
-          <span class="fila__cuerpo"><span class="fila__titulo block">Imprimir ticket</span><span class="fila__detalle block">Usa la impresora configurada en el equipo</span></span>
-        </button>
-
-        <div class="bloque">
-          <div class="flex items-center gap-3 mb-3">
-            <span class="avatar" style="border-radius:var(--radio)"><span class="icono" aria-hidden="true">share</span></span>
-            <div><div class="fila__titulo">Compartir ticket digital</div><div class="fila__detalle">Se envía al teléfono del cliente</div></div>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" class="boton" data-canal="whatsapp">WhatsApp</button>
-            <button type="button" class="boton" data-canal="sms">SMS</button>
+      <!-- Acciones -->
+      <aside class="lg:col-span-5 flex flex-col gap-3 no-imprimir" aria-label="Acciones">
+        <div class="tarjeta flex flex-col gap-3">
+          <button type="button" id="imprimir" class="fila fila--seleccionable accion">
+            <span class="accion__icono"><span class="icono" aria-hidden="true">print</span></span>
+            <span class="fila__cuerpo"><span class="fila__titulo block">Imprimir ticket físico</span><span class="fila__detalle block" id="texto-impresora">Impresora térmica de 58 mm</span></span>
+            <span class="icono texto-tenue" aria-hidden="true">chevron_right</span>
+          </button>
+          <div class="bloque">
+            <div class="accion mb-3">
+              <span class="accion__icono"><span class="icono texto-exito" aria-hidden="true">share</span></span>
+              <div><div class="fila__titulo">Compartir ticket digital</div><div class="fila__detalle">Envío directo al teléfono del cliente</div></div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" class="boton" data-canal="whatsapp"><span class="icono icono--sm texto-exito" aria-hidden="true">chat</span>WhatsApp</button>
+              <button type="button" class="boton" data-canal="sms"><span class="icono icono--sm" aria-hidden="true">sms</span>SMS</button>
+            </div>
           </div>
         </div>
-
         <button type="button" class="boton boton--oro boton--bloque boton--grande" data-nav="registrar-cobro.html">
-          <span class="icono" aria-hidden="true">check</span>Finalizar y nueva venta
+          <span class="icono" aria-hidden="true">check_circle</span>Finalizar y nueva venta
+        </button>
+        <button type="button" class="boton boton--bloque" id="reembolsar"><span class="icono icono--sm" aria-hidden="true">undo</span>Reembolsar esta venta</button>
+        <button type="button" class="boton boton--fantasma boton--bloque" data-nav="ajustes.html#impresora">
+          <span class="icono icono--sm" aria-hidden="true">settings</span>Configurar impresora
         </button>
       </aside>
     </div>
@@ -174,12 +211,16 @@
 
   <!-- ===================== Plantillas ===================== -->
   <template id="plantilla-linea">
-    <li class="flex justify-between gap-3 py-1.5">
+    <li class="ticket__linea flex justify-between gap-3">
       <div class="min-w-0">
         <b><span data-campo="NombreItem"></span> <span data-campo="CantidadTexto" data-vacio=""></span></b>
-        <span class="block text-xs texto-gris" data-campo="DetalleTexto"></span>
+        <span class="block text-xs texto-gris" data-detalle></span>
+        <span class="block ticket__descuento" data-descuento hidden></span>
       </div>
-      <span class="numeros" data-campo="Importe" data-formato="moneda"></span>
+      <div class="ticket__importe">
+        <span class="ticket__tachado" data-campo="Bruto" data-formato="moneda" hidden></span>
+        <span data-campo="Importe" data-formato="moneda"></span>
+      </div>
     </li>
   </template>
 </body>

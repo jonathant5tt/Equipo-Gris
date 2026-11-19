@@ -24,28 +24,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Panel principal · Engreídos Barbershop</title>
 
-  <!-- Tipografías e íconos -->
+  <!-- Ícono de la pestaña y de «Agregar a pantalla de inicio» (logotipo oficial) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icono-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icono-192.png">
+  <link rel="apple-touch-icon" href="assets/img/icono-180.png">
+  <meta name="theme-color" content="#0d0f13">
+
+  <!-- Tipografías e íconos (se cargan sin bloquear: la pantalla aparece aunque no haya internet) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
 
-  <!-- Tailwind CSS (distribución) + configuración compartida -->
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="assets/js/tailwind.config.js"></script>
+  <!-- Tailwind CSS compilado (funciona sin internet). Regenerar: cd servidor && npm run estilos -->
+  <link rel="stylesheet" href="assets/css/tailwind.css">
 
   <!-- Sistema de diseño propio -->
   <link rel="stylesheet" href="assets/css/comun.css">
 
   <!-- Núcleo de la aplicación (el orden importa) -->
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/idioma.js"></script>
   <script src="assets/js/utilidades.js"></script>
   <script src="assets/js/sesion.js"></script>
   <script src="assets/js/api.js"></script>
-  <script src="assets/js/api-sin-servidor.js"></script>
 
   <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/logo-engreidos.js" defer></script>
   <script src="assets/js/componentes/encabezado-app.js" defer></script>
+  <script src="assets/js/componentes/menu-ajustes.js" defer></script>
   <script src="assets/js/paginas/panel.js" defer></script>
 </head>
 
@@ -87,13 +94,15 @@
 
       <!-- Datos de la próxima cita (Api.citas.proxima) -->
       <div id="turno-datos" class="flex flex-wrap items-center justify-between gap-4" hidden>
+        <span class="avatar avatar--grande" data-campo="NombreCliente" data-formato="iniciales" data-avatar-foto="FotoCorteReferencia"></span>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1 min-w-0">
           <div class="dato"><span class="dato__etiqueta">Hora</span><span class="dato__valor numeros" data-campo="FechaHora" data-formato="hora"></span></div>
           <div class="dato"><span class="dato__etiqueta">Cliente</span><span class="dato__valor" data-campo="NombreCliente"></span></div>
           <div class="dato"><span class="dato__etiqueta">Servicio</span><span class="dato__valor" data-campo="NombreServicio"></span></div>
-          <div class="dato"><span class="dato__etiqueta">Origen</span><span class="dato__valor" data-campo="Origen"></span></div>
+          <div class="dato"><span class="dato__etiqueta">Origen</span><span class="dato__valor" data-campo="Origen" data-traducir></span></div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
+          <button type="button" id="turno-falta" class="boton boton--peligro">No asistió</button>
           <button type="button" id="turno-ficha" class="boton">Ver ficha</button>
           <button type="button" id="turno-atencion" class="boton boton--primario">
             <span class="icono icono--sm" aria-hidden="true">play_arrow</span><span data-texto>Iniciar atención</span>
@@ -154,6 +163,13 @@
           <span class="mosaico__icono"><span class="icono" aria-hidden="true">receipt_long</span></span>
           <span class="mosaico__titulo">Historial de ventas</span>
           <span class="mosaico__descripcion">Folios, filtros y exportación</span>
+        </button>
+
+        <button type="button" class="mosaico" data-roles="Cajero,Dueño" data-nav="reembolsos.html">
+          <span class="mosaico__numero"></span>
+          <span class="mosaico__icono"><span class="icono" aria-hidden="true">undo</span></span>
+          <span class="mosaico__titulo">Reembolsos</span>
+          <span class="mosaico__descripcion">Devolver el dinero de una venta</span>
         </button>
 
         <button type="button" class="mosaico" data-roles="Barbero" data-nav="barbero-mi-horario.html">
