@@ -17,27 +17,33 @@
   <meta name="description" content="Acceso al sistema de citas, caja y turnos de Engreídos Barbershop.">
   <title>Iniciar sesión · Engreídos Barbershop</title>
 
-  <!-- Tipografías e íconos -->
+  <!-- Ícono de la pestaña y de «Agregar a pantalla de inicio» (logotipo oficial) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icono-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icono-192.png">
+  <link rel="apple-touch-icon" href="assets/img/icono-180.png">
+  <meta name="theme-color" content="#0d0f13">
+
+  <!-- Tipografías e íconos (se cargan sin bloquear: la pantalla aparece aunque no haya internet) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
 
-  <!-- Tailwind CSS (distribución) + configuración compartida -->
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="assets/js/tailwind.config.js"></script>
+  <!-- Tailwind CSS compilado (funciona sin internet). Regenerar: cd servidor && npm run estilos -->
+  <link rel="stylesheet" href="assets/css/tailwind.css">
 
   <!-- Sistema de diseño propio -->
   <link rel="stylesheet" href="assets/css/comun.css">
 
   <!-- Núcleo de la aplicación (el orden importa) -->
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/idioma.js"></script>
   <script src="assets/js/utilidades.js"></script>
   <script src="assets/js/sesion.js"></script>
   <script src="assets/js/api.js"></script>
-  <script src="assets/js/api-sin-servidor.js"></script>
 
-  <!-- Lógica de esta pantalla -->
+  <!-- Logotipo y lógica de esta pantalla -->
+  <script src="assets/js/componentes/logo-engreidos.js" defer></script>
   <script src="assets/js/paginas/inicio-sesion.js" defer></script>
 </head>
 
@@ -77,12 +83,36 @@
         <div class="w-full max-w-md mx-auto flex flex-col gap-7">
 
           <header class="flex flex-col items-center gap-5 text-center">
-            <span class="marca marca--grande" aria-label="Engreídos Barbershop">
-              <span class="marca__nombre"><span class="marca__corchete">[</span><span class="marca__texto">Engreídos</span><span class="marca__corchete">]</span></span>
-              <span class="marca__subtitulo">Barbershop</span>
-            </span>
+            <span class="marca marca--grande"><logo-engreidos></logo-engreidos></span>
             <h1 id="titulo-acceso" class="titulo-serif text-2xl font-semibold text-white">Iniciar sesión</h1>
           </header>
+
+          <!-- Primer uso: todavía no existe la cuenta del Dueño -->
+          <form id="formulario-inicial" class="flex flex-col gap-4" novalidate hidden autocomplete="off">
+            <div class="alerta alerta--exito">
+              <span class="icono" aria-hidden="true">celebration</span>
+              <div><strong>Configuración inicial</strong><span>La base de datos está lista. Crea la cuenta del Dueño para empezar.</span></div>
+            </div>
+            <div>
+              <label class="etiqueta" for="inicial-nombre">Nombre completo</label>
+              <input class="campo" id="inicial-nombre" maxlength="100" required>
+            </div>
+            <div>
+              <label class="etiqueta" for="inicial-usuario">Usuario</label>
+              <input class="campo" id="inicial-usuario" maxlength="30" autocapitalize="none" spellcheck="false" required placeholder="dueno">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="etiqueta" for="inicial-contrasena">Contraseña</label>
+                <input class="campo" id="inicial-contrasena" type="password" autocomplete="new-password" required>
+              </div>
+              <div>
+                <label class="etiqueta" for="inicial-confirmar">Repite la contraseña</label>
+                <input class="campo" id="inicial-confirmar" type="password" autocomplete="new-password" required>
+              </div>
+            </div>
+            <button type="submit" id="inicial-crear" class="boton boton--primario boton--bloque boton--grande">Crear cuenta del Dueño</button>
+          </form>
 
           <form id="formulario-acceso" class="flex flex-col gap-4" novalidate>
             <!-- Usuario -->
@@ -118,10 +148,37 @@
             </button>
           </form>
 
-          <p class="flex items-center justify-center gap-2 text-xs text-texto-tenue">
-            <span class="icono icono--sm" aria-hidden="true">info</span>
-            Acceso para barberos, cajeros y administrador.
-          </p>
+          <!-- Servidor (PC con Node.js + MySQL). En la app de Android se configura aquí. -->
+          <section class="bloque flex flex-col gap-3" aria-label="Servidor">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="dato__etiqueta flex items-center gap-1"><span class="insignia__punto" id="punto-servidor" aria-hidden="true"></span>Servidor</div>
+                <div class="text-sm numeros truncate" id="texto-servidor" translate="no"></div>
+              </div>
+              <button type="button" class="boton boton--pequeno" id="cambiar-servidor"><span class="icono icono--sm" aria-hidden="true">dns</span>Cambiar</button>
+            </div>
+            <div id="ayuda-servidor" class="alerta alerta--alerta" hidden>
+              <span class="icono" aria-hidden="true">wifi_off</span>
+              <div><strong>No se encontró el servidor</strong><span id="ayuda-servidor-texto"></span></div>
+            </div>
+            <button type="button" id="buscar-servidor" class="boton boton--bloque" hidden><span class="icono icono--sm" aria-hidden="true">travel_explore</span><span data-texto>Buscar el servidor en la red Wi-Fi</span></button>
+            <form id="formulario-servidor" class="flex flex-col gap-2" novalidate hidden>
+              <label class="etiqueta" for="direccion-servidor">Dirección del servidor</label>
+              <input class="campo numeros" id="direccion-servidor" type="text" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="192.168.1.70:3000">
+              <p class="ayuda">IP de la computadora donde está instalado el servidor (en la misma red Wi-Fi). Aparece al iniciar el servidor.</p>
+              <div class="flex gap-2">
+                <button type="submit" class="boton boton--primario flex-1" id="guardar-servidor">Probar y guardar</button>
+                <button type="button" class="boton" id="cancelar-servidor">Cancelar</button>
+              </div>
+            </form>
+          </section>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-texto-tenue">
+            <span class="flex items-center gap-2"><span class="icono icono--sm" aria-hidden="true">info</span>Acceso para barberos, cajeros y administrador.</span>
+            <label class="flex items-center gap-2"><span class="icono icono--sm" aria-hidden="true">translate</span><span class="solo-lector">Idioma</span>
+              <select class="campo" id="idioma" style="width:auto;min-height:34px;padding:4px 30px 4px 10px;font-size:12px"></select>
+            </label>
+          </div>
         </div>
       </section>
     </div>

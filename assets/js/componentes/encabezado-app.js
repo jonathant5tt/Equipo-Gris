@@ -9,15 +9,16 @@
  *   <encabezado-app variante="modulo"></encabezado-app>   → flecha al panel
  *
  * Contenido (de izquierda a derecha):
- *   [☰ | ←]  [ Engreídos ] BARBERSHOP  ·····  ● En línea   ● Rol: Cajero   [Cerrar sesión]
+ *   [☰ | ←]  [logotipo oficial]  ·····  ● En línea   ● Rol: Cajero   [Cerrar sesión]
  *
- * - El menú (☰) solo aparece en el panel principal; está reservado para los
- *   ajustes futuros y emite el evento `encabezado:menu`.
- * - El punto de conexión consulta GET /salud cada APP_CONFIG.INTERVALO_SALUD_MS
- *   cuando hay back end; sin back end refleja la conexión a internet del equipo.
+ * - El menú (☰) solo aparece en el panel principal y abre el panel
+ *   «Ajustes del sistema» (componentes/menu-ajustes.js) con las secciones
+ *   del rol; si ese archivo no está cargado, abre ajustes.html.
+ * - El punto de conexión consulta GET /salud cada APP_CONFIG.INTERVALO_SALUD_MS.
+ * - El logotipo es el componente <logo-engreidos> (logo-engreidos.js).
  * - Se usa light DOM (sin Shadow DOM) para que comun.css lo estilice.
  *
- * Requiere: config.js, sesion.js, api.js, utilidades.js
+ * Requiere: config.js, idioma.js, sesion.js, api.js, utilidades.js, componentes/logo-engreidos.js
  */
 (function () {
   'use strict';
@@ -63,16 +64,15 @@
       var rol = window.Sesion.rol() || '—';
 
       var botonIzquierdo = esPanel
-        ? '<button type="button" class="encabezado__boton-icono" data-accion="menu" aria-label="Menú de ajustes" title="Ajustes">' + SVG.menu + '</button>'
+        ? '<a href="ajustes.html" class="encabezado__boton-icono" data-accion="menu" aria-label="Ajustes" title="Ajustes" aria-haspopup="dialog">' + SVG.menu + '</a>'
         : '<a href="' + CFG.PAGINA_PANEL + '" data-nav="@panel" class="encabezado__boton-icono" aria-label="Volver al panel principal" title="Volver al panel principal">' + SVG.volver + '</a>';
 
       this.innerHTML =
         '<header class="encabezado">' +
           '<div class="encabezado__izquierda">' +
             botonIzquierdo +
-            '<a href="' + CFG.PAGINA_PANEL + '" data-nav="@panel" class="marca" aria-label="' + CFG.NOMBRE + ', ir al panel principal">' +
-              '<span class="marca__nombre"><span class="marca__corchete">[</span><span class="marca__texto">Engreídos</span><span class="marca__corchete">]</span></span>' +
-              '<span class="marca__subtitulo">Barbershop</span>' +
+            '<a href="' + CFG.PAGINA_PANEL + '" data-nav="@panel" class="marca" aria-label="' + CFG.NOMBRE + window.Idioma.t(', ir al panel principal') + '">' +
+              '<logo-engreidos decorativo></logo-engreidos>' +
             '</a>' +
           '</div>' +
           '<div class="encabezado__derecha">' +
@@ -90,14 +90,15 @@
         '</header>';
 
       // El rol se inserta como texto para no interpretar HTML.
-      this.querySelector('[data-rol]').textContent = rol;
+      this.querySelector('[data-rol]').textContent = window.Idioma.t(rol);
 
+      // ☰ abre el panel «Ajustes del sistema» (menu-ajustes.js); sin él, abre ajustes.html.
       var menu = this.querySelector('[data-accion="menu"]');
       if (menu) {
-        menu.addEventListener('click', function () {
-          // Punto de extensión para los ajustes futuros del panel.
-          var evento = new CustomEvent('encabezado:menu', { bubbles: true, cancelable: true });
-          if (menu.dispatchEvent(evento)) window.Utilidades.aviso('Los ajustes estarán disponibles próximamente.', 'info');
+        menu.addEventListener('click', function (e) {
+          if (!window.MenuAjustes) return;
+          e.preventDefault();
+          window.MenuAjustes.abrirCajon();
         });
       }
     }
@@ -110,18 +111,17 @@
       var pastilla = this.querySelector('.conexion');
       if (!pastilla) return;
       pastilla.setAttribute('data-estado', estado);
-      pastilla.title = TEXTO_CONEXION[estado];
-      pastilla.querySelector('.pastilla__valor').textContent = TEXTO_CONEXION[estado];
+      pastilla.title = window.Idioma.t(TEXTO_CONEXION[estado]);
+      pastilla.querySelector('.pastilla__valor').textContent = window.Idioma.t(TEXTO_CONEXION[estado]);
     }
 
     /** Verifica la conexión al cargar, al cambiar la red y de forma periódica. */
     iniciarIndicadorConexion() {
       var self = this;
 
-      /** Consulta la conexión: red del equipo y, con back end, GET /salud. */
+      /** Consulta la conexión con el servidor: GET /salud. */
       function verificar() {
         if (!navigator.onLine) { self.marcarConexion('sin-conexion'); return; }
-        if (!CFG.USAR_BACKEND) { self.marcarConexion('en-linea'); return; }
         window.Api.salud.verificar()
           .then(function () { self.marcarConexion('en-linea'); })
           .catch(function () { self.marcarConexion('sin-conexion'); });
@@ -130,7 +130,7 @@
       this._alCambiarRed = verificar;
       window.addEventListener('online', verificar);
       window.addEventListener('offline', verificar);
-      if (CFG.USAR_BACKEND) this._intervalo = setInterval(verificar, CFG.INTERVALO_SALUD_MS);
+      this._intervalo = setInterval(verificar, CFG.INTERVALO_SALUD_MS);
       verificar();
     }
   }

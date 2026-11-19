@@ -1,0 +1,1285 @@
+# Textos de la interfaz: español <TAB> inglés <TAB> italiano
+# Las {variables} se conservan tal cual. Generar los diccionarios con:
+#   python3 herramientas/idiomas/generar.py
+#
+# ---- Generales y navegación ----
+(opcional)	(optional)	(facoltativo)
+Acceso para barberos, cajeros y administrador.	Access for barbers, cashiers and administrator.	Accesso per barbieri, cassieri e amministratore.
+Accesos rápidos	Quick actions	Accessi rapidi
+Acciones	Actions	Azioni
+Ajustes	Settings	Impostazioni
+Agenda	Schedule	Agenda
+Auditoría	Audit	Verifica
+Avisos	Notices	Avvisi
+Bienvenido,	Welcome,	Benvenuto,
+Buscar	Search	Cerca
+Cambiar	Change	Cambia
+Cancelar	Cancel	Annulla
+Cerrar	Close	Chiudi
+Cerrar sesión	Log out	Esci
+Comprobando…	Checking…	Verifica in corso…
+Confirmar	Confirm	Conferma
+Consultando…	Checking…	Verifica in corso…
+Editar	Edit	Modifica
+Eliminar	Delete	Elimina
+En línea	Online	Online
+Error	Error	Errore
+Estado del servicio:	Service status:	Stato del servizio:
+Filtrar	Filter	Filtra
+Filtros	Filters	Filtri
+Guardar	Save	Salva
+Guardar cambios	Save changes	Salva modifiche
+Hoy	Today	Oggi
+Idioma	Language	Lingua
+Indicadores	Indicators	Indicatori
+Intenta de nuevo.	Try again.	Riprova.
+Ir al panel	Go to dashboard	Vai al pannello
+Módulos	Modules	Moduli
+Ninguna	None	Nessuna
+Ninguno	None	Nessuno
+Ocultar	Hide	Nascondi
+Paginación	Pagination	Paginazione
+Página anterior	Previous page	Pagina precedente
+Página siguiente	Next page	Pagina successiva
+Panel principal	Main dashboard	Pannello principale
+Periodo	Period	Periodo
+Presentación	Presentation	Presentazione
+Probar	Test	Prova
+Probar y guardar	Test and save	Prova e salva
+Rol:	Role:	Ruolo:
+Sin conexión	Offline	Offline
+Sin configurar	Not configured	Non configurato
+Solo dueño	Owner only	Solo titolare
+Todos	All	Tutti
+Ver	Show	Mostra
+Verificando…	Checking…	Verifica in corso…
+Versión	Version	Versione
+predeterminado	default	predefinito
+tú	you	tu
+, ir al panel principal	, go to main dashboard	, vai al pannello principale
+Secciones del barbero	Barber sections	Sezioni del barbiere
+Citas	Appointments	Appuntamenti
+Clientes	Clients	Clienti
+Mi horario	My schedule	Il mio orario
+Engreídos Barbershop	Engreídos Barbershop	Engreídos Barbershop
+# ---- Roles y estados ----
+Dueño	Owner	Titolare
+Cajero	Cashier	Cassiere
+Barbero	Barber	Barbiere
+Activo	Active	Attivo
+ACTIVO	ACTIVE	ATTIVO
+Suspendido	Suspended	Sospeso
+SUSPENDIDO	SUSPENDED	SOSPESO
+Activa	Active	Attiva
+Inactiva	Inactive	Inattiva
+Vencida	Expired	Scaduta
+Agendada	Scheduled	Prenotato
+En espera	Waiting	In attesa
+En atención	In service	In servizio
+Atendida	Completed	Servito
+Cancelada	Cancelled	Annullato
+No asistió	No-show	Non presentato
+Libre	Free	Libero
+Ocupado	Busy	Occupato
+No disponible	Unavailable	Non disponibile
+Comida	Lunch	Pranzo
+Horario de comida	Lunch break	Pausa pranzo
+Caja	Front desk	Cassa
+App	App	App
+Sin cita	Walk-in	Senza appuntamento
+WhatsApp	WhatsApp	WhatsApp
+SMS	SMS	SMS
+Origen	Source	Origine
+Efectivo	Cash	Contanti
+Tarjeta	Card	Carta
+Transferencia	Transfer	Bonifico
+Servicio	Service	Servizio
+Producto	Product	Prodotto
+Membresía	Membership	Abbonamento
+Alta	Initial stock	Carico iniziale
+Entrada	Stock in	Carico
+Baja	Write-off	Scarico
+Venta	Sale	Vendita
+Nueva cita	New appointment	Nuovo appuntamento
+Cita cancelada	Appointment cancelled	Appuntamento annullato
+Cambio de horario	Schedule change	Cambio d'orario
+Iniciar	Start	Inizia
+Finalizar	Finish	Termina
+Iniciar atención	Start service	Inizia servizio
+Finalizar atención	Finish service	Termina servizio
+# ---- Días ----
+Lunes	Monday	Lunedì
+Martes	Tuesday	Martedì
+Miércoles	Wednesday	Mercoledì
+Jueves	Thursday	Giovedì
+Viernes	Friday	Venerdì
+Sábado	Saturday	Sabato
+Domingo	Sunday	Domenica
+Lun	Mon	Lun
+Mar	Tue	Mar
+Mié	Wed	Mer
+Jue	Thu	Gio
+Vie	Fri	Ven
+Sáb	Sat	Sab
+Dom	Sun	Dom
+L	Mo	Lu
+M	Tu	Ma
+X	We	Me
+J	Th	Gi
+V	Fr	Ve
+S	Sa	Sa
+D	Su	Do
+Todos los días	Every day	Tutti i giorni
+laboral	working day	lavorativo
+descanso	day off	riposo
+Descanso	Day off	Riposo
+Sin descanso	No days off	Nessun riposo
+# ---- Inicio de sesión ----
+Iniciar sesión	Log in	Accedi
+Usuario	Username	Utente
+Contraseña	Password	Password
+No se pudo iniciar sesión	Could not log in	Accesso non riuscito
+Portal administrativo y operativo	Management and operations portal	Portale amministrativo e operativo
+Cuidado personal masculino llevado a la excelencia.	Men's grooming taken to excellence.	La cura personale maschile portata all'eccellenza.
+Gestión interna de citas, caja y control de turnos en silla para el equipo de Engreídos Barbershop.	Internal management of appointments, checkout and chair turns for the Engreídos Barbershop team.	Gestione interna di appuntamenti, cassa e turni in poltrona per il team di Engreídos Barbershop.
+Agenda y turnos en tiempo real	Real-time schedule and turns	Agenda e turni in tempo reale
+Cobros, productos, membresías y cierre de caja	Payments, products, memberships and cash closing	Incassi, prodotti, abbonamenti e chiusura cassa
+Escribe tu usuario y tu contraseña.	Enter your username and password.	Inserisci utente e password.
+Servidor	Server	Server
+Dirección del servidor	Server address	Indirizzo del server
+IP de la computadora donde está instalado el servidor (en la misma red Wi-Fi). Aparece al iniciar el servidor.	IP of the computer where the server is installed (on the same Wi-Fi network). It is shown when the server starts.	IP del computer su cui è installato il server (sulla stessa rete Wi-Fi). Viene mostrato all'avvio del server.
+Servidor guardado.	Server saved.	Server salvato.
+Escribe la dirección del servidor, por ejemplo 192.168.1.70:3000.	Enter the server address, for example 192.168.1.70:3000.	Inserisci l'indirizzo del server, ad esempio 192.168.1.70:3000.
+No se encontró el servidor en {url}. Revisa que la computadora esté encendida, con el servidor iniciado y en la misma red Wi-Fi.	No server found at {url}. Check that the computer is on, the server is running and you are on the same Wi-Fi network.	Nessun server trovato su {url}. Verifica che il computer sia acceso, il server avviato e sulla stessa rete Wi-Fi.
+Configura la dirección del servidor.	Set the server address.	Configura l'indirizzo del server.
+No hay conexión con el servidor. Revisa que esté encendido y en la misma red.	No connection to the server. Check that it is on and on the same network.	Nessuna connessione al server. Verifica che sia acceso e sulla stessa rete.
+El servidor tardó demasiado en responder.	The server took too long to respond.	Il server ha impiegato troppo a rispondere.
+del servidor.	from the server.	dal server.
+# ---- Panel ----
+Agenda del día y turnos programados	Today's schedule and booked turns	Agenda del giorno e turni prenotati
+Mis citas	My appointments	I miei appuntamenti
+Agendar cita	Book appointment	Prenota appuntamento
+Reservar un horario con un barbero	Book a time slot with a barber	Prenota un orario con un barbiere
+Registrar cobro	Register payment	Registra incasso
+Servicios, productos y membresías	Services, products and memberships	Servizi, prodotti e abbonamenti
+Registrar nuevo cliente	Register new client	Registra nuovo cliente
+Alta con número de WhatsApp	Sign-up with WhatsApp number	Registrazione con numero WhatsApp
+Clientes y perfiles	Clients and profiles	Clienti e profili
+Historial de cortes, fotos y notas	Haircut history, photos and notes	Storico tagli, foto e note
+Cierre de caja	Cash closing	Chiusura cassa
+Arqueo y corte del turno	Cash count and shift closing	Conteggio e chiusura del turno
+Historial de ventas	Sales history	Storico vendite
+Folios, filtros y exportación	Receipts, filters and export	Ricevute, filtri ed esportazione
+Mi horario y roles	My schedule and roles	Il mio orario e ruoli
+Jornada, descansos y actividades	Hours, days off and activities	Orario, riposi e attività
+Personal y horarios	Staff and schedules	Personale e orari
+Suspender / reanudar servicio	Suspend / resume service	Sospendi / riprendi servizio
+Suspender o reanudar el servicio	Suspend or resume the service	Sospendi o riprendi il servizio
+Siguiente turno	Next turn	Prossimo turno
+Consultando tu agenda…	Checking your schedule…	Controllo della tua agenda…
+No tienes turnos próximos	You have no upcoming turns	Non hai turni in arrivo
+Las citas que te asignen aparecerán aquí.	Appointments assigned to you will appear here.	Gli appuntamenti assegnati a te appariranno qui.
+Hora	Time	Ora
+Cliente	Client	Cliente
+Ver ficha	View profile	Vedi scheda
+Atención iniciada.	Service started.	Servizio iniziato.
+Atención finalizada: el cliente pasa a caja.	Service finished: the client goes to checkout.	Servizio terminato: il cliente passa in cassa.
+Cita marcada como «No asistió».	Appointment marked as "No-show".	Appuntamento segnato come «Non presentato».
+¿Marcar que {cliente} no asistió a su cita?	Mark that {cliente} did not show up for the appointment?	Segnare che {cliente} non si è presentato all'appuntamento?
+# ---- Agendar cita ----
+Gestión de turnos	Turn management	Gestione turni
+Elige barbero, día y horario; después el cliente y el servicio.	Choose barber, day and time; then the client and the service.	Scegli barbiere, giorno e orario; poi il cliente e il servizio.
+Barberos	Barbers	Barbieri
+Selecciona con quién será la cita	Choose who the appointment is with	Scegli con chi sarà l'appuntamento
+Cargando barberos…	Loading barbers…	Caricamento barbieri…
+No hay barberos registrados	No barbers registered	Nessun barbiere registrato
+El Dueño los da de alta en Ajustes → Cuentas.	The Owner adds them in Settings → Accounts.	Il titolare li aggiunge in Impostazioni → Account.
+Días de la semana	Days of the week	Giorni della settimana
+Semana anterior	Previous week	Settimana precedente
+Semana siguiente	Next week	Settimana successiva
+Selecciona un barbero	Select a barber	Seleziona un barbiere
+Se mostrarán sus horarios libres, ocupados y de comida.	Their free, busy and lunch slots will be shown.	Verranno mostrati gli orari liberi, occupati e di pranzo.
+Horarios del día	Today's slots	Orari del giorno
+Consultando disponibilidad…	Checking availability…	Verifica disponibilità…
+Leyenda	Legend	Legenda
+Jornada	Working hours	Orario di lavoro
+Sin horarios para este día	No slots for this day	Nessun orario per questo giorno
+Sin espacio para {n} min	No room for {n} min	Non c'è spazio per {n} min
+1 horario libre	1 free slot	1 orario libero
+{n} horarios libres	{n} free slots	{n} orari liberi
+El barbero no trabaja en esta fecha.	The barber does not work on this date.	Il barbiere non lavora in questa data.
+Datos de la cita	Appointment details	Dati dell'appuntamento
+Fecha	Date	Data
+Duración	Duration	Durata
+Servicio solicitado	Requested service	Servizio richiesto
+Servicios	Services	Servizi
+Cargando servicios…	Loading services…	Caricamento servizi…
+Aún no hay servicios registrados. El Dueño los agrega en Ajustes → Servicios.	No services registered yet. The Owner adds them in Settings → Services.	Nessun servizio registrato. Il titolare li aggiunge in Impostazioni → Servizi.
+Buscar por nombre o teléfono	Search by name or phone	Cerca per nome o telefono
+¿No está registrado? Escribe su nombre y elige «Registrar cliente nuevo».	Not registered? Type their name and choose "Register new client".	Non è registrato? Scrivi il nome e scegli «Registra nuovo cliente».
+Al confirmar, el resumen se envía al cliente por WhatsApp.	When you confirm, the summary is sent to the client via WhatsApp.	Alla conferma, il riepilogo viene inviato al cliente via WhatsApp.
+Confirmar cita	Confirm appointment	Conferma appuntamento
+Cita agendada	Appointment booked	Appuntamento prenotato
+Enviar por WhatsApp	Send via WhatsApp	Invia via WhatsApp
+Agendar otra cita	Book another appointment	Prenota un altro appuntamento
+El resumen se envió por WhatsApp al {tel}.	The summary was sent via WhatsApp to {tel}.	Il riepilogo è stato inviato via WhatsApp al {tel}.
+Envía el resumen al cliente con el botón de WhatsApp.	Send the summary to the client with the WhatsApp button.	Invia il riepilogo al cliente con il pulsante WhatsApp.
+No se pudo enviar automáticamente ({error}). Envíalo con el botón.	Could not send automatically ({error}). Send it with the button.	Invio automatico non riuscito ({error}). Invialo con il pulsante.
+Solo	Only	Solo
+min	min	min
+{n} min	{n} min	{n} min
+Elige al cliente.	Choose the client.	Scegli il cliente.
+Elige el servicio.	Choose the service.	Scegli il servizio.
+Elige un horario.	Choose a time slot.	Scegli un orario.
+Elige un horario libre.	Choose a free slot.	Scegli un orario libero.
+# ---- Buscador de clientes ----
+Buscar cliente	Search client	Cerca cliente
+Buscar cliente por nombre o teléfono	Search client by name or phone	Cerca cliente per nome o telefono
+Nombre o teléfono del cliente	Client name or phone	Nome o telefono del cliente
+Cliente 0	Client 0	Cliente 0
+Público en general · sin datos en el ticket	Walk-in customer · no details on the receipt	Cliente generico · nessun dato sullo scontrino
+Registrar cliente nuevo	Register new client	Registra nuovo cliente
+Sin coincidencias para «{texto}»	No matches for "{texto}"	Nessun risultato per «{texto}»
+# ---- Registrar cobro ----
+Punto de venta	Point of sale	Punto vendita
+Asocia al cliente, agrega los conceptos, elige el método de pago y emite el ticket.	Link the client, add the items, choose the payment method and issue the receipt.	Associa il cliente, aggiungi le voci, scegli il metodo di pagamento ed emetti lo scontrino.
+Cliente asociado	Linked client	Cliente associato
+Escribe el nombre o teléfono del cliente	Type the client's name or phone	Scrivi il nome o il telefono del cliente
+= con membresía	= with membership	= con abbonamento
+Dorado	Gold	Oro
+Agregar conceptos	Add items	Aggiungi voci
+Tipo de concepto	Item type	Tipo di voce
+Barbero que lo atendió	Barber who served them	Barbiere che lo ha servito
+Agregar servicio	Add service	Aggiungi servizio
+Agregar producto	Add product	Aggiungi prodotto
+Agregar membresía	Add membership	Aggiungi abbonamento
+Agregar uno	Add one	Aggiungi uno
+Quitar uno	Remove one	Togli uno
+Quitar concepto	Remove item	Rimuovi voce
+Existencias: {n}	Stock: {n}	Giacenza: {n}
+Sin existencias	Out of stock	Esaurito
+No hay productos registrados. El Dueño los agrega en Ajustes → Productos.	No products registered. The Owner adds them in Settings → Products.	Nessun prodotto registrato. Il titolare li aggiunge in Impostazioni → Prodotti.
+No hay membresías registradas. El Dueño las crea en Ajustes → Membresías.	No memberships registered. The Owner creates them in Settings → Memberships.	Nessun abbonamento registrato. Il titolare li crea in Impostazioni → Abbonamenti.
+No hay servicios registrados	No services registered	Nessun servizio registrato
+Selecciona primero al cliente: la membresía no se puede vender a Cliente 0.	Select the client first: memberships cannot be sold to Client 0.	Seleziona prima il cliente: l'abbonamento non può essere venduto al Cliente 0.
+Selecciona un servicio	Select a service	Seleziona un servizio
+Selecciona al barbero	Select the barber	Seleziona il barbiere
+Resumen de la venta	Sale summary	Riepilogo della vendita
+Agrega un servicio, producto o membresía para iniciar la venta.	Add a service, product or membership to start the sale.	Aggiungi un servizio, prodotto o abbonamento per iniziare la vendita.
+1 concepto	1 item	1 voce
+{n} conceptos	{n} items	{n} voci
+Pendiente de pago	Payment pending	In attesa di pagamento
+? Pendiente de pago	? Payment pending	? In attesa di pagamento
+Servicio de una cita atendida: se debe cobrar	Service from a completed appointment: must be charged	Servizio di un appuntamento completato: da incassare
+Calculando…	Calculating…	Calcolo in corso…
+Subtotal de conceptos	Items subtotal	Subtotale voci
+Descuento por membresía	Membership discount	Sconto abbonamento
+Total a cobrar	Total due	Totale da incassare
+Moneda nacional (MXN)	Mexican pesos (MXN)	Pesos messicani (MXN)
+Método de pago	Payment method	Metodo di pagamento
+Monto recibido	Amount received	Importo ricevuto
+Cambio a entregar	Change due	Resto da dare
+Cobrar y emitir ticket	Charge and issue receipt	Incassa ed emetti scontrino
+Cancelar venta	Cancel sale	Annulla vendita
+¿Cancelar la venta en curso? Se quitarán todos los conceptos.	Cancel the current sale? All items will be removed.	Annullare la vendita in corso? Tutte le voci verranno rimosse.
+Elige al cliente o «Cliente 0».	Choose the client or "Client 0".	Scegli il cliente o «Cliente 0».
+Sin membresía	No membership	Nessun abbonamento
+Vence	Expires	Scade
+vence	expires	scade
+Desde	Since	Dal
+Gratis	Free	Gratis
+gratis	free	gratis
+{n} al mes	{n} per month	{n} al mese
+ilimitado	unlimited	illimitato
+Sin beneficios configurados	No benefits configured	Nessun vantaggio configurato
+Productos: {p} % de descuento	Products: {p}% off	Prodotti: {p}% di sconto
+{p} % de descuento	{p}% off	{p}% di sconto
+Los beneficios de la membresía se aplican en esta misma venta.	The membership benefits apply to this same sale.	I vantaggi dell'abbonamento si applicano già in questa vendita.
+Membresía {plan}: vence el {fecha}	{plan} membership: expires on {fecha}	Abbonamento {plan}: scade il {fecha}
+se suma a la fecha actual	added to the current expiry date	si somma alla scadenza attuale
+Se agregó 1 servicio pendiente de pago.	1 service pending payment was added.	È stato aggiunto 1 servizio in attesa di pagamento.
+Se agregaron {n} servicios pendientes de pago.	{n} services pending payment were added.	Sono stati aggiunti {n} servizi in attesa di pagamento.
+c/u	each	cad.
+El monto recibido es menor al total.	The amount received is less than the total.	L'importo ricevuto è inferiore al totale.
+Captura el monto recibido.	Enter the amount received.	Inserisci l'importo ricevuto.
+# ---- Ticket ----
+Ticket digital	Digital receipt	Scontrino digitale
+¡Cobro registrado con éxito!	Payment registered successfully!	Incasso registrato con successo!
+Venta guardada e inventario actualizado.	Sale saved and inventory updated.	Vendita salvata e inventario aggiornato.
+Comprobante de venta	Sales receipt	Ricevuta di vendita
+Cargando ticket…	Loading receipt…	Caricamento scontrino…
+No hay un ticket para mostrar	There is no receipt to show	Nessuno scontrino da mostrare
+El ticket aparece aquí al terminar un cobro en «Registrar cobro».	The receipt appears here after finishing a payment in "Register payment".	Lo scontrino appare qui al termine di un incasso in «Registra incasso».
+Volver a registrar cobro	Back to register payment	Torna a registra incasso
+Folio:	Receipt no.:	N. scontrino:
+Fecha:	Date:	Data:
+Atendió:	Served by:	Servito da:
+Hora:	Time:	Ora:
+Cliente:	Client:	Cliente:
+Concepto / especialista	Item / specialist	Voce / specialista
+Importe	Amount	Importo
+TOTAL A PAGAR	TOTAL TO PAY	TOTALE DA PAGARE
+Método de pago:	Payment method:	Metodo di pagamento:
+Monto recibido:	Amount received:	Importo ricevuto:
+Cambio entregado:	Change given:	Resto dato:
+¡Gracias por su preferencia!	Thank you for your preference!	Grazie per la preferenza!
+Imprimir ticket físico	Print paper receipt	Stampa scontrino
+Configurar impresora	Set up printer	Configura stampante
+Compartir ticket digital	Share digital receipt	Condividi scontrino digitale
+Envío directo al teléfono del cliente	Sent straight to the client's phone	Invio diretto al telefono del cliente
+Finalizar y nueva venta	Finish and new sale	Termina e nuova vendita
+Barbero: {nombre}	Barber: {nombre}	Barbiere: {nombre}
+Despacho: mostrador	Dispatched: counter	Consegna: banco
+Tu membresía vence el {fecha}	Your membership expires on {fecha}	Il tuo abbonamento scade il {fecha}
+Síguenos	Follow us	Seguici
+Tel.	Phone	Tel.
+Número de 10 dígitos al que se enviará el ticket:	10-digit number the receipt will be sent to:	Numero a 10 cifre a cui inviare lo scontrino:
+Ticket enviado por WhatsApp.	Receipt sent via WhatsApp.	Scontrino inviato via WhatsApp.
+Ticket enviado a la impresora.	Receipt sent to the printer.	Scontrino inviato alla stampante.
+No se pudo enviar automáticamente: {e}	Could not send automatically: {e}	Invio automatico non riuscito: {e}
+Impresora	Printer	Stampante
+Impresora térmica de 58 mm	58 mm thermal printer	Stampante termica da 58 mm
+Impresora Bluetooth (elígela en Ajustes)	Bluetooth printer (choose it in Settings)	Stampante Bluetooth (sceglila in Impostazioni)
+Impresora del sistema · 58 mm	System printer · 58 mm	Stampante di sistema · 58 mm
+USB o Bluetooth (puerto serie) · 58 mm	USB or Bluetooth (serial port) · 58 mm	USB o Bluetooth (porta seriale) · 58 mm
+Bluetooth BLE · 58 mm	Bluetooth BLE · 58 mm	Bluetooth BLE · 58 mm
+Folio	Receipt no.	N. scontrino
+Atendió	Served by	Servito da
+Subtotal	Subtotal	Subtotale
+Descuento	Discount	Sconto
+Descuento membresía	Membership discount	Sconto abbonamento
+TOTAL	TOTAL	TOTALE
+Pago	Payment	Pagamento
+Recibido	Received	Ricevuto
+Cambio	Change	Resto
+Prueba de impresora	Printer test	Prova stampante
+¡La impresora funciona!	The printer works!	La stampante funziona!
+Elige la impresora en Ajustes → Impresora.	Choose the printer in Settings → Printer.	Scegli la stampante in Impostazioni → Stampante.
+Permite el acceso a «Dispositivos cercanos» y vuelve a intentarlo.	Allow access to "Nearby devices" and try again.	Consenti l'accesso a «Dispositivi nelle vicinanze» e riprova.
+No se pudo imprimir: {e}	Could not print: {e}	Stampa non riuscita: {e}
+La impresora no aceptó la conexión Bluetooth.	The printer did not accept the Bluetooth connection.	La stampante non ha accettato la connessione Bluetooth.
+Solo disponible en la app de Android.	Only available in the Android app.	Disponibile solo nell'app Android.
+CORTE DE CAJA	CASH CLOSING	CHIUSURA CASSA
+Firma	Signature	Firma
+# ---- Nuevo cliente ----
+Ficha técnica	Client card	Scheda tecnica
+Identidad de contacto y estilo de corte	Contact details and haircut style	Dati di contatto e stile di taglio
+Datos del cliente	Client details	Dati del cliente
+Nombre completo	Full name	Nome completo
+Escribe el nombre completo (mínimo 3 letras).	Enter the full name (at least 3 letters).	Inserisci il nome completo (minimo 3 lettere).
+Teléfono (WhatsApp)	Phone (WhatsApp)	Telefono (WhatsApp)
+Lada del país	Country code	Prefisso internazionale
++52 MX	+52 MX	+52 MX
++1 EE. UU.	+1 US	+1 USA
+0 / 10 dígitos	0 / 10 digits	0 / 10 cifre
+{n} / 10 dígitos	{n} / 10 digits	{n} / 10 cifre
+El teléfono debe tener exactamente 10 dígitos.	The phone number must have exactly 10 digits.	Il telefono deve avere esattamente 10 cifre.
+Estilo preferido	Preferred style	Stile preferito
+Técnica, largo, peinado, perfilado de barba…	Technique, length, styling, beard shaping…	Tecnica, lunghezza, acconciatura, rifinitura barba…
+Historial y observaciones	History and notes	Storico e osservazioni
+Piel sensible, alergias, frecuencia de visita…	Sensitive skin, allergies, visit frequency…	Pelle sensibile, allergie, frequenza delle visite…
+Visible para los barberos	Visible to barbers	Visibile ai barbieri
+Guía visual	Visual guide	Guida visiva
+Foto de corte de referencia	Reference haircut photo	Foto del taglio di riferimento
+Vista previa de la foto de referencia	Reference photo preview	Anteprima della foto di riferimento
+Sin foto	No photo	Nessuna foto
+Tomar / subir	Take / upload	Scatta / carica
+Quitar foto	Remove photo	Rimuovi foto
+Los datos del cliente quedan disponibles en todas las pantallas del salón. Pide su autorización antes de tomar la foto.	The client's details are available on every screen in the shop. Ask for their permission before taking the photo.	I dati del cliente sono disponibili su tutti gli schermi del salone. Chiedi l'autorizzazione prima di scattare la foto.
+Los campos con	Fields marked with	I campi con
+son obligatorios.	are required.	sono obbligatori.
+Guardar cliente	Save client	Salva cliente
+Cliente guardado.	Client saved.	Cliente salvato.
+El archivo no es una imagen.	The file is not an image.	Il file non è un'immagine.
+No se pudo leer la imagen.	Could not read the image.	Impossibile leggere l'immagine.
+# ---- Perfil del cliente ----
+Perfil del cliente	Client profile	Profilo del cliente
+Ficha integral	Full profile	Scheda completa
+Identidad, membresía, puntualidad, historial y fotos de corte.	Identity, membership, punctuality, history and haircut photos.	Identità, abbonamento, puntualità, storico e foto dei tagli.
+Filtrar clientes	Filter clients	Filtra clienti
+Todos (A–Z)	All (A–Z)	Tutti (A–Z)
+Clientes recientes	Recent clients	Clienti recenti
+Primeros clientes	First clients	Primi clienti
+Clientes con membresía	Clients with membership	Clienti con abbonamento
+Sin clientes con ese filtro.	No clients with that filter.	Nessun cliente con questo filtro.
+Busca a un cliente para ver su ficha	Search for a client to see their profile	Cerca un cliente per vedere la sua scheda
+Busca a un cliente	Search for a client	Cerca un cliente
+Escribe su nombre o teléfono, o usa el filtro y «Buscar».	Type their name or phone, or use the filter and "Search".	Scrivi il nome o il telefono, oppure usa il filtro e «Cerca».
+Escribe su nombre o teléfono para ver su ficha.	Type their name or phone to see their profile.	Scrivi il nome o il telefono per vedere la scheda.
+Cargando ficha…	Loading profile…	Caricamento scheda…
+Sin foto de referencia	No reference photo	Nessuna foto di riferimento
+Pantalla completa	Full screen	Schermo intero
+Eliminar foto	Delete photo	Elimina foto
+Cliente desde	Client since	Cliente dal
+Fecha de inicio	Start date	Data di inizio
+Puntualidad	Punctuality	Puntualità
+Faltas consecutivas	Consecutive no-shows	Assenze consecutive
+Próxima cita	Next appointment	Prossimo appuntamento
+Sin cita próxima	No upcoming appointment	Nessun appuntamento in programma
+Sin citas registradas	No appointments yet	Nessun appuntamento registrato
+{p} % ({a} de {n} citas)	{p}% ({a} of {n} appointments)	{p}% ({a} su {n} appuntamenti)
+{n} seguidas · {total} en total	{n} in a row · {total} in total	{n} di fila · {total} in totale
+{total} en total	{total} in total	{total} in totale
+Membresía activa	Active membership	Abbonamento attivo
+Sin descripción registrada.	No description yet.	Nessuna descrizione registrata.
+Sin observaciones.	No notes.	Nessuna osservazione.
+Historial de servicios	Service history	Storico servizi
+Servicios cobrados en caja	Services charged at checkout	Servizi incassati in cassa
+Aún no hay servicios registrados para este cliente.	No services recorded for this client yet.	Nessun servizio registrato per questo cliente.
+Mostrador	Counter	Banco
+{n} visita	{n} visit	{n} visita
+{n} visitas	{n} visits	{n} visite
+Gasto promedio por visita:	Average spend per visit:	Spesa media per visita:
+Fotos anteriores	Previous photos	Foto precedenti
+Toca una foto para verla a pantalla completa	Tap a photo to see it full screen	Tocca una foto per vederla a schermo intero
+Agregar foto	Add photo	Aggiungi foto
+Sin fotos de cortes anteriores.	No photos of previous haircuts.	Nessuna foto dei tagli precedenti.
+Foto de corte	Haircut photo	Foto del taglio
+Corte	Haircut	Taglio
+Corte de referencia	Reference haircut	Taglio di riferimento
+Referencia	Reference	Riferimento
+Usar como referencia	Use as reference	Usa come riferimento
+Registrar nueva cita	Book new appointment	Prenota nuovo appuntamento
+Cobrar a este cliente	Charge this client	Incassa da questo cliente
+Foto agregada.	Photo added.	Foto aggiunta.
+Foto eliminada.	Photo deleted.	Foto eliminata.
+Foto de referencia actualizada.	Reference photo updated.	Foto di riferimento aggiornata.
+¿Eliminar esta foto del expediente del cliente?	Delete this photo from the client's file?	Eliminare questa foto dalla scheda del cliente?
+¿Eliminar la foto principal del cliente?	Delete the client's main photo?	Eliminare la foto principale del cliente?
+# ---- Cierre de caja ----
+Corte de caja	Cash closing	Chiusura cassa
+Incluye todas las ventas cobradas desde el último corte (cajero y dueño).	Includes every sale charged since the last closing (cashier and owner).	Include tutte le vendite incassate dall'ultima chiusura (cassiere e titolare).
+Desde:	Since:	Dal:
+Sin ventas	No sales	Nessuna vendita
+Responsable:	In charge:	Responsabile:
+Responsable	In charge	Responsabile
+Ventas pendientes de corte	Sales pending closing	Vendite da chiudere
+0 tickets	0 receipts	0 scontrini
+{n} ticket	{n} receipt	{n} scontrino
+{n} tickets	{n} receipts	{n} scontrini
+Filtrar por método de pago	Filter by payment method	Filtra per metodo di pagamento
+Buscar folio o cliente	Search receipt or client	Cerca scontrino o cliente
+Cargando ventas del turno…	Loading shift sales…	Caricamento vendite del turno…
+No hay ventas pendientes de corte	No sales pending closing	Nessuna vendita da chiudere
+No hay ventas pendientes de corte.	No sales pending closing.	Nessuna vendita da chiudere.
+Las ventas cobradas en este turno aparecerán aquí.	Sales charged in this shift will appear here.	Le vendite incassate in questo turno appariranno qui.
+Cliente y concepto	Client and item	Cliente e voce
+Método	Method	Metodo
+Total	Total	Totale
+Productos	Products	Prodotti
+Ticket medio	Average ticket	Scontrino medio
+Cortes anteriores	Previous closings	Chiusure precedenti
+Aún no se ha registrado ningún corte.	No closing has been recorded yet.	Nessuna chiusura registrata.
+Imprimir corte	Print closing	Stampa chiusura
+Resumen del cierre	Closing summary	Riepilogo chiusura
+Total de ingresos	Total income	Totale incassi
+ventas · descuentos por membresía:	sales · membership discounts:	vendite · sconti abbonamento:
+Desglose por método de pago	Breakdown by payment method	Dettaglio per metodo di pagamento
+Fondo inicial	Opening float	Fondo cassa iniziale
+Efectivo esperado en caja	Expected cash in drawer	Contanti attesi in cassa
+Efectivo esperado	Expected cash	Contanti attesi
+Efectivo contado en caja (arqueo)	Cash counted in drawer (count)	Contanti contati in cassa (conteggio)
+Efectivo contado	Cash counted	Contanti contati
+Diferencia	Difference	Differenza
+Captura el efectivo contado para continuar.	Enter the counted cash to continue.	Inserisci i contanti contati per continuare.
+Arqueo exacto: sin diferencias.	Exact count: no differences.	Conteggio esatto: nessuna differenza.
+Sobrante de {monto}. Se registrará en el corte.	Surplus of {monto}. It will be recorded in the closing.	Eccedenza di {monto}. Sarà registrata nella chiusura.
+Faltante de {monto}. Se registrará en el corte.	Shortage of {monto}. It will be recorded in the closing.	Ammanco di {monto}. Sarà registrato nella chiusura.
+Hay una diferencia de {monto}. ¿Registrar el corte de todos modos?	There is a difference of {monto}. Record the closing anyway?	C'è una differenza di {monto}. Registrare comunque la chiusura?
+Generar cierre de caja	Close the register	Genera chiusura cassa
+Imprimir reporte	Print report	Stampa report
+Se imprime en la impresora térmica configurada en Ajustes.	Prints on the thermal printer set up in Settings.	Si stampa sulla stampante termica configurata in Impostazioni.
+Reporte enviado a la impresora.	Report sent to the printer.	Report inviato alla stampante.
+Turno cerrado con éxito	Shift closed successfully	Turno chiuso con successo
+Las ventas incluidas quedaron cerradas en este corte.	The included sales were closed in this closing.	Le vendite incluse sono state chiuse in questa chiusura.
+Folio del corte	Closing no.	N. chiusura
+Ventas incluidas	Sales included	Vendite incluse
+Imprimir	Print	Stampa
+Ventas	Sales	Vendite
+# ---- Historial de ventas ----
+Consulta de folios, conceptos y métodos de pago.	Look up receipts, items and payment methods.	Consulta di scontrini, voci e metodi di pagamento.
+Exportar CSV	Export CSV	Esporta CSV
+Rango de días	Date range	Intervallo di giorni
+Fecha específica	Specific date	Data specifica
+Hasta	Until	Fino al
+Concepto	Item	Voce
+Todos los conceptos	All items	Tutte le voci
+Membresías	Memberships	Abbonamenti
+Búsqueda	Search	Ricerca
+Folio, cliente o «Cliente 0»	Receipt, client or "Client 0"	Scontrino, cliente o «Cliente 0»
+Transacciones	Transactions	Transazioni
+tickets	receipts	scontrini
+Servicios realizados	Services performed	Servizi eseguiti
+servicios cobrados	services charged	servizi incassati
+Productos vendidos	Products sold	Prodotti venduti
+piezas	units	pezzi
+Ticket promedio	Average ticket	Scontrino medio
+MXN	MXN	MXN
+Ventas del periodo	Sales in the period	Vendite del periodo
+Consultando ventas…	Loading sales…	Caricamento vendite…
+No hay ventas en el periodo seleccionado	No sales in the selected period	Nessuna vendita nel periodo selezionato
+Cambia las fechas o los filtros y vuelve a consultar.	Change the dates or filters and search again.	Cambia le date o i filtri e riprova.
+Fecha y hora	Date and time	Data e ora
+Ver ticket	View receipt	Vedi scontrino
+Descuentos por membresía	Membership discounts	Sconti abbonamento
+Total del periodo	Period total	Totale del periodo
+Totales del periodo	Period totals	Totali del periodo
+Mostrando {n} de {total} ventas	Showing {n} of {total} sales	{n} di {total} vendite
+La fecha final no puede ser anterior a la inicial.	The end date cannot be before the start date.	La data finale non può essere precedente a quella iniziale.
+Tipo	Type	Tipo
+Cobró	Charged by	Incassato da
+Descuentos	Discounts	Sconti
+# ---- Mis citas (barbero) ----
+0 turnos asignados	0 assigned turns	0 turni assegnati
+{n} turno asignado	{n} assigned turn	{n} turno assegnato
+{n} turnos asignados	{n} assigned turns	{n} turni assegnati
+{n} aviso	{n} notice	{n} avviso
+{n} avisos	{n} notices	{n} avvisi
+Marcar como leídos	Mark as read	Segna come letti
+Día anterior	Previous day	Giorno precedente
+Día siguiente	Next day	Giorno successivo
+Día consultado	Selected day	Giorno selezionato
+Volver a hoy	Back to today	Torna a oggi
+Turnos del día	Today's turns	Turni del giorno
+Cargando agenda…	Loading schedule…	Caricamento agenda…
+Sin turnos asignados	No assigned turns	Nessun turno assegnato
+No tienes citas para este día.	You have no appointments for this day.	Non hai appuntamenti per questo giorno.
+Ver perfil del cliente	View client profile	Vedi profilo del cliente
+Servicio por definir	Service to be defined	Servizio da definire
+Nuevo cliente	New client	Nuovo cliente
+# ---- Mi horario (barbero) ----
+Consulta	View	Consulta
+Cargando tu horario…	Loading your schedule…	Caricamento del tuo orario…
+Horario no disponible	Schedule unavailable	Orario non disponibile
+Aún no tienes una jornada registrada. Pide al Dueño que la configure.	You don't have working hours yet. Ask the Owner to set them up.	Non hai ancora un orario registrato. Chiedi al titolare di configurarlo.
+Jornada de hoy	Today's hours	Orario di oggi
+Salida	Clock-out	Uscita
+Días de trabajo	Working days	Giorni lavorativi
+Descanso programado:	Scheduled days off:	Riposo programmato:
+Roles / actividades asignadas	Assigned roles / activities	Ruoli / attività assegnati
+Sin actividades asignadas.	No activities assigned.	Nessuna attività assegnata.
+Solo lectura: el Dueño es quien modifica horarios, comida y descansos.	Read only: the Owner changes hours, lunch and days off.	Sola lettura: il titolare modifica orari, pranzo e riposi.
+Hoy activo	Working today	Oggi al lavoro
+Hoy descansas	Day off today	Oggi riposi
+Sin horario	No schedule	Nessun orario
+{n} día laboral	{n} working day	{n} giorno lavorativo
+{n} días laborales	{n} working days	{n} giorni lavorativi
+# ---- Personal y horarios ----
+Jornadas, comida y descansos de cada barbero, y su rendimiento diario.	Hours, lunch and days off of each barber, and their daily performance.	Orari, pranzo e riposi di ogni barbiere e il suo rendimento giornaliero.
+Agregar o eliminar barberos	Add or remove barbers	Aggiungi o rimuovi barbieri
+Programación de barberos	Barber scheduling	Programmazione barbieri
+0 barberos	0 barbers	0 barbieri
+{n} barbero	{n} barber	{n} barbiere
+{n} barberos	{n} barbers	{n} barbieri
+Cuando se den de alta en el sistema aparecerán aquí.	They will appear here once added to the system.	Appariranno qui una volta registrati nel sistema.
+Editar horario	Edit schedule	Modifica orario
+Servicios e ingresos	Services and income	Servizi e incassi
+Ver servicios e ingresos	View services and income	Vedi servizi e incassi
+Servicios e ingresos diarios	Daily services and income	Servizi e incassi giornalieri
+Últimos 7 días	Last 7 days	Ultimi 7 giorni
+últimos {n} días	last {n} days	ultimi {n} giorni
+Ingreso del día	Daily income	Incasso del giorno
+Toca el ícono de estadísticas de un barbero para ver sus servicios e ingresos.	Tap a barber's statistics icon to see their services and income.	Tocca l'icona delle statistiche di un barbiere per vedere servizi e incassi.
+Sin servicios registrados en los últimos {n} días.	No services recorded in the last {n} days.	Nessun servizio registrato negli ultimi {n} giorni.
+Toca el ícono de edición de un barbero para modificar su horario.	Tap a barber's edit icon to change their schedule.	Tocca l'icona di modifica di un barbiere per cambiarne l'orario.
+Hora de entrada	Clock-in time	Ora di entrata
+Hora de salida	Clock-out time	Ora di uscita
+Comida: inicio	Lunch: start	Pranzo: inizio
+Comida: fin	Lunch: end	Pranzo: fine
+0 días	0 days	0 giorni
+{n} día activo	{n} active day	{n} giorno attivo
+{n} días activos	{n} active days	{n} giorni attivi
+Los días sin marcar son de descanso.	Unmarked days are days off.	I giorni non selezionati sono di riposo.
+Roles / actividades	Roles / activities	Ruoli / attività
+Cortes, barba, atención de citas	Haircuts, beard, appointments	Tagli, barba, gestione appuntamenti
+Separa las actividades con comas.	Separate activities with commas.	Separa le attività con virgole.
+Captura la hora de entrada y de salida.	Enter the clock-in and clock-out times.	Inserisci l'ora di entrata e di uscita.
+La hora de salida debe ser posterior a la de entrada.	Clock-out time must be after clock-in time.	L'ora di uscita deve essere successiva a quella di entrata.
+Captura el inicio y el fin de la comida, o deja ambos vacíos.	Enter the lunch start and end, or leave both empty.	Inserisci inizio e fine del pranzo, oppure lascia entrambi vuoti.
+La comida debe quedar dentro de la jornada y terminar después de empezar.	Lunch must be within working hours and end after it starts.	Il pranzo deve rientrare nell'orario e finire dopo l'inizio.
+Marca al menos un día de trabajo.	Select at least one working day.	Seleziona almeno un giorno lavorativo.
+Horario de {nombre} actualizado. Se le envió un aviso.	{nombre}'s schedule updated. A notice was sent to them.	Orario di {nombre} aggiornato. Gli è stato inviato un avviso.
+# ---- Suspender servicio y mantenimiento ----
+Suspender servicio	Suspend service	Sospendi servizio
+Reanudar servicio	Resume service	Riprendi servizio
+Control global de la operación de caja, citas y WhatsApp.	Global control of checkout, appointments and WhatsApp.	Controllo globale di cassa, appuntamenti e WhatsApp.
+Estado actual del servicio	Current service status	Stato attuale del servizio
+Al suspender el servicio se bloquean la caja, la agenda y la integración con WhatsApp. Cajeros y barberos verán la pantalla de mantenimiento hasta que lo reanudes.	Suspending the service blocks checkout, the schedule and the WhatsApp integration. Cashiers and barbers will see the maintenance screen until you resume it.	Sospendendo il servizio si bloccano cassa, agenda e integrazione WhatsApp. Cassieri e barbieri vedranno la schermata di manutenzione finché non lo riprendi.
+Mensaje de mantenimiento	Maintenance message	Messaggio di manutenzione
+Escribe el mensaje que verán los usuarios mientras el servicio esté suspendido.	Write the message users will see while the service is suspended.	Scrivi il messaggio che gli utenti vedranno mentre il servizio è sospeso.
+/255 caracteres	/255 characters	/255 caratteri
+Lo que verán los usuarios	What users will see	Cosa vedranno gli utenti
+Actualizar solo el mensaje	Update the message only	Aggiorna solo il messaggio
+¿Suspender el servicio?	Suspend the service?	Sospendere il servizio?
+¿Reanudar el servicio?	Resume the service?	Riprendere il servizio?
+¿Actualizar el mensaje?	Update the message?	Aggiornare il messaggio?
+Se bloqueará el acceso a caja, agenda y WhatsApp. Los usuarios verán el aviso de mantenimiento.	Access to checkout, schedule and WhatsApp will be blocked. Users will see the maintenance notice.	L'accesso a cassa, agenda e WhatsApp sarà bloccato. Gli utenti vedranno l'avviso di manutenzione.
+Todos los usuarios podrán volver a usar el sistema de inmediato.	All users will be able to use the system again right away.	Tutti gli utenti potranno usare di nuovo il sistema subito.
+El servicio seguirá suspendido; solo cambiará el aviso que ven los usuarios.	The service will stay suspended; only the notice users see will change.	Il servizio resterà sospeso; cambierà solo l'avviso che vedono gli utenti.
+Servicio suspendido.	Service suspended.	Servizio sospeso.
+Servicio reanudado.	Service resumed.	Servizio ripreso.
+Mensaje de mantenimiento actualizado.	Maintenance message updated.	Messaggio di manutenzione aggiornato.
+Servicio en mantenimiento	Service under maintenance	Servizio in manutenzione
+Aviso de administración	Notice from management	Avviso dell'amministrazione
+Por ahora no es posible usar la caja ni la agenda. Esta pantalla se actualizará sola cuando el servicio se reanude.	Checkout and the schedule can't be used right now. This screen will refresh by itself when the service resumes.	Al momento non è possibile usare cassa e agenda. Questa schermata si aggiornerà da sola quando il servizio riprenderà.
+Reintentar conexión	Retry connection	Riprova connessione
+Verificando el estado automáticamente	Checking status automatically	Verifica automatica dello stato
+Robot barbero en mantenimiento	Barber robot under maintenance	Robot barbiere in manutenzione
+El servicio sigue suspendido.	The service is still suspended.	Il servizio è ancora sospeso.
+El sistema se encuentra temporalmente suspendido. Intenta de nuevo más tarde o comunícate con el administrador.	The system is temporarily suspended. Try again later or contact the administrator.	Il sistema è temporaneamente sospeso. Riprova più tardi o contatta l'amministratore.
+# ---- Ajustes ----
+Catálogos, cuentas, impresora, WhatsApp, idioma y conexión con el servidor.	Catalogs, accounts, printer, WhatsApp, language and server connection.	Cataloghi, account, stampante, WhatsApp, lingua e connessione al server.
+Secciones de ajustes	Settings sections	Sezioni delle impostazioni
+Productos e inventario	Products and inventory	Prodotti e inventario
+Inventario	Inventory	Inventario
+Cuentas	Accounts	Account
+Datos del negocio	Business details	Dati dell'attività
+Nuevo servicio	New service	Nuovo servizio
+Editar servicio	Edit service	Modifica servizio
+Aparecerá en agenda y en caja.	It will appear in the schedule and at checkout.	Apparirà in agenda e in cassa.
+Nombre	Name	Nome
+Ej. Corte clásico	E.g. Classic haircut	Es. Taglio classico
+Precio	Price	Prezzo
+15 min	15 min	15 min
+20 min	20 min	20 min
+30 min	30 min	30 min
+45 min	45 min	45 min
+1 h	1 h	1 h
+1 h 30 min	1 h 30 min	1 h 30 min
+2 h	2 h	2 h
+3 h	3 h	3 h
+Días en que existe el servicio	Days the service is offered	Giorni in cui è disponibile il servizio
+Sin días marcados, el servicio se ofrece todos los días.	With no days selected, the service is offered every day.	Senza giorni selezionati, il servizio è offerto tutti i giorni.
+Descripción	Description	Descrizione
+Guardar servicio	Save service	Salva servizio
+Servicios registrados	Registered services	Servizi registrati
+Aún no hay servicios. Crea el primero.	No services yet. Create the first one.	Ancora nessun servizio. Crea il primo.
+Días	Days	Giorni
+{n} servicio	{n} service	{n} servizio
+{n} servicios	{n} services	{n} servizi
+Servicio creado.	Service created.	Servizio creato.
+Servicio actualizado.	Service updated.	Servizio aggiornato.
+Servicio eliminado.	Service deleted.	Servizio eliminato.
+Escribe el nombre del servicio.	Enter the service name.	Inserisci il nome del servizio.
+Escribe un precio válido.	Enter a valid price.	Inserisci un prezzo valido.
+¿Eliminar el servicio «{nombre}»? Ya no aparecerá en agenda ni en caja, y se quitará de los beneficios de las membresías.	Delete the service "{nombre}"? It will no longer appear in the schedule or at checkout, and it will be removed from membership benefits.	Eliminare il servizio «{nombre}»? Non apparirà più in agenda né in cassa e verrà rimosso dai vantaggi degli abbonamenti.
+Nuevo producto	New product	Nuovo prodotto
+Editar producto	Edit product	Modifica prodotto
+Se vende desde «Registrar cobro» y descuenta existencias.	Sold from "Register payment" and deducted from stock.	Si vende da «Registra incasso» e scala la giacenza.
+Ej. Pomada mate	E.g. Matte pomade	Es. Pomata opaca
+Cantidad inicial	Initial quantity	Quantità iniziale
+Las existencias se cambian con «Agregar inventario» o «Dar de baja» en la lista.	Stock is changed with "Add stock" or "Write off" in the list.	La giacenza si modifica con «Aggiungi inventario» o «Scarica» nell'elenco.
+Guardar producto	Save product	Salva prodotto
+Dar de baja pide la contraseña del dueño o del cajero con sesión.	Writing off asks for the password of the logged-in owner or cashier.	Lo scarico richiede la password del titolare o del cassiere connesso.
+No hay productos registrados.	No products registered.	Nessun prodotto registrato.
+Agregar inventario	Add stock	Aggiungi inventario
+Dar de baja	Write off	Scarica
+Dar de baja del inventario	Write off from inventory	Scarica dall'inventario
+Movimientos	Movements	Movimenti
+Eliminar producto	Delete product	Elimina prodotto
+{n} producto	{n} product	{n} prodotto
+{n} productos	{n} products	{n} prodotti
+Existencias: {n} pieza	Stock: {n} unit	Giacenza: {n} pezzo
+Existencias: {n} piezas	Stock: {n} units	Giacenza: {n} pezzi
+Producto creado.	Product created.	Prodotto creato.
+Producto actualizado.	Product updated.	Prodotto aggiornato.
+Producto eliminado.	Product deleted.	Prodotto eliminato.
+Escribe el nombre del producto.	Enter the product name.	Inserisci il nome del prodotto.
+¿Eliminar el producto «{nombre}» del catálogo?	Delete the product "{nombre}" from the catalog?	Eliminare il prodotto «{nombre}» dal catalogo?
+Cantidad (piezas)	Quantity (units)	Quantità (pezzi)
+Motivo	Reason	Motivo
+Ej. Compra a proveedor	E.g. Purchase from supplier	Es. Acquisto dal fornitore
+Ej. Producto dañado o caducado	E.g. Damaged or expired product	Es. Prodotto danneggiato o scaduto
+Se requiere autorización	Authorization required	Autorizzazione richiesta
+Escribe tu contraseña (dueño o cajero) para confirmar la baja.	Enter your password (owner or cashier) to confirm the write-off.	Inserisci la tua password (titolare o cassiere) per confermare lo scarico.
+Confirmar baja	Confirm write-off	Conferma scarico
+Agregar al inventario	Add to inventory	Aggiungi all'inventario
+Escribe una cantidad válida.	Enter a valid quantity.	Inserisci una quantità valida.
+Solo hay {n} pieza(s) en existencia.	There are only {n} unit(s) in stock.	Ci sono solo {n} pezzi in giacenza.
+Escribe el motivo de la baja.	Enter the reason for the write-off.	Inserisci il motivo dello scarico.
+Escribe tu contraseña para autorizar la baja.	Enter your password to authorize the write-off.	Inserisci la tua password per autorizzare lo scarico.
+Baja registrada. Quedan {n} pieza(s).	Write-off recorded. {n} unit(s) left.	Scarico registrato. Restano {n} pezzi.
+Inventario agregado. Ahora hay {n} pieza(s).	Stock added. There are now {n} unit(s).	Inventario aggiunto. Ora ci sono {n} pezzi.
+Movimientos de inventario	Inventory movements	Movimenti di inventario
+Sin movimientos.	No movements.	Nessun movimento.
+Cant.	Qty.	Qtà
+Queda	Left	Resta
+Motivo · Quién	Reason · Who	Motivo · Chi
+Nueva membresía	New membership	Nuovo abbonamento
+Editar membresía	Edit membership	Modifica abbonamento
+Se activa al cobrarla en caja; sus beneficios aplican desde esa misma venta.	It is activated when charged at checkout; its benefits apply from that same sale.	Si attiva quando viene incassato in cassa; i vantaggi valgono già da quella vendita.
+Ej. Plan Oro	E.g. Gold Plan	Es. Piano Oro
+1 mes	1 month	1 mese
+2 meses	2 months	2 mesi
+3 meses	3 months	3 mesi
+6 meses	6 months	6 mesi
+12 meses	12 months	12 mesi
+{n} mes	{n} month	{n} mese
+{n} meses	{n} months	{n} mesi
+Descuento en productos (%)	Product discount (%)	Sconto sui prodotti (%)
+Beneficios por servicio	Benefits per service	Vantaggi per servizio
+Elige qué servicios son gratis o con descuento y cuántas veces al mes (vacío = ilimitado). Ej. «Barba: gratis, 1 por mes».	Choose which services are free or discounted and how many times per month (empty = unlimited). E.g. "Beard: free, 1 per month".	Scegli quali servizi sono gratis o scontati e quante volte al mese (vuoto = illimitato). Es. «Barba: gratis, 1 al mese».
+Beneficio	Benefit	Vantaggio
+% desc.	% off	% sconto
+Usos / mes	Uses / month	Usi / mese
+Usos por mes	Uses per month	Usi al mese
+Porcentaje de descuento	Discount percentage	Percentuale di sconto
+Ilimitado	Unlimited	Illimitato
+Sin beneficio	No benefit	Nessun vantaggio
+Primero registra servicios en la sección «Servicios».	First register services in the "Services" section.	Prima registra i servizi nella sezione «Servizi».
+Guardar membresía	Save membership	Salva abbonamento
+Membresías registradas	Registered memberships	Abbonamenti registrati
+Aún no hay membresías.	No memberships yet.	Ancora nessun abbonamento.
+{n} vez por mes	{n} time per month	{n} volta al mese
+{n} veces por mes	{n} times per month	{n} volte al mese
+Membresía creada.	Membership created.	Abbonamento creato.
+Membresía actualizada.	Membership updated.	Abbonamento aggiornato.
+Membresía eliminada.	Membership deleted.	Abbonamento eliminato.
+Escribe el nombre de la membresía.	Enter the membership name.	Inserisci il nome dell'abbonamento.
+El porcentaje de descuento debe estar entre 1 y 100.	The discount percentage must be between 1 and 100.	La percentuale di sconto deve essere tra 1 e 100.
+¿Eliminar la membresía «{nombre}»? Los clientes que ya la tienen la conservan hasta su vencimiento.	Delete the membership "{nombre}"? Clients who already have it keep it until it expires.	Eliminare l'abbonamento «{nombre}»? I clienti che già lo hanno lo mantengono fino alla scadenza.
+Agregar cuenta	Add account	Aggiungi account
+Cajeros y barberos entran con su usuario y contraseña.	Cashiers and barbers log in with their username and password.	Cassieri e barbieri accedono con utente e password.
+Rol	Role	Ruolo
+Rol de la cuenta	Account role	Ruolo dell'account
+Teléfono	Phone	Telefono
+10 dígitos	10 digits	10 cifre
+Los barberos nuevos inician con horario 9:00 a. m. – 7:00 p. m.; ajústalo en «Personal y horarios».	New barbers start with hours 9:00 AM – 7:00 PM; adjust them in "Staff and schedules".	I nuovi barbieri iniziano con orario 9:00 – 19:00; modificalo in «Personale e orari».
+Cuentas activas	Active accounts	Account attivi
+Cambiar contraseña	Change password	Cambia password
+Eliminar cuenta	Delete account	Elimina account
+Nueva contraseña	New password	Nuova password
+Guardar contraseña	Save password	Salva password
+Contraseña actualizada.	Password updated.	Password aggiornata.
+Cuenta eliminada.	Account deleted.	Account eliminato.
+Cuenta de {rol} creada. Usuario: {usuario}	{rol} account created. Username: {usuario}	Account {rol} creato. Utente: {usuario}
+Escribe el nombre completo.	Enter the full name.	Inserisci il nome completo.
+El usuario debe tener al menos 3 caracteres.	The username must have at least 3 characters.	L'utente deve avere almeno 3 caratteri.
+La contraseña debe tener al menos 3 caracteres.	The password must have at least 3 characters.	La password deve avere almeno 3 caratteri.
+¿Eliminar la cuenta de {nombre} ({rol})? Ya no podrá iniciar sesión; su historial se conserva.	Delete {nombre}'s account ({rol})? They will no longer be able to log in; their history is kept.	Eliminare l'account di {nombre} ({rol})? Non potrà più accedere; il suo storico viene conservato.
+Aparecen en el ticket impreso y en los mensajes de WhatsApp.	They appear on the printed receipt and in WhatsApp messages.	Appaiono sullo scontrino stampato e nei messaggi WhatsApp.
+Nombre del negocio	Business name	Nome dell'attività
+Eslogan	Slogan	Slogan
+Dirección	Address	Indirizzo
+Redes sociales	Social media	Social network
+Mensaje al pie del ticket	Receipt footer message	Messaggio a piè di scontrino
+Datos fiscales	Tax details	Dati fiscali
+Fondo inicial de caja	Opening cash float	Fondo cassa iniziale
+Guardar datos	Save details	Salva dati
+Datos del negocio guardados.	Business details saved.	Dati dell'attività salvati.
+Escribe el nombre del negocio.	Enter the business name.	Inserisci il nome dell'attività.
+La configuración se guarda en este equipo.	The settings are saved on this device.	La configurazione viene salvata su questo dispositivo.
+Forma de conexión	Connection type	Tipo di connessione
+Bluetooth (app de Android)	Bluetooth (Android app)	Bluetooth (app Android)
+Imprime directo en la impresora vinculada con el teléfono o tableta.	Prints straight to the printer paired with the phone or tablet.	Stampa direttamente sulla stampante associata al telefono o tablet.
+Impresora del sistema (USB o Bluetooth)	System printer (USB or Bluetooth)	Stampante di sistema (USB o Bluetooth)
+Abre el diálogo de impresión con formato de 58 mm. Instala la impresora en la computadora con su controlador.	Opens the print dialog with a 58 mm layout. Install the printer on the computer with its driver.	Apre la finestra di stampa con formato da 58 mm. Installa la stampante sul computer con il suo driver.
+USB / Bluetooth directo (Chrome o Edge en PC)	Direct USB / Bluetooth (Chrome or Edge on PC)	USB / Bluetooth diretto (Chrome o Edge su PC)
+Envía el ticket por el puerto COM de la impresora sin diálogo de impresión.	Sends the receipt through the printer's COM port without a print dialog.	Invia lo scontrino tramite la porta COM della stampante senza finestra di stampa.
+Bluetooth BLE (Chrome)	Bluetooth BLE (Chrome)	Bluetooth BLE (Chrome)
+Para impresoras con Bluetooth de baja energía.	For printers with Bluetooth Low Energy.	Per stampanti con Bluetooth Low Energy.
+Impresora elegida	Selected printer	Stampante scelta
+Buscar vinculadas	Find paired	Cerca associate
+Imprimir el logotipo en el ticket	Print the logo on the receipt	Stampa il logo sullo scontrino
+Imprimir prueba	Print test	Stampa di prova
+Conectar la impresora	Connect the printer	Collegare la stampante
+Enciende la impresora y carga papel de 58 mm.	Turn on the printer and load 58 mm paper.	Accendi la stampante e carica carta da 58 mm.
+Teléfono o tableta: vincúlala en Ajustes → Bluetooth (PIN 0000 o 1234).	Phone or tablet: pair it in Settings → Bluetooth (PIN 0000 or 1234).	Telefono o tablet: associala in Impostazioni → Bluetooth (PIN 0000 o 1234).
+En la app elige «Bluetooth (app de Android)», toca «Buscar vinculadas» y selecciónala.	In the app choose "Bluetooth (Android app)", tap "Find paired" and select it.	Nell'app scegli «Bluetooth (app Android)», tocca «Cerca associate» e selezionala.
+Computadora con USB: instala el controlador y usa «Impresora del sistema» o «USB / Bluetooth directo».	Computer with USB: install the driver and use "System printer" or "Direct USB / Bluetooth".	Computer con USB: installa il driver e usa «Stampante di sistema» o «USB / Bluetooth diretto».
+Toca «Imprimir prueba»: deben salir acentos y ñ correctamente.	Tap "Print test": accents and ñ must print correctly.	Tocca «Stampa di prova»: accenti e ñ devono stamparsi correttamente.
+Impresora guardada en este equipo.	Printer saved on this device.	Stampante salvata su questo dispositivo.
+Ticket de prueba enviado.	Test receipt sent.	Scontrino di prova inviato.
+No hay impresoras vinculadas. Vincúlala primero en los ajustes de Bluetooth del teléfono.	No paired printers. Pair it first in the phone's Bluetooth settings.	Nessuna stampante associata. Associala prima nelle impostazioni Bluetooth del telefono.
+API de WhatsApp (Meta Cloud API)	WhatsApp API (Meta Cloud API)	API di WhatsApp (Meta Cloud API)
+Envía automáticamente la confirmación de cada cita y los tickets.	Automatically sends each appointment confirmation and the receipts.	Invia automaticamente la conferma di ogni appuntamento e gli scontrini.
+Envío automático activado	Automatic sending on	Invio automatico attivo
+Identificador del número (Phone number ID)	Phone number ID	ID del numero (Phone number ID)
+Token de acceso	Access token	Token di accesso
+Plantilla para citas	Appointment template	Modello per appuntamenti
+Idioma de la plantilla	Template language	Lingua del modello
+Guardar configuración	Save settings	Salva configurazione
+Enviar mensaje de prueba a	Send a test message to	Invia un messaggio di prova a
+Cómo conectarla	How to connect it	Come collegarla
+Entra a developers.facebook.com, crea una app de tipo «Empresa» y agrega el producto WhatsApp.	Go to developers.facebook.com, create a "Business" app and add the WhatsApp product.	Vai su developers.facebook.com, crea un'app di tipo «Business» e aggiungi il prodotto WhatsApp.
+Registra el número del negocio y copia su «Phone number ID».	Register the business number and copy its "Phone number ID".	Registra il numero dell'attività e copia il suo «Phone number ID».
+Crea un usuario del sistema en el Business Manager y genera un token permanente con permiso whatsapp_business_messaging.	Create a system user in Business Manager and generate a permanent token with the whatsapp_business_messaging permission.	Crea un utente di sistema nel Business Manager e genera un token permanente con il permesso whatsapp_business_messaging.
+Para escribir a clientes que no te han escrito en 24 h, crea una plantilla aprobada con 6 variables: {{1}} cliente, {{2}} fecha, {{3}} hora, {{4}} servicio, {{5}} duración, {{6}} barbero.	To message clients who haven't written to you in 24 h, create an approved template with 6 variables: {{1}} client, {{2}} date, {{3}} time, {{4}} service, {{5}} duration, {{6}} barber.	Per scrivere a clienti che non ti hanno scritto nelle ultime 24 h, crea un modello approvato con 6 variabili: {{1}} cliente, {{2}} data, {{3}} ora, {{4}} servizio, {{5}} durata, {{6}} barbiere.
+Pega los datos aquí, activa el envío y manda un mensaje de prueba.	Paste the details here, turn sending on and send a test message.	Incolla qui i dati, attiva l'invio e manda un messaggio di prova.
+Sin configurar, el sistema abre WhatsApp con el mensaje ya escrito para enviarlo a mano.	When not configured, the system opens WhatsApp with the message ready to send by hand.	Se non configurata, il sistema apre WhatsApp con il messaggio già scritto da inviare a mano.
+Hay un token guardado. Escribe uno nuevo solo si quieres reemplazarlo.	A token is saved. Enter a new one only if you want to replace it.	C'è un token salvato. Inseriscine uno nuovo solo se vuoi sostituirlo.
+Pega aquí el token permanente de tu app de Meta.	Paste your Meta app's permanent token here.	Incolla qui il token permanente della tua app Meta.
+Configuración de WhatsApp guardada.	WhatsApp settings saved.	Configurazione WhatsApp salvata.
+Mensaje enviado. Revisa WhatsApp en ese número.	Message sent. Check WhatsApp on that number.	Messaggio inviato. Controlla WhatsApp su quel numero.
+No se pudo enviar: {e}	Could not send: {e}	Invio non riuscito: {e}
+La API no está configurada o está desactivada. Se abrirá WhatsApp con el mensaje.	The API is not configured or is turned off. WhatsApp will open with the message.	L'API non è configurata o è disattivata. Si aprirà WhatsApp con il messaggio.
+Idioma del programa	App language	Lingua del programma
+Se aplica a todas las pantallas de este equipo.	Applies to every screen on this device.	Si applica a tutte le schermate di questo dispositivo.
+Computadora donde están el back end (Node.js) y la base de datos (MySQL).	Computer running the back end (Node.js) and the database (MySQL).	Computer con il back end (Node.js) e il database (MySQL).
+Dirección actual	Current address	Indirizzo attuale
+Nueva dirección	New address	Nuovo indirizzo
+Al cambiarla se cierra la sesión para entrar en el nuevo servidor.	Changing it logs you out so you can log in to the new server.	Cambiandolo si chiude la sessione per accedere al nuovo server.
+Usar la dirección de esta página	Use this page's address	Usa l'indirizzo di questa pagina
+Servidor guardado. Inicia sesión de nuevo.	Server saved. Log in again.	Server salvato. Accedi di nuovo.
+# ---- Mensajes del servidor ----
+Agrega al menos un concepto.	Add at least one item.	Aggiungi almeno una voce.
+Cada servicio solo puede tener un beneficio en la misma membresía.	Each service can only have one benefit in the same membership.	Ogni servizio può avere un solo vantaggio nello stesso abbonamento.
+Contraseña incorrecta. No se dio de baja el inventario.	Wrong password. The inventory was not written off.	Password errata. L'inventario non è stato scaricato.
+Demasiados conceptos en una sola venta.	Too many items in a single sale.	Troppe voci in una sola vendita.
+Demasiados intentos. Espera 5 minutos e inténtalo de nuevo.	Too many attempts. Wait 5 minutes and try again.	Troppi tentativi. Attendi 5 minuti e riprova.
+Descanso del barbero	Barber's day off	Riposo del barbiere
+El barbero no existe o ya no está activo.	The barber does not exist or is no longer active.	Il barbiere non esiste o non è più attivo.
+El barbero no existe.	The barber does not exist.	Il barbiere non esiste.
+El cliente no existe.	The client does not exist.	Il cliente non esiste.
+El cliente no tiene foto de referencia.	The client has no reference photo.	Il cliente non ha una foto di riferimento.
+El cliente no tiene teléfono registrado.	The client has no registered phone.	Il cliente non ha un telefono registrato.
+El producto no existe.	The product does not exist.	Il prodotto non esiste.
+El servicio no existe.	The service does not exist.	Il servizio non esiste.
+El servicio no se ofrece este día	The service is not offered on this day	Il servizio non è offerto in questo giorno
+El usuario solo puede tener letras, números, punto y guion, sin espacios.	The username can only contain letters, numbers, dots and hyphens, without spaces.	L'utente può contenere solo lettere, numeri, punto e trattino, senza spazi.
+Elige el servicio solicitado.	Choose the requested service.	Scegli il servizio richiesto.
+Elige la fecha y la hora de la cita.	Choose the date and time of the appointment.	Scegli data e ora dell'appuntamento.
+Esa cita ya fue cobrada.	That appointment has already been charged.	Quell'appuntamento è già stato incassato.
+Esa hora está fuera de la jornada del barbero.	That time is outside the barber's working hours.	Quell'ora è fuori dall'orario del barbiere.
+Escribe el número de teléfono al que se enviará el ticket.	Enter the phone number the receipt will be sent to.	Inserisci il numero di telefono a cui inviare lo scontrino.
+Escribe tu usuario y contraseña.	Enter your username and password.	Inserisci utente e password.
+Ese horario ya no está disponible. Elige otro.	That slot is no longer available. Choose another one.	Quell'orario non è più disponibile. Scegline un altro.
+Fecha pasada	Past date	Data passata
+Hora pasada	Past time	Ora passata
+Sin horarios libres	No free slots	Nessun orario libero
+Fuera de horario	Outside working hours	Fuori orario
+La cita cambió mientras tanto. Actualiza la pantalla.	The appointment changed in the meantime. Refresh the screen.	L'appuntamento è cambiato nel frattempo. Aggiorna la schermata.
+La cita no corresponde a este cliente.	The appointment does not belong to this client.	L'appuntamento non appartiene a questo cliente.
+La cita no existe.	The appointment does not exist.	L'appuntamento non esiste.
+La comida debe quedar dentro de la jornada.	Lunch must be within working hours.	Il pranzo deve rientrare nell'orario di lavoro.
+La cuenta del dueño no se puede eliminar.	The owner's account cannot be deleted.	L'account del titolare non può essere eliminato.
+La cuenta no existe.	The account does not exist.	L'account non esiste.
+La foto debe ser una imagen JPG, PNG o WEBP.	The photo must be a JPG, PNG or WEBP image.	La foto deve essere un'immagine JPG, PNG o WEBP.
+La foto es demasiado grande (máximo 8 MB).	The photo is too large (maximum 8 MB).	La foto è troppo grande (massimo 8 MB).
+La foto no existe.	The photo does not exist.	La foto non esiste.
+La membresía no existe o ya no está disponible.	The membership does not exist or is no longer available.	L'abbonamento non esiste o non è più disponibile.
+La membresía no existe.	The membership does not exist.	L'abbonamento non esiste.
+La misma cita aparece dos veces.	The same appointment appears twice.	Lo stesso appuntamento compare due volte.
+La venta no existe.	The sale does not exist.	La vendita non esiste.
+Las citas pendientes solo se cobran con el cliente seleccionado.	Pending appointments can only be charged with the client selected.	Gli appuntamenti in sospeso si incassano solo con il cliente selezionato.
+Los importes cambiaron (precios, existencias o membresía). Revisa la venta antes de cobrar.	The amounts changed (prices, stock or membership). Review the sale before charging.	Gli importi sono cambiati (prezzi, giacenza o abbonamento). Controlla la vendita prima di incassare.
+Para vender una membresía selecciona o registra al cliente (no puede ser Cliente 0).	To sell a membership, select or register the client (it can't be Client 0).	Per vendere un abbonamento seleziona o registra il cliente (non può essere il Cliente 0).
+Solo puedes cambiar tus propias citas.	You can only change your own appointments.	Puoi modificare solo i tuoi appuntamenti.
+Solo se cobran citas atendidas.	Only completed appointments can be charged.	Si incassano solo appuntamenti completati.
+Solo se puede vender una membresía por venta.	Only one membership can be sold per sale.	Si può vendere un solo abbonamento per vendita.
+Tipo de cuenta no válido.	Invalid account type.	Tipo di account non valido.
+Tu cuenta ya no está activa.	Your account is no longer active.	Il tuo account non è più attivo.
+Tu rol no tiene permiso para esta acción.	Your role is not allowed to do this.	Il tuo ruolo non ha il permesso per questa azione.
+Tu sesión terminó. Inicia sesión de nuevo.	Your session ended. Log in again.	La sessione è scaduta. Accedi di nuovo.
+Una de las citas ya fue cobrada.	One of the appointments has already been charged.	Uno degli appuntamenti è già stato incassato.
+Uno de los servicios del beneficio ya no existe.	One of the benefit's services no longer exists.	Uno dei servizi del vantaggio non esiste più.
+Usuario o contraseña incorrectos.	Wrong username or password.	Utente o password errati.
+Ya existe otro cliente con ese teléfono.	Another client already has that phone number.	Esiste già un altro cliente con quel telefono.
+Ya existe un cliente con ese teléfono.	A client with that phone number already exists.	Esiste già un cliente con quel telefono.
+El servicio está suspendido.	The service is suspended.	Il servizio è sospeso.
+El cuerpo de la petición es demasiado grande.	The request is too large.	La richiesta è troppo grande.
+No se encontró la ruta solicitada.	The requested route was not found.	Percorso richiesto non trovato.
+No se pudo conectar con la base de datos.	Could not connect to the database.	Impossibile connettersi al database.
+Ocurrió un error en el servidor.	A server error occurred.	Si è verificato un errore nel server.
+# ---- Nombres de campos (para los mensajes de validación) ----
+Días disponibles	Available days	Giorni disponibili
+El barbero	The barber	Il barbiere
+El canal	The channel	Il canale
+El cliente	The client	Il cliente
+El concepto	The item	La voce
+El descuento en productos	The product discount	Lo sconto sui prodotti
+El efectivo contado	The counted cash	I contanti contati
+El eslogan	The slogan	Lo slogan
+El estado	The status	Lo stato
+El fin de la comida	The lunch end	La fine del pranzo
+El fondo de caja	The cash float	Il fondo cassa
+El identificador del número	The phone number ID	L'ID del numero
+El idioma de la plantilla	The template language	La lingua del modello
+El inicio de la comida	The lunch start	L'inizio del pranzo
+El límite	The limit	Il limite
+El mensaje	The message	Il messaggio
+El mensaje del ticket	The receipt message	Il messaggio dello scontrino
+El monto recibido	The amount received	L'importo ricevuto
+El motivo	The reason	Il motivo
+El método de pago	The payment method	Il metodo di pagamento
+El nombre	The name	Il nome
+El nombre completo	The full name	Il nome completo
+El nombre de la membresía	The membership name	Il nome dell'abbonamento
+El nombre del negocio	The business name	Il nome dell'attività
+El nombre del producto	The product name	Il nome del prodotto
+El nombre del servicio	The service name	Il nome del servizio
+El precio	The price	Il prezzo
+El rol	The role	Il ruolo
+El tamaño de página	The page size	La dimensione della pagina
+El teléfono	The phone	Il telefono
+El token	The token	Il token
+El total	The total	Il totale
+El título	The title	Il titolo
+El usuario	The username	L'utente
+La cantidad	The quantity	La quantità
+La contraseña	The password	La password
+La descripción	The description	La descrizione
+La dirección	The address	L'indirizzo
+La duración	The duration	La durata
+La fecha	The date	La data
+La fecha final	The end date	La data finale
+La fecha inicial	The start date	La data iniziale
+La hora	The time	L'ora
+La hora de entrada	The clock-in time	L'ora di entrata
+La hora de salida	The clock-out time	L'ora di uscita
+La plantilla	The template	Il modello
+La página	The page	La pagina
+Las notas	The notes	Le note
+Las observaciones	The notes	Le osservazioni
+Las redes sociales	The social media	I social network
+Los datos fiscales	The tax details	I dati fiscali
+Los días	The days	I giorni
+Ruta no encontrada.	Route not found.	Percorso non trovato.
+El archivo es demasiado grande.	The file is too large.	Il file è troppo grande.
+La información enviada no es válida.	The information sent is not valid.	Le informazioni inviate non sono valide.
+Ya existe un registro con esos datos.	A record with that data already exists.	Esiste già un record con questi dati.
+Algún dato está fuera de los valores permitidos.	Some value is outside the allowed range.	Qualche dato è fuori dai valori consentiti.
+No se puede eliminar porque tiene registros relacionados.	It cannot be deleted because it has related records.	Non si può eliminare perché ha record collegati.
+No hay conexión con la base de datos.	No connection to the database.	Nessuna connessione al database.
+Ocurrió un error en el servidor. Intenta de nuevo.	A server error occurred. Try again.	Si è verificato un errore nel server. Riprova.
+El servicio está suspendido temporalmente.	The service is temporarily suspended.	Il servizio è temporaneamente sospeso.
+# ---- Primer uso y búsqueda del servidor ----
+Bienvenido	Welcome	Benvenuto
+Configuración inicial	Initial setup	Configurazione iniziale
+La base de datos está lista. Crea la cuenta del Dueño para empezar.	The database is ready. Create the Owner account to get started.	Il database è pronto. Crea l'account del titolare per iniziare.
+Repite la contraseña	Repeat the password	Ripeti la password
+Crear cuenta del Dueño	Create Owner account	Crea account del titolare
+Cuenta del Dueño creada. ¡Bienvenido!	Owner account created. Welcome!	Account del titolare creato. Benvenuto!
+Las contraseñas no coinciden.	The passwords do not match.	Le password non coincidono.
+La cuenta del Dueño ya existe. Inicia sesión.	The Owner account already exists. Log in.	L'account del titolare esiste già. Accedi.
+No se encontró el servidor	Server not found	Server non trovato
+Buscar el servidor en la red Wi-Fi	Find the server on the Wi-Fi network	Cerca il server nella rete Wi-Fi
+Buscando… {n} %	Searching… {n}%	Ricerca… {n}%
+Servidor encontrado: {url}	Server found: {url}	Server trovato: {url}
+No se encontró el servidor en esta red. Revisa que esté encendido o escribe su dirección.	The server was not found on this network. Check that it is on or type its address.	Server non trovato in questa rete. Verifica che sia acceso o scrivi il suo indirizzo.
+Enciende el servidor con iniciar-servidor.bat (doble clic) y deja abierta esa ventana; después recarga esta página. Si el servidor está en otra computadora, toca «Cambiar» y escribe su dirección.	Start the server with iniciar-servidor.bat (double-click) and leave that window open; then reload this page. If the server is on another computer, tap "Change" and type its address.	Avvia il server con iniciar-servidor.bat (doppio clic) e lascia aperta quella finestra; poi ricarica questa pagina. Se il server è su un altro computer, tocca «Cambia» e scrivi il suo indirizzo.
+Enciende el servidor en la computadora (iniciar-servidor.bat). Luego toca «Buscar el servidor en la red Wi-Fi» o escribe la dirección que muestra esa ventana; el teléfono debe estar en la misma red Wi-Fi.	Start the server on the computer (iniciar-servidor.bat). Then tap "Find the server on the Wi-Fi network" or type the address shown in that window; the phone must be on the same Wi-Fi network.	Avvia il server sul computer (iniciar-servidor.bat). Poi tocca «Cerca il server nella rete Wi-Fi» o scrivi l'indirizzo mostrato in quella finestra; il telefono deve essere sulla stessa rete Wi-Fi.
+
+# ---- v3.2 · Menú «Ajustes del sistema» ----
+Ajustes del sistema	System settings	Impostazioni di sistema
+Configuración general	General configuration	Configurazione generale
+Local	Local	Locale
+Remoto	Remote	Remoto
+
+# ---- v3.2 · Membresías con beneficios flexibles ----
+Beneficios	Benefits	Vantaggi
+Precio al mes	Monthly price	Prezzo mensile
+Ej. Premier	E.g. Premier	Es. Premier
+Ej. Para el caballero que cuida cada detalle	E.g. For the gentleman who cares about every detail	Es. Per il gentiluomo che cura ogni dettaglio
+Agrégalos como aparecen en tu cartel y en el mismo orden. Cada uno puede ser gratis o con descuento, ilimitado o con un número de usos por visita o por mes. Los de «solo texto» se muestran pero no cambian el precio (ej. «Pase preferente»).	Add them as they appear on your poster and in the same order. Each one can be free or discounted, unlimited or with a number of uses per visit or per month. "Text only" benefits are shown but do not change the price (e.g. "Priority pass").	Aggiungili come appaiono sul tuo cartellone e nello stesso ordine. Ognuno può essere gratuito o scontato, illimitato o con un numero di utilizzi per visita o al mese. Quelli «solo testo» vengono mostrati ma non cambiano il prezzo (es. «Pass prioritario»).
+Sin beneficios. Usa «Agregar beneficio».	No benefits. Use "Add benefit".	Nessun vantaggio. Usa «Aggiungi vantaggio».
+Agregar beneficio	Add benefit	Aggiungi vantaggio
+Agregar beneficio de solo texto	Add text-only benefit	Aggiungi vantaggio solo testo
+«Corte para amigo»: deja los cortes del socio en «1 por visita» y agrega otro corte gratis con límite «1 por mes».	"Haircut for a friend": set the member's haircuts to "1 per visit" and add another free haircut limited to "1 per month".	«Taglio per un amico»: imposta i tagli del socio su «1 per visita» e aggiungi un altro taglio gratuito con limite «1 al mese».
+Texto del cartel, ej. Cortes ilimitados	Poster text, e.g. Unlimited haircuts	Testo del cartellone, es. Tagli illimitati
+Texto del cartel (opcional), ej. Cortes ilimitados	Poster text (optional), e.g. Unlimited haircuts	Testo del cartellone (facoltativo), es. Tagli illimitati
+Texto que ve el cliente	Text the customer sees	Testo che vede il cliente
+Ej. Pase preferente	E.g. Priority pass	Es. Pass prioritario
+Subir	Move up	Sposta su
+Bajar	Move down	Sposta giù
+Quitar beneficio	Remove benefit	Rimuovi vantaggio
+Aplica a	Applies to	Si applica a
+Descuento %	Discount %	Sconto %
+Límite	Limit	Limite
+Por visita	Per visit	Per visita
+Por mes	Per month	Al mese
+Usos	Uses	Utilizzi
+Otro	Other	Altro
+Todos los productos	All products	Tutti i prodotti
+Categoría: {c}	Category: {c}	Categoria: {c}
+Categoría «{c}»	Category "{c}"	Categoria «{c}»
+Otra categoría…	Other category…	Altra categoria…
+Solo texto (no cambia el precio)	Text only (does not change the price)	Solo testo (non cambia il prezzo)
+Beneficio informativo (no cambia el precio)	Informational benefit (does not change the price)	Vantaggio informativo (non cambia il prezzo)
+{n} por visita	{n} per visit	{n} per visita
+Escribe el texto del beneficio {n}.	Write the text of benefit {n}.	Scrivi il testo del vantaggio {n}.
+Escribe la categoría del beneficio {n}.	Write the category of benefit {n}.	Scrivi la categoria del vantaggio {n}.
+Escribe cuántos usos tiene el beneficio {n}.	Write how many uses benefit {n} has.	Scrivi quanti utilizzi ha il vantaggio {n}.
+Categoría	Category	Categoria
+Ej. Bebida	E.g. Drink	Es. Bevanda
+Sirve para beneficios de membresía como «1 bebida por visita».	Used for membership benefits such as "1 drink per visit".	Serve per vantaggi dell'abbonamento come «1 bevanda per visita».
+La categoría debe tener al menos 2 letras.	The category must have at least 2 letters.	La categoria deve avere almeno 2 lettere.
+Una membresía admite como máximo 30 beneficios.	A membership allows at most 30 benefits.	Un abbonamento ammette al massimo 30 vantaggi.
+A qué aplica	What it applies to	A cosa si applica
+El texto	The text	Il testo
+El servicio	The service	Il servizio
+El producto	The product	Il prodotto
+El tipo	The type	Il tipo
+El porcentaje	The percentage	La percentuale
+El número de usos	The number of uses	Il numero di utilizzi
+El periodo	The period	Il periodo
+El identificador	The identifier	L'identificativo
+La categoría	The category	La categoria
+Beneficios de la membresía {plan}	Membership benefits: {plan}	Vantaggi dell'abbonamento {plan}
+Ya existe un servicio con ese nombre.	A service with that name already exists.	Esiste già un servizio con questo nome.
+Ya existe un producto con ese nombre.	A product with that name already exists.	Esiste già un prodotto con questo nome.
+Ya existe una membresía con ese nombre. Usa «Editar» para cambiar sus beneficios.	A membership with that name already exists. Use "Edit" to change its benefits.	Esiste già un abbonamento con questo nome. Usa «Modifica» per cambiarne i vantaggi.
+Ver foto de corte de referencia	View reference haircut photo	Vedi la foto del taglio di riferimento
+Toca para cerrar	Tap to close	Tocca per chiudere
+Foto	Photo	Foto
+Exportar resumen (CSV)	Export summary (CSV)	Esporta riepilogo (CSV)
+Archivo para Excel con los totales y las ventas del turno.	Excel file with the shift totals and sales.	File per Excel con i totali e le vendite del turno.
+Exportar corte a CSV	Export cash close to CSV	Esporta chiusura in CSV
+Exportar	Export	Esporta
+Resumen del turno (sin cerrar)	Shift summary (not closed)	Riepilogo del turno (non chiuso)
+Total de ingresos	Total income	Totale incassi
+Ventas incluidas	Sales included	Vendite incluse
+Concepto	Item	Voce
+Importe	Amount	Importo
+{n} ventas	{n} sales	{n} vendite
+Actualiza la app de Android a la versión 2.4 o posterior para exportar archivos.	Update the Android app to version 2.4 or later to export files.	Aggiorna l'app Android alla versione 2.4 o successiva per esportare file.
+Permite que la app guarde archivos y vuelve a intentarlo.	Allow the app to save files and try again.	Consenti all'app di salvare file e riprova.
+No se pudo guardar el archivo.	The file could not be saved.	Impossibile salvare il file.
+Archivo guardado en {ruta}	File saved in {ruta}	File salvato in {ruta}
+Archivo guardado en {ruta}. ¿Quieres compartirlo (WhatsApp, correo, Drive…)?	File saved in {ruta}. Do you want to share it (WhatsApp, email, Drive…)?	File salvato in {ruta}. Vuoi condividerlo (WhatsApp, e-mail, Drive…)?
+No hay una app para compartir el archivo.	There is no app to share the file.	Nessuna app per condividere il file.
+# ---- v3.4: descuentos, reembolsos, cierre, impresora, bot ----
+(opcional, recomendada)	(optional, recommended)	(facoltativa, consigliata)
+9600 (la más común)	9600 (most common)	9600 (la più comune)
+Abrir Bluetooth del teléfono	Open phone Bluetooth	Apri il Bluetooth del telefono
+Actualizar	Refresh	Aggiorna
+Aparecen en el ticket y son los datos que da el bot de WhatsApp (dirección, horario, teléfono).	Shown on the receipt and used by the WhatsApp bot (address, hours, phone).	Compaiono sullo scontrino e sono i dati che fornisce il bot di WhatsApp (indirizzo, orari, telefono).
+Aún no ha escrito nadie.	Nobody has written yet.	Nessuno ha ancora scritto.
+Aún no hay descuentos. Crea el primero.	No discounts yet. Create the first one.	Ancora nessuno sconto. Crea il primo.
+Bot de respuestas	Auto-reply bot	Bot di risposta
+Buscar impresora	Find printer	Cerca stampante
+Cantidad en pesos ($)	Amount in pesos ($)	Importo in pesos ($)
+Catálogos, descuentos, cuentas, impresora, WhatsApp, idioma y conexión con el servidor.	Catalogs, discounts, accounts, printer, WhatsApp, language and server connection.	Cataloghi, sconti, account, stampante, WhatsApp, lingua e connessione al server.
+Clave secreta de la app	App secret	Chiave segreta dell'app
+Conecta el número del negocio para enviar confirmaciones de citas, tickets y las respuestas del bot.	Connect the business number to send appointment confirmations, receipts and bot replies.	Collega il numero dell'attività per inviare conferme degli appuntamenti, scontrini e le risposte del bot.
+Conecta primero la API (arriba) y comprueba la conexión.	First connect the API (above) and test the connection.	Collega prima l'API (sopra) e verifica la connessione.
+Contesta solo cuando preguntan por servicios, productos, membresías, descuentos, horario, dirección o citas.	Answers by itself when customers ask about services, products, memberships, discounts, hours, address or appointments.	Risponde da solo quando chiedono di servizi, prodotti, abbonamenti, sconti, orari, indirizzo o appuntamenti.
+Copiar	Copy	Copia
+Crea un usuario del sistema en el Business Manager y genera un token permanente con los permisos whatsapp_business_messaging y whatsapp_business_management.	Create a system user in Business Manager and generate a permanent token with the whatsapp_business_messaging and whatsapp_business_management permissions.	Crea un utente di sistema nel Business Manager e genera un token permanente con i permessi whatsapp_business_messaging e whatsapp_business_management.
+Cómo activar el bot	How to turn on the bot	Come attivare il bot
+Cómo agendar una cita	How to book an appointment	Come prenotare un appuntamento
+Datos para el webhook de Meta	Data for the Meta webhook	Dati per il webhook di Meta
+Descuento activo	Discount active	Sconto attivo
+Descuentos registrados	Registered discounts	Sconti registrati
+Desmarca los días que no abren. Es el horario que responde el bot cuando preguntan «¿a qué hora cierran?».	Uncheck the days you are closed. These are the hours the bot gives when asked "what time do you close?".	Deseleziona i giorni di chiusura. È l'orario che il bot comunica quando chiedono «a che ora chiudete?».
+Dirección pública del servidor (https)	Public server address (https)	Indirizzo pubblico del server (https)
+Ej. Agenda por llamada o directamente en la barbería.	E.g. Book by phone or directly at the barbershop.	Es. Prenota per telefono o direttamente in barberia.
+Ej. Martes de barba	E.g. Beard Tuesday	Es. Martedì della barba
+Ej. Todos los martes la barba tiene 20 % de descuento.	E.g. Every Tuesday beard trims are 20% off.	Es. Ogni martedì la barba ha il 20 % di sconto.
+Ej. ¿A qué hora cierran?	E.g. What time do you close?	Es. A che ora chiudete?
+El bot de WhatsApp la usa cuando preguntan por promociones.	The WhatsApp bot uses it when customers ask about promotions.	Il bot di WhatsApp la usa quando chiedono delle promozioni.
+El servidor necesita una dirección https pública. Lo más sencillo es un túnel gratuito: instala «cloudflared», ejecuta el comando de abajo y pega aquí la dirección que te da.	The server needs a public https address. The easiest way is a free tunnel: install "cloudflared", run the command below and paste here the address it gives you.	Il server ha bisogno di un indirizzo https pubblico. Il modo più semplice è un tunnel gratuito: installa «cloudflared», esegui il comando qui sotto e incolla qui l'indirizzo che ti fornisce.
+Elegir puerto	Choose port	Scegli porta
+Empieza	Starts	Inizia
+En Google Maps: Compartir → Copiar vínculo. El bot lo manda cuando preguntan dónde están.	In Google Maps: Share → Copy link. The bot sends it when customers ask where you are.	In Google Maps: Condividi → Copia link. Il bot lo invia quando chiedono dove siete.
+En WhatsApp → Configuración de la API copia el «Identificador de número de teléfono» (no el número).	In WhatsApp → API Setup copy the "Phone number ID" (not the phone number).	In WhatsApp → Configurazione API copia l'«ID numero di telefono» (non il numero).
+En developers.facebook.com → tu app → WhatsApp → Configuración → Webhook, pega la «URL de devolución de llamada» y el «Token de verificación» y toca «Verificar y guardar».	At developers.facebook.com → your app → WhatsApp → Configuration → Webhook, paste the "Callback URL" and the "Verify token" and tap "Verify and save".	Su developers.facebook.com → la tua app → WhatsApp → Configurazione → Webhook, incolla l'«URL di callback» e il «Token di verifica» e tocca «Verifica e salva».
+En «Campos del webhook» suscríbete al campo «messages».	Under "Webhook fields" subscribe to the "messages" field.	In «Campi del webhook» iscriviti al campo «messages».
+Enciende «Responder automáticamente» y escribe al número desde otro WhatsApp.	Turn on "Reply automatically" and write to the number from another WhatsApp.	Attiva «Rispondi automaticamente» e scrivi al numero da un altro WhatsApp.
+Enlace del mapa	Map link	Link della mappa
+Envío automático de citas y tickets	Automatic sending of appointments and receipts	Invio automatico di appuntamenti e scontrini
+Guardar bot	Save bot	Salva bot
+Guardar descuento	Save discount	Salva sconto
+Hola	Hello	Ciao
+Horario	Hours	Orari
+Horario de atención	Opening hours	Orari di apertura
+La cantidad se descuenta a cada pieza o servicio.	The amount is taken off each unit or service.	L'importo viene scontato a ogni pezzo o servizio.
+La computadora del servidor y el túnel deben estar encendidos para que el bot conteste.	The server computer and the tunnel must be running for the bot to answer.	Il computer del server e il tunnel devono essere accesi perché il bot risponda.
+Los precios, promociones, horario y dirección salen de los catálogos y de «Datos del negocio».	Prices, promotions, hours and address come from the catalogs and from "Business details".	Prezzi, promozioni, orari e indirizzo provengono dai cataloghi e da «Dati dell'attività».
+Mensajes recientes	Recent messages	Messaggi recenti
+Meta solo puede avisar a una dirección https de internet. Se guarda en este equipo solo para armar la URL de abajo.	Meta can only notify a public https address. It is saved on this device just to build the URL below.	Meta può avvisare solo un indirizzo https pubblico. Viene salvato su questo dispositivo solo per comporre l'URL qui sotto.
+Nuevo descuento	New discount	Nuovo sconto
+Editar descuento	Edit discount	Modifica sconto
+Para avisar citas a clientes que no te han escrito en 24 h, crea una plantilla aprobada con 6 variables: {{1}} cliente, {{2}} fecha, {{3}} hora, {{4}} servicio, {{5}} duración, {{6}} barbero.	To notify customers who have not written to you in 24 h, create an approved template with 6 variables: {{1}} customer, {{2}} date, {{3}} time, {{4}} service, {{5}} duration, {{6}} barber.	Per avvisare i clienti che non ti hanno scritto nelle ultime 24 h, crea un modello approvato con 6 variabili: {{1}} cliente, {{2}} data, {{3}} ora, {{4}} servizio, {{5}} durata, {{6}} barbiere.
+Pausar o reanudar	Pause or resume	Metti in pausa o riprendi
+Pega los datos aquí, guarda y toca «Probar conexión»: debe aparecer el número del negocio.	Paste the data here, save and tap "Test connection": the business number must appear.	Incolla qui i dati, salva e tocca «Prova connessione»: deve comparire il numero dell'attività.
+Porcentaje	Percentage	Percentuale
+Porcentaje (%)	Percentage (%)	Percentuale (%)
+Preguntar	Ask	Chiedi
+Probar conexión	Test connection	Prova connessione
+Probar el bot aquí (no envía nada)	Try the bot here (nothing is sent)	Prova il bot qui (non invia nulla)
+Puerto	Port	Porta
+Regresa a la app, toca «Buscar vinculadas» y selecciónala.	Go back to the app, tap "Find paired" and select it.	Torna all'app, tocca «Cerca associate» e selezionala.
+Responder automáticamente a los clientes	Reply automatically to customers	Rispondi automaticamente ai clienti
+Saludo	Greeting	Saluto
+Se aplica solo en caja mientras esté vigente.	Applied automatically at checkout while it is active.	Si applica da solo in cassa finché è valido.
+Sección	Section	Sezione
+Si la prueba imprime símbolos raros, cambia la velocidad.	If the test prints strange symbols, change the speed.	Se la prova stampa simboli strani, cambia la velocità.
+Si no conecta: apaga y enciende la impresora, revisa que no esté conectada a otro teléfono o computadora (solo acepta uno a la vez) y acércala. Si sigue igual, en el Bluetooth del teléfono elige «Olvidar» y vuelve a vincularla.	If it does not connect: turn the printer off and on, check it is not connected to another phone or computer (it accepts only one at a time) and bring it closer. If it still fails, choose "Forget" in the phone's Bluetooth and pair it again.	Se non si collega: spegni e riaccendi la stampante, verifica che non sia collegata a un altro telefono o computer (ne accetta uno solo alla volta) e avvicinala. Se continua, nel Bluetooth del telefono scegli «Dimentica» e associala di nuovo.
+Si un cliente con membresía compra algo que también tiene promoción, se aplica el descuento que más le conviene (no se suman).	If a member buys something that also has a promotion, the better discount is applied (they do not add up).	Se un cliente con abbonamento compra qualcosa che ha anche una promozione, si applica lo sconto più conveniente (non si sommano).
+Sin fechas, el descuento se aplica hasta que lo pongas en pausa o lo elimines.	Without dates, the discount applies until you pause or delete it.	Senza date, lo sconto si applica finché non lo metti in pausa o lo elimini.
+Teléfono o tableta: toca «Abrir Bluetooth del teléfono» y vincúlala (PIN 0000 o 1234).	Phone or tablet: tap "Open phone Bluetooth" and pair it (PIN 0000 or 1234).	Telefono o tablet: tocca «Apri il Bluetooth del telefono» e associala (PIN 0000 o 1234).
+Termina	Ends	Termina
+Toca «Probar conexión»: debe decir «Impresora conectada».	Tap "Test connection": it must say "Printer connected".	Tocca «Prova connessione»: deve dire «Stampante collegata».
+Toda la venta	The whole sale	Tutta la vendita
+Token de verificación	Verify token	Token di verifica
+URL de devolución de llamada	Callback URL	URL di callback
+Velocidad	Speed	Velocità
+¡Hola! 👋 Gracias por escribir a Engreídos Barbershop.	Hello! 👋 Thanks for writing to Engreídos Barbershop.	Ciao! 👋 Grazie per aver scritto a Engreídos Barbershop.
+Abre los ajustes de Bluetooth del teléfono y vincula la impresora.	Open the phone's Bluetooth settings and pair the printer.	Apri le impostazioni Bluetooth del telefono e associa la stampante.
+Bot guardado (apagado).	Bot saved (off).	Bot salvato (spento).
+Bot guardado y encendido.	Bot saved and turned on.	Bot salvato e attivato.
+Cantidad	Quantity	Quantità
+Cerrado	Closed	Chiuso
+Conectado con el número {numero} ({nombre}).	Connected to number {numero} ({nombre}).	Collegato al numero {numero} ({nombre}).
+No se pudo conectar.	Could not connect.	Connessione non riuscita.
+Conectando con la impresora…	Connecting to the printer…	Connessione alla stampante…
+Copiado.	Copied.	Copiato.
+Del {a} al {b}	From {a} to {b}	Dal {a} al {b}
+Descuento actualizado.	Discount updated.	Sconto aggiornato.
+Descuento creado.	Discount created.	Sconto creato.
+Descuento eliminado.	Discount deleted.	Sconto eliminato.
+Descuento en pausa.	Discount paused.	Sconto in pausa.
+Descuento reanudado.	Discount resumed.	Sconto ripreso.
+Desde el {a}	From {a}	Dal {a}
+El enlace del mapa debe empezar con https://	The map link must start with https://	Il link della mappa deve iniziare con https://
+El token de verificación solo lleva letras, números, guiones y puntos (mínimo 6).	The verify token may only contain letters, numbers, hyphens and dots (at least 6).	Il token di verifica può contenere solo lettere, numeri, trattini e punti (minimo 6).
+Enviado	Sent	Inviato
+Enviando el ticket de prueba…	Sending the test receipt…	Invio dello scontrino di prova…
+Escribe el nombre del descuento.	Enter the discount name.	Scrivi il nome dello sconto.
+El porcentaje debe estar entre 1 y 100.	The percentage must be between 1 and 100.	La percentuale deve essere tra 1 e 100.
+Escribe la cantidad a descontar.	Enter the amount to take off.	Scrivi l'importo da scontare.
+Está en Meta → tu app → Configuración → Básica. Con ella el sistema comprueba que los mensajes vienen de Meta.	Found in Meta → your app → Settings → Basic. With it the system checks that messages really come from Meta.	Si trova in Meta → la tua app → Impostazioni → Di base. Con essa il sistema verifica che i messaggi provengano da Meta.
+Hasta el {b}	Until {b}	Fino al {b}
+Hay una clave guardada: solo se aceptan mensajes firmados por Meta.	A secret is saved: only messages signed by Meta are accepted.	C'è una chiave salvata: si accettano solo messaggi firmati da Meta.
+Impresora conectada: {nombre}	Printer connected: {nombre}	Stampante collegata: {nombre}
+La fecha de término no puede ser anterior a la de inicio.	The end date cannot be before the start date.	La data di fine non può essere precedente a quella di inizio.
+Mensaje enviado con la plantilla «hello_world» (ese número no ha escrito en las últimas 24 h).	Message sent with the "hello_world" template (that number has not written in the last 24 h).	Messaggio inviato con il modello «hello_world» (quel numero non ha scritto nelle ultime 24 h).
+No hay impresoras vinculadas. Toca «Abrir Bluetooth del teléfono», vincúlala (PIN 0000 o 1234) y vuelve a buscar.	No paired printers. Tap "Open phone Bluetooth", pair it (PIN 0000 or 1234) and search again.	Nessuna stampante associata. Tocca «Apri il Bluetooth del telefono», associala (PIN 0000 o 1234) e cerca di nuovo.
+No se envió: {e}	Not sent: {e}	Non inviato: {e}
+Permite el acceso a «Dispositivos cercanos» y vuelve a tocar «Buscar vinculadas».	Allow access to "Nearby devices" and tap "Find paired" again.	Consenti l'accesso a «Dispositivi nelle vicinanze» e tocca di nuovo «Cerca associate».
+Poner en pausa	Pause	Metti in pausa
+Puerto elegido. Imprime la prueba.	Port chosen. Print the test.	Porta scelta. Stampa la prova.
+Reanudar	Resume	Riprendi
+Sin fecha de término	No end date	Senza data di fine
+Toca tu impresora en la lista.	Tap your printer in the list.	Tocca la tua stampante nell'elenco.
+Todas las membresías	All memberships	Tutti gli abbonamenti
+Todos los servicios	All services	Tutti i servizi
+Vincula la impresora y regresa a la app para tocar «Buscar vinculadas».	Pair the printer and return to the app to tap "Find paired".	Associa la stampante e torna all'app per toccare «Cerca associate».
+{dia}: abre a las	{dia}: opens at	{dia}: apre alle
+{dia}: cierra a las	{dia}: closes at	{dia}: chiude alle
+{dia}: escribe la hora de apertura y la de cierre.	{dia}: enter the opening and closing times.	{dia}: scrivi l'ora di apertura e di chiusura.
+{dia}: la hora de cierre debe ser después de la de apertura.	{dia}: the closing time must be after the opening time.	{dia}: l'ora di chiusura deve essere dopo quella di apertura.
+{n} descuento	{n} discount	{n} sconto
+{n} descuentos	{n} discounts	{n} sconti
+¿Eliminar el descuento «{nombre}»? Ya no se aplicará en caja.	Delete the discount "{nombre}"? It will no longer apply at checkout.	Eliminare lo sconto «{nombre}»? Non verrà più applicato in cassa.
+Vigente	Active	Valido
+En pausa	Paused	In pausa
+Programado	Scheduled	Programmato
+Terminado	Ended	Terminato
+a	to	alle
+Archivo para Excel con los totales, las ventas y los reembolsos del turno.	Excel file with the totals, sales and refunds of the shift.	File per Excel con i totali, le vendite e i rimborsi del turno.
+Cliente y motivo	Customer and reason	Cliente e motivo
+Cobrado por	Collected by	Incassato da
+Cobrado por método de pago	Collected by payment method	Incassato per metodo di pagamento
+Contar billetes y monedas	Count bills and coins	Conta banconote e monete
+Descuentos y membresías	Discounts and memberships	Sconti e abbonamenti
+Devolución	Refund method	Rimborso
+Ej. Se pagó el garrafón con $40 de caja	E.g. Paid $40 for water from the register	Es. Pagata l'acqua con $40 dalla cassa
+Hacer un reembolso	Make a refund	Fai un rimborso
+Incluye todas las ventas y reembolsos desde el último corte (cajero y dueño).	Includes all sales and refunds since the last closing (cashier and owner).	Include tutte le vendite e i rimborsi dall'ultima chiusura (cassiere e titolare).
+Ingreso neto del turno	Net income of the shift	Incasso netto del turno
+Monto	Amount	Importo
+Observaciones	Notes	Osservazioni
+Reembolsos	Refunds	Rimborsi
+Reembolsos del turno	Refunds of the shift	Rimborsi del turno
+Reembolsos en efectivo	Cash refunds	Rimborsi in contanti
+Reporte del turno	Shift report	Rapporto del turno
+Servicios por barbero	Services by barber	Servizi per barbiere
+Ticket	Receipt	Scontrino
+Total cobrado	Total collected	Totale incassato
+Total contado	Total counted	Totale contato
+Ventas brutas	Gross sales	Vendite lorde
+Ventas en efectivo	Cash sales	Vendite in contanti
+Ventas por tipo	Sales by type	Vendite per tipo
+Arqueo de efectivo	Cash count	Conteggio contanti
+Cobrado	Collected	Incassato
+Denominación	Denomination	Taglio
+Ingreso neto	Net income	Incasso netto
+Neto	Net	Netto
+No hay ventas ni reembolsos pendientes de corte.	No sales or refunds pending closing.	Nessuna vendita o rimborso da chiudere.
+Piezas	Units	Pezzi
+Piezas de {monto}	Pieces of {monto}	Pezzi da {monto}
+Reembolsado	Refunded	Rimborsato
+Reembolsos incluidos	Refunds included	Rimborsi inclusi
+Resumen	Summary	Riepilogo
+Autorizó	Authorized by	Autorizzato da
+{n} reembolso	{n} refund	{n} rimborso
+{n} reembolsos	{n} refunds	{n} rimborsi
+Sin barbero	No barber	Senza barbiere
+Reembolsar	Refund	Rimborsa
+Descuento aplicado	Discount applied	Sconto applicato
+Resumen del periodo	Period summary	Riepilogo del periodo
+Elige el puerto de la impresora en Ajustes → Impresora.	Choose the printer port in Settings → Printer.	Scegli la porta della stampante in Impostazioni → Stampante.
+Este navegador no permite Bluetooth. Usa Chrome.	This browser does not support Bluetooth. Use Chrome.	Questo browser non supporta il Bluetooth. Usa Chrome.
+Este navegador no permite la conexión directa. Usa Chrome o Edge en computadora.	This browser does not support direct connection. Use Chrome or Edge on a computer.	Questo browser non supporta la connessione diretta. Usa Chrome o Edge su computer.
+Impresora Bluetooth	Bluetooth printer	Stampante Bluetooth
+La impresora del sistema se elige en el diálogo de impresión.	The system printer is chosen in the print dialog.	La stampante di sistema si sceglie nella finestra di stampa.
+No se eligió ninguna impresora.	No printer was chosen.	Nessuna stampante scelta.
+No se eligió ningún puerto.	No port was chosen.	Nessuna porta scelta.
+No se pudo abrir el puerto de la impresora. Revisa que esté encendida, conectada y que ningún otro programa la esté usando.	Could not open the printer port. Check that it is on, connected and not in use by another program.	Impossibile aprire la porta della stampante. Verifica che sia accesa, collegata e non usata da un altro programma.
+No se pudo conectar con la impresora. Revisa que esté encendida y cerca.	Could not connect to the printer. Check that it is on and nearby.	Impossibile collegarsi alla stampante. Verifica che sia accesa e vicina.
+Puerto abierto. Imprime la prueba para confirmar la velocidad.	Port open. Print the test to confirm the speed.	Porta aperta. Stampa la prova per confermare la velocità.
+Puerto serie (COM)	Serial port (COM)	Porta seriale (COM)
+Activa el Bluetooth del teléfono.	Turn on the phone's Bluetooth.	Attiva il Bluetooth del telefono.
+Este equipo no tiene Bluetooth.	This device has no Bluetooth.	Questo dispositivo non ha il Bluetooth.
+Elige la impresora otra vez en Ajustes → Impresora.	Choose the printer again in Settings → Printer.	Scegli di nuovo la stampante in Impostazioni → Stampante.
+Devolver el dinero de una venta	Give back the money of a sale	Restituire il denaro di una vendita
+1. Busca el ticket	1. Find the receipt	1. Cerca lo scontrino
+2. Elige qué se devuelve	2. Choose what is refunded	2. Scegli cosa rimborsare
+Al reembolsar la membresía, el cliente deja de tener sus beneficios.	When the membership is refunded, the customer loses its benefits.	Rimborsando l'abbonamento, il cliente perde i suoi vantaggi.
+Devuelve el dinero de una venta completa o solo de algunos conceptos.	Give back the money of a whole sale or only some items.	Restituisci il denaro di una vendita intera o solo di alcune voci.
+Ej. Producto dañado, cobro por error…	E.g. Damaged product, charged by mistake…	Es. Prodotto danneggiato, incasso per errore…
+El dinero se devuelve por	The money is returned by	Il denaro viene restituito tramite
+Elige un ticket de la lista para ver sus conceptos.	Choose a receipt from the list to see its items.	Scegli uno scontrino dall'elenco per vederne le voci.
+Esta venta ya se reembolsó completa.	This sale has already been fully refunded.	Questa vendita è già stata rimborsata per intero.
+Folio o cliente	Receipt number or customer	Numero o cliente
+Menos	Less	Meno
+Más	More	Più
+No hay reembolsos en estas fechas.	No refunds on these dates.	Nessun rimborso in queste date.
+No hay ventas con esos datos.	No sales match that search.	Nessuna vendita con questi dati.
+Pagó con:	Paid with:	Pagato con:
+Qué se devolvió	What was refunded	Cosa è stato rimborsato
+Reembolsar toda la venta	Refund the whole sale	Rimborsa tutta la vendita
+Reembolsos del periodo	Refunds in the period	Rimborsi del periodo
+Registrar reembolso	Register refund	Registra rimborso
+Regresar los productos al inventario	Return the products to inventory	Rimetti i prodotti in magazzino
+Regresó al inventario	Returned to inventory	Rientrato in magazzino
+Total a devolver	Total to refund	Totale da rimborsare
+Total:	Total:	Totale:
+Tu contraseña	Your password	La tua password
+Escribe el motivo del reembolso.	Enter the reason for the refund.	Scrivi il motivo del rimborso.
+Escribe tu contraseña para autorizar el reembolso.	Enter your password to authorize the refund.	Scrivi la tua password per autorizzare il rimborso.
+No	No	No
+Sí	Yes	Sì
+Reembolso registrado: {monto}.	Refund registered: {monto}.	Rimborso registrato: {monto}.
+Sin corte	Not closed yet	Senza chiusura
+Ya reembolsadas: {n}	Already refunded: {n}	Già rimborsati: {n}
+Ya reembolsado	Already refunded	Già rimborsato
+{n} piezas	{n} units	{n} pezzi
+¿Devolver {monto} del ticket {folio}? Esta acción no se puede deshacer.	Refund {monto} from receipt {folio}? This cannot be undone.	Rimborsare {monto} dello scontrino {folio}? L'azione non può essere annullata.
+Promociones de hoy	Today's promotions	Promozioni di oggi
+Reembolsar esta venta	Refund this sale	Rimborsa questa vendita
+Productos de {categoria}	{categoria} products	Prodotti di {categoria}
+El descuento no existe.	The discount does not exist.	Lo sconto non esiste.
+Elige al menos un concepto para reembolsar.	Choose at least one item to refund.	Scegli almeno una voce da rimborsare.
+Contraseña incorrecta. No se hizo el reembolso.	Wrong password. The refund was not made.	Password errata. Il rimborso non è stato effettuato.
+Esos conceptos no tuvieron costo para el cliente: no hay importe que devolver.	Those items were free for the customer: there is nothing to refund.	Quelle voci non hanno avuto costo per il cliente: non c'è importo da rimborsare.
+El corte no existe.	The closing does not exist.	La chiusura non esiste.
+El horario no es válido.	The opening hours are not valid.	L'orario non è valido.
+Falta guardar el identificador del número y el token de acceso.	The phone number ID and the access token have not been saved yet.	Mancano l'ID del numero e il token di accesso.
+No se pudo conectar con los servidores de WhatsApp. Revisa que la computadora del servidor tenga internet.	Could not reach the WhatsApp servers. Check that the server computer has internet.	Impossibile raggiungere i server di WhatsApp. Verifica che il computer del server abbia internet.
+El token de acceso no es válido o ya venció. Genera uno nuevo en Meta (de preferencia un token permanente de usuario del sistema) y guárdalo otra vez.	The access token is invalid or has expired. Generate a new one in Meta (preferably a permanent system-user token) and save it again.	Il token di accesso non è valido o è scaduto. Generane uno nuovo in Meta (preferibilmente un token permanente di utente di sistema) e salvalo di nuovo.
+El identificador del número (Phone number ID) no es correcto o el token no tiene permiso sobre ese número. Copia el «Identificador de número de teléfono», no el número telefónico.	The phone number ID is wrong or the token has no permission over that number. Copy the "Phone number ID", not the phone number.	L'ID del numero non è corretto o il token non ha permessi su quel numero. Copia l'«ID numero di telefono», non il numero.
+El token no tiene el permiso whatsapp_business_messaging. Vuelve a generarlo marcando ese permiso.	The token lacks the whatsapp_business_messaging permission. Generate it again with that permission checked.	Il token non ha il permesso whatsapp_business_messaging. Generalo di nuovo selezionando quel permesso.
+El token no tiene permisos suficientes para este número.	The token does not have enough permissions for this number.	Il token non ha permessi sufficienti per questo numero.
+Meta está limitando los envíos por ahora. Espera unos minutos.	Meta is rate-limiting messages right now. Wait a few minutes.	Meta sta limitando gli invii in questo momento. Attendi qualche minuto.
+Se alcanzó el límite de mensajes por segundo. Intenta de nuevo en un momento.	The per-second message limit was reached. Try again in a moment.	Raggiunto il limite di messaggi al secondo. Riprova tra un momento.
+Ese número no puede recibir el mensaje: no tiene WhatsApp o no ha aceptado los términos más recientes.	That number cannot receive the message: it has no WhatsApp or has not accepted the latest terms.	Quel numero non può ricevere il messaggio: non ha WhatsApp o non ha accettato gli ultimi termini.
+La cuenta está en modo de prueba y ese teléfono no está en la lista de destinatarios permitidos. Agrégalo en Meta → WhatsApp → Configuración de la API → «Para».	The account is in test mode and that phone is not in the allowed recipients list. Add it in Meta → WhatsApp → API Setup → "To".	L'account è in modalità di prova e quel telefono non è nell'elenco dei destinatari consentiti. Aggiungilo in Meta → WhatsApp → Configurazione API → «A».
+Pasaron más de 24 horas desde el último mensaje del cliente. Solo se le puede escribir con una plantilla aprobada.	More than 24 hours have passed since the customer's last message. You can only write with an approved template.	Sono passate più di 24 ore dall'ultimo messaggio del cliente. Si può scrivere solo con un modello approvato.
+Meta bloqueó la cuenta de WhatsApp Business. Revisa el estado en WhatsApp Manager.	Meta blocked the WhatsApp Business account. Check its status in WhatsApp Manager.	Meta ha bloccato l'account WhatsApp Business. Controlla lo stato in WhatsApp Manager.
+Hay un problema con el método de pago de la cuenta de WhatsApp Business.	There is a problem with the payment method of the WhatsApp Business account.	C'è un problema con il metodo di pagamento dell'account WhatsApp Business.
+El número de variables no coincide con la plantilla aprobada.	The number of variables does not match the approved template.	Il numero di variabili non corrisponde al modello approvato.
+La plantilla no existe con ese nombre e idioma, o todavía no está aprobada.	The template does not exist with that name and language, or is not approved yet.	Il modello non esiste con quel nome e lingua, oppure non è ancora approvato.
+El número todavía no está registrado en la API de WhatsApp Cloud. Regístralo en WhatsApp Manager.	The number is not registered in the WhatsApp Cloud API yet. Register it in WhatsApp Manager.	Il numero non è ancora registrato nell'API WhatsApp Cloud. Registralo in WhatsApp Manager.

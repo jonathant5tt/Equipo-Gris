@@ -17,6 +17,7 @@
 
   var U = window.Utilidades;
   var Api = window.Api;
+  var t = window.Idioma.t;
 
   /** Orden y nombre de los días de la semana. */
   var DIAS = [
@@ -62,8 +63,8 @@
 
   /** @param {string[]} trabajo  @returns {string} Nombres de los días de descanso. */
   function diasDescanso(trabajo) {
-    var descanso = DIAS.filter(function (d) { return trabajo.indexOf(d[0]) === -1; }).map(function (d) { return d[1]; });
-    return descanso.length ? descanso.join(', ') : 'Sin descanso';
+    var descanso = DIAS.filter(function (d) { return trabajo.indexOf(d[0]) === -1; }).map(function (d) { return t(d[1]); });
+    return descanso.length ? descanso.join(', ') : t('Sin descanso');
   }
 
   // ---------------------------------------------------------------------------
@@ -75,7 +76,7 @@
     try { barberos = (await Api.barberos.listar()) || []; }
     catch (error) { barberos = []; U.aviso(error.message, 'error'); }
     el.cargando.hidden = true;
-    el.numeroBarberos.textContent = barberos.length + (barberos.length === 1 ? ' barbero' : ' barberos');
+    el.numeroBarberos.textContent = t(barberos.length === 1 ? '{n} barbero' : '{n} barberos', { n: barberos.length });
 
     U.dibujarLista({
       contenedor: el.filas,
@@ -90,6 +91,7 @@
       }),
       alCrear: function (fila, b) {
         var original = barberos.find(function (x) { return x.ID_Barbero === b.ID_Barbero; });
+        fila.querySelector('[data-campo="Descanso"]').setAttribute('translate', 'no');
         fila.querySelector('[data-accion="editar"]').addEventListener('click', function () { editar(original, fila); });
         fila.querySelector('[data-accion="historial"]').addEventListener('click', function () { cargarIngresos(original); });
       }
@@ -120,8 +122,8 @@
   /** Actualiza el contador de días activos y el texto de descanso. */
   function actualizarResumenDias() {
     var marcados = diasMarcados();
-    el.diasActivos.textContent = marcados.length + (marcados.length === 1 ? ' día activo' : ' días activos');
-    el.textoDescanso.textContent = 'Descanso: ' + diasDescanso(marcados) + '.';
+    el.diasActivos.textContent = t(marcados.length === 1 ? '{n} día activo' : '{n} días activos', { n: marcados.length });
+    el.textoDescanso.textContent = t('Descanso') + ': ' + diasDescanso(marcados) + '.';
   }
 
   /** @param {Object} barbero @param {HTMLElement} fila */
@@ -131,10 +133,11 @@
     if (fila) fila.setAttribute('aria-selected', 'true');
 
     el.nombreEdicion.textContent = '— ' + barbero.Nombre;
-    el.entrada.value = U.formatoHora(barbero.HoraEntrada).replace('—', '');
-    el.salida.value = U.formatoHora(barbero.HoraSalida).replace('—', '');
-    el.comidaInicio.value = barbero.ComidaInicio ? U.formatoHora(barbero.ComidaInicio) : '';
-    el.comidaFin.value = barbero.ComidaFin ? U.formatoHora(barbero.ComidaFin) : '';
+    // <input type="time"> necesita "HH:MM" en 24 h.
+    el.entrada.value = U.hora24(barbero.HoraEntrada);
+    el.salida.value = U.hora24(barbero.HoraSalida);
+    el.comidaInicio.value = U.hora24(barbero.ComidaInicio);
+    el.comidaFin.value = U.hora24(barbero.ComidaFin);
     el.roles.value = barbero.RolesActividades || '';
     pintarDias(listaDias(barbero.DiasTrabajo));
     el.error.hidden = true;
@@ -173,7 +176,7 @@
   async function guardar(evento) {
     evento.preventDefault();
     var error = validar();
-    el.error.textContent = error || '';
+    el.error.textContent = error ? t(error) : '';
     el.error.hidden = !error;
     if (error || !enEdicion) return;
 
@@ -186,8 +189,10 @@
       RolesActividades: el.roles.value.trim()
     };
     try {
-      var r = await U.conCarga(el.guardar, Api.barberos.actualizarHorario(enEdicion.ID_Barbero, datos));
-      if (!(r && r.simulado)) { U.aviso('Horario de ' + enEdicion.Nombre + ' actualizado.'); cancelarEdicion(); cargarBarberos(); }
+      await U.conCarga(el.guardar, Api.barberos.actualizarHorario(enEdicion.ID_Barbero, datos));
+      U.aviso(t('Horario de {nombre} actualizado. Se le envió un aviso.', { nombre: enEdicion.Nombre }));
+      cancelarEdicion();
+      cargarBarberos();
     } catch (e) { U.aviso(e.message, 'error'); }
   }
 
@@ -197,12 +202,12 @@
 
   /** @param {Object} barbero */
   async function cargarIngresos(barbero) {
-    el.ingresosBarbero.textContent = barbero.Nombre + ' · últimos ' + DIAS_HISTORIAL + ' días';
+    el.ingresosBarbero.textContent = barbero.Nombre + ' · ' + t('últimos {n} días', { n: DIAS_HISTORIAL });
     var dias = [];
     try { dias = (await Api.barberos.ingresos(barbero.ID_Barbero, DIAS_HISTORIAL)) || []; }
     catch (error) { U.aviso(error.message, 'error'); }
 
-    el.ingresosVacio.querySelector('[data-texto]').textContent = 'Sin servicios registrados en los últimos ' + DIAS_HISTORIAL + ' días.';
+    el.ingresosVacio.querySelector('[data-texto]').textContent = t('Sin servicios registrados en los últimos {n} días.', { n: DIAS_HISTORIAL });
     U.dibujarLista({ contenedor: el.ingresosFilas, plantilla: 'plantilla-ingreso', datos: dias, vacio: el.ingresosVacio });
     el.ingresosTabla.hidden = !dias.length;
     el.ingresosFilas.hidden = false;

@@ -1,0 +1,4 @@
+/* Entrada de Tailwind: se compila a assets/css/tailwind.css (npm run estilos) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

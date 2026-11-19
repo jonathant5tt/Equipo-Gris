@@ -1,21 +1,20 @@
 /**
- * @file tailwind.config.js
- * @description Configuración compartida de Tailwind CSS para todas las pantallas.
+ * Configuración de Tailwind CSS (CLI) para compilar assets/css/tailwind.css.
  *
  * Tailwind se usa solo para la distribución (grid, flex, espacios, tamaños y
  * puntos de quiebre). Los colores y componentes viven en assets/css/comun.css
  * como variables CSS; aquí se exponen con los mismos nombres para poder usar
- * clases como `text-texto-suave` o `bg-superficie` cuando haga falta.
+ * clases como `text-texto-suave` o `bg-superficie`.
  *
- * Se carga justo después del script del CDN de Tailwind:
- *   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
- *   <script src="assets/js/tailwind.config.js"></script>
- *
- * Producción: en lugar del CDN, compilar con Tailwind CLI usando este mismo
- * objeto (ver README.md, sección «Compilar estilos para producción»).
+ * Después de agregar clases nuevas en el HTML o el JS, vuelve a compilar:
+ *   cd servidor && npm run estilos
  */
-/* global tailwind */
-tailwind.config = {
+const path = require('path');
+const raiz = path.join(__dirname, '..', '..');
+
+module.exports = {
+  content: [path.join(raiz, '*.html'), path.join(raiz, 'assets/js/**/*.js')],
+  ...{
   theme: {
     extend: {
       colors: {
@@ -44,4 +43,5 @@ tailwind.config = {
       }
     }
   }
+}
 };

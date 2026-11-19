@@ -5,7 +5,7 @@
   ----------------------------------------------------------------------------
   Consulta de ventas por día actual, rango de días o fecha específica, con
   filtro por concepto y búsqueda por folio o cliente. Muestra indicadores,
-  totales por método de pago y permite exportar a CSV o imprimir.
+  totales por método de pago y permite exportar a CSV (Excel).
 
   Endpoints: GET /ventas?desde=&hasta=&concepto=&buscar=&pagina=&tamano=
   Lógica:    assets/js/paginas/historial-ventas.js
@@ -17,27 +17,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Historial de ventas · Engreídos Barbershop</title>
 
-  <!-- Tipografías e íconos -->
+  <!-- Ícono de la pestaña y de «Agregar a pantalla de inicio» (logotipo oficial) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icono-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icono-192.png">
+  <link rel="apple-touch-icon" href="assets/img/icono-180.png">
+  <meta name="theme-color" content="#0d0f13">
+
+  <!-- Tipografías e íconos (se cargan sin bloquear: la pantalla aparece aunque no haya internet) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
 
-  <!-- Tailwind CSS (distribución) + configuración compartida -->
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="assets/js/tailwind.config.js"></script>
+  <!-- Tailwind CSS compilado (funciona sin internet). Regenerar: cd servidor && npm run estilos -->
+  <link rel="stylesheet" href="assets/css/tailwind.css">
 
   <!-- Sistema de diseño propio -->
   <link rel="stylesheet" href="assets/css/comun.css">
 
   <!-- Núcleo de la aplicación (el orden importa) -->
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/idioma.js"></script>
   <script src="assets/js/utilidades.js"></script>
   <script src="assets/js/sesion.js"></script>
   <script src="assets/js/api.js"></script>
-  <script src="assets/js/api-sin-servidor.js"></script>
 
   <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/logo-engreidos.js" defer></script>
   <script src="assets/js/componentes/encabezado-app.js" defer></script>
   <script src="assets/js/paginas/historial-ventas.js" defer></script>
 </head>
@@ -54,8 +60,8 @@
         <h1 class="cabecera-pagina__titulo">Historial de ventas</h1>
         <p class="cabecera-pagina__descripcion">Consulta de folios, conceptos y métodos de pago.</p>
       </div>
-      <div class="flex gap-2 no-imprimir">
-        <button type="button" id="imprimir" class="boton"><span class="icono icono--sm" aria-hidden="true">print</span>Imprimir</button>
+      <div class="flex flex-wrap gap-2 no-imprimir">
+        <button type="button" class="boton" data-nav="reembolsos.html"><span class="icono icono--sm" aria-hidden="true">undo</span>Reembolsos</button>
         <button type="button" id="exportar" class="boton boton--primario" disabled><span class="icono icono--sm" aria-hidden="true">download</span>Exportar CSV</button>
       </div>
     </div>
@@ -88,7 +94,7 @@
           </div>
           <div>
             <label class="etiqueta" for="buscar">Búsqueda</label>
-            <input class="campo" id="buscar" type="search" placeholder="Folio o cliente">
+            <input class="campo" id="buscar" type="search" placeholder="Folio, cliente o «Cliente 0»">
           </div>
           <button type="submit" class="boton boton--primario"><span class="icono icono--sm" aria-hidden="true">filter_alt</span>Filtrar</button>
         </div>
@@ -98,7 +104,7 @@
     <!-- ===== Indicadores del periodo ===== -->
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5" id="indicadores" aria-label="Indicadores">
       <div class="tarjeta"><div class="dato__etiqueta">Transacciones</div><div class="text-3xl font-bold numeros mt-1" data-campo="Transacciones"></div><div class="text-xs texto-tenue">tickets</div></div>
-      <div class="tarjeta"><div class="dato__etiqueta">Servicios realizados</div><div class="text-3xl font-bold numeros mt-1" data-campo="Servicios"></div><div class="text-xs texto-tenue">cortes y rituales</div></div>
+      <div class="tarjeta"><div class="dato__etiqueta">Servicios realizados</div><div class="text-3xl font-bold numeros mt-1" data-campo="Servicios"></div><div class="text-xs texto-tenue">servicios cobrados</div></div>
       <div class="tarjeta"><div class="dato__etiqueta">Productos vendidos</div><div class="text-3xl font-bold numeros mt-1" data-campo="Productos"></div><div class="text-xs texto-tenue">piezas</div></div>
       <div class="tarjeta"><div class="dato__etiqueta">Ticket promedio</div><div class="text-3xl font-bold numeros mt-1" data-campo="TicketPromedio" data-formato="moneda"></div><div class="text-xs texto-tenue">MXN</div></div>
     </section>
@@ -135,16 +141,30 @@
       </nav>
     </section>
 
-    <!-- ===== Totales por método ===== -->
-    <section class="tarjeta flex flex-wrap items-center justify-between gap-5" id="totales" aria-label="Totales del periodo">
-      <dl class="flex flex-wrap gap-6">
-        <div class="dato"><dt class="dato__etiqueta">Efectivo</dt><dd class="dato__valor numeros" data-campo="Efectivo" data-formato="moneda"></dd></div>
-        <div class="dato"><dt class="dato__etiqueta">Tarjeta</dt><dd class="dato__valor numeros" data-campo="Tarjeta" data-formato="moneda"></dd></div>
-        <div class="dato"><dt class="dato__etiqueta">Transferencia</dt><dd class="dato__valor numeros" data-campo="Transferencia" data-formato="moneda"></dd></div>
-      </dl>
-      <div class="text-right">
-        <div class="dato__etiqueta">Total del periodo</div>
-        <div class="total-final__importe" data-campo="Total" data-formato="moneda"></div>
+    <!-- ===== Reporte del periodo ===== -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="totales" aria-label="Totales del periodo">
+      <div class="tarjeta">
+        <div class="dato__etiqueta mb-2">Ventas del periodo</div>
+        <div class="total-linea"><span>Ventas brutas</span><span data-campo="Bruto" data-formato="moneda"></span></div>
+        <div class="total-linea"><span>Descuentos y membresías</span><span>−<span data-campo="Descuentos" data-formato="moneda"></span></span></div>
+        <div class="total-linea font-semibold" style="color:var(--color-texto)"><span>Total cobrado</span><span data-campo="Total" data-formato="moneda"></span></div>
+        <div class="total-linea"><span>Reembolsos <span class="texto-tenue numeros" data-campo="NumeroReembolsos"></span></span><span>−<span data-campo="Reembolsos" data-formato="moneda"></span></span></div>
+        <div class="total-final" style="padding-top:8px">
+          <span class="text-sm texto-suave">Ingreso neto</span>
+          <span class="total-final__importe" data-campo="Neto" data-formato="moneda"></span>
+        </div>
+      </div>
+      <div class="tarjeta">
+        <div class="dato__etiqueta mb-2">Cobrado por método de pago</div>
+        <div class="total-linea"><span>Efectivo</span><span data-campo="Efectivo" data-formato="moneda"></span></div>
+        <div class="total-linea"><span>Tarjeta</span><span data-campo="Tarjeta" data-formato="moneda"></span></div>
+        <div class="total-linea"><span>Transferencia</span><span data-campo="Transferencia" data-formato="moneda"></span></div>
+      </div>
+      <div class="tarjeta">
+        <div class="dato__etiqueta mb-2">Ventas por tipo</div>
+        <div class="total-linea"><span>Servicios <span class="texto-tenue numeros" data-campo="CantServicios"></span></span><span data-campo="ImpServicios" data-formato="moneda"></span></div>
+        <div class="total-linea"><span>Productos <span class="texto-tenue numeros" data-campo="CantProductos"></span></span><span data-campo="ImpProductos" data-formato="moneda"></span></div>
+        <div class="total-linea"><span>Membresías <span class="texto-tenue numeros" data-campo="CantMembresias"></span></span><span data-campo="ImpMembresias" data-formato="moneda"></span></div>
       </div>
     </section>
   </main>
@@ -154,12 +174,12 @@
     <tr>
       <td class="whitespace-nowrap"><span class="numeros" data-campo="FechaHoraCobro" data-formato="fecha"></span><span class="tabla__secundario numeros" data-campo="FechaHoraCobro" data-formato="hora"></span></td>
       <td class="numeros texto-suave" data-campo="NumeroFactura"></td>
-      <td data-campo="NombreCliente" data-vacio="Público en general"></td>
-      <td><span class="tabla__secundario" data-campo="TipoItem" data-vacio=""></span><span data-campo="Concepto"></span></td>
+      <td data-campo="NombreCliente" data-traducir></td>
+      <td><span class="tabla__secundario" data-campo="TipoItem" data-traducir data-vacio=""></span><span data-campo="Concepto"></span></td>
       <td data-campo="NombreBarbero" data-vacio="Mostrador"></td>
-      <td><span class="insignia" data-campo="MetodoPago"></span></td>
-      <td class="derecha numeros font-semibold" data-campo="ImporteTotal" data-formato="moneda"></td>
-      <td class="no-imprimir"><button type="button" class="boton boton--fantasma boton--icono" data-accion="ver" aria-label="Ver ticket"><span class="icono icono--sm" aria-hidden="true">receipt</span></button></td>
+      <td><span class="insignia" data-campo="MetodoPago" data-traducir></span><span class="tabla__secundario" data-campo="CobradoPor"></span></td>
+      <td class="derecha numeros font-semibold"><span data-campo="ImporteTotal" data-formato="moneda"></span><span class="tabla__secundario texto-membresia" data-descuento hidden></span><span class="tabla__secundario texto-error" data-reembolsado hidden></span></td>
+      <td class="no-imprimir whitespace-nowrap"><button type="button" class="boton boton--fantasma boton--icono" data-accion="ver" aria-label="Ver ticket" title="Ver ticket"><span class="icono icono--sm" aria-hidden="true">receipt</span></button><button type="button" class="boton boton--fantasma boton--icono" data-accion="reembolsar" aria-label="Reembolsar" title="Reembolsar"><span class="icono icono--sm" aria-hidden="true">undo</span></button></td>
     </tr>
   </template>
 </body>

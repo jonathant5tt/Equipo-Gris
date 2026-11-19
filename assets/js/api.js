@@ -1,129 +1,32 @@
 /**
  * @file api.js
- * @description Cliente de la API REST del back end (Node.js + Express + MySQL).
+ * @description Cliente de la API REST del servidor (Node.js + Express + MySQL).
  *
  * Todas las pantallas obtienen y envían datos SOLO a través de este archivo.
- * Cada función corresponde a un endpoint documentado en docs/API.md, y los
- * nombres de los campos coinciden con las columnas del modelo relacional
- * (sección 3.3 del documento del proyecto: CLIENTE, BARBERO, CAJERO, CITA,
- * PRODUCTO, VENTA, DETALLE_VENTA, CIERRE_CAJA).
+ * Cada función corresponde a un endpoint documentado en docs/API.md; los
+ * nombres de los campos son los de las columnas de MySQL
+ * (base-de-datos/esquema.sql).
  *
- * Convenciones con el back end:
- *   - Formato JSON en peticiones y respuestas (salvo subida de fotos: multipart).
- *   - Autenticación: cabecera `Authorization: Bearer <token>` (JWT).
- *   - Errores: código HTTP + cuerpo `{ "mensaje": "Texto para el usuario" }`.
- *   - 401: token vencido o inválido   → se cierra la sesión.
- *   - 403: el rol no tiene permiso      → se muestra el mensaje.
- *   - 503: servicio suspendido          → se muestra la pantalla de mantenimiento.
- *   - Fechas: "AAAA-MM-DD"; fecha y hora: "AAAA-MM-DDTHH:MM:SS" (hora local).
- *
- * Con `APP_CONFIG.USAR_BACKEND = false` las peticiones las contesta
- * `ApiSinServidor` (assets/js/api-sin-servidor.js) sin datos de ejemplo.
+ * Convenciones:
+ *   - JSON en peticiones y respuestas (las fotos viajan como data URL base64).
+ *   - Autenticación: cabecera «Authorization: Bearer <token>» (JWT).
+ *   - Errores: código HTTP + { "mensaje": "Texto para el usuario" }.
+ *       401 → la sesión terminó: se vuelve al inicio de sesión.
+ *       503 → servicio suspendido: Cajero y Barbero van a mantenimiento.
+ *   - Fechas: "AAAA-MM-DD"; fecha y hora: "AAAA-MM-DD HH:MM:SS".
  *
  * Expone los objetos globales `Api` y `ErrorApi`.
- * Requiere: config.js, sesion.js. Opcional: api-sin-servidor.js
+ * Requiere: config.js, idioma.js, sesion.js
  */
 (function () {
   'use strict';
 
   var CFG = window.APP_CONFIG;
-
-  // ---------------------------------------------------------------------------
-  // Tipos de datos (reflejan las tablas MySQL)
-  // ---------------------------------------------------------------------------
+  var t = window.Idioma ? window.Idioma.t : function (x) { return x; };
 
   /**
-   * @typedef {Object} Cliente                       Tabla CLIENTE
-   * @property {number} ID_Cliente
-   * @property {string} Nombre
-   * @property {string} Telefono                     10 dígitos, único.
-   * @property {string|null} FotoCorteReferencia     URL de la imagen.
-   * @property {string|null} Descripcion             Estilo de corte preferido.
-   * @property {string|null} Observaciones           Notas técnicas o médicas (columna sugerida).
-   * @property {'Activa'|'Inactiva'} EstadoMembresia
-   * @property {number|null} ID_Membresia            Plan contratado (tabla MEMBRESIA, sugerida).
-   * @property {string|null} NombrePlan              (JOIN) Nombre del plan.
-   * @property {number|null} DescuentoServicios      (JOIN) Porcentaje 0-100 sobre servicios.
-   * @property {string|null} FechaInicio             "AAAA-MM-DD"
-   * @property {number} FaltasConsecutivas
-   */
-
-  /**
-   * @typedef {Object} Barbero                       Tabla BARBERO (sin Contrasena)
-   * @property {number} ID_Barbero
-   * @property {string} Nombre
-   * @property {string} Telefono
-   * @property {string} HoraEntrada                  "09:00"
-   * @property {string} HoraSalida                   "19:00"
-   * @property {string|null} ComidaInicio            (columna sugerida) "14:00"
-   * @property {string|null} ComidaFin               (columna sugerida) "15:00"
-   * @property {string} DiasTrabajo                  Letras separadas por coma: "L,M,X,J,V,S"
-   * @property {string|null} RolesActividades        Texto separado por comas.
-   */
-
-  /**
-   * @typedef {Object} Cita                          Tabla CITA (+ JOIN)
-   * @property {number} ID_Cita
-   * @property {string} FechaHora                    "AAAA-MM-DDTHH:MM:SS"
-   * @property {'Agendada'|'EnEspera'|'EnAtencion'|'Atendida'|'Cancelada'|'NoAsistio'} Estado
-   * @property {'WhatsApp'|'Caja'|'App'|'SinCita'} Origen
-   * @property {number} ID_Cliente
-   * @property {number} ID_Barbero
-   * @property {string} NombreCliente                (JOIN)
-   * @property {string} NombreBarbero                (JOIN)
-   * @property {string|null} NombreServicio          (JOIN, opcional)
-   */
-
-  /**
-   * @typedef {Object} Producto                      Tabla PRODUCTO
-   * @property {number} ID_Producto
-   * @property {string} NombreProducto
-   * @property {number} Precio
-   * @property {string|null} FotoProducto
-   * @property {string|null} Descripcion
-   * @property {number} Stock
-   */
-
-  /**
-   * @typedef {Object} DetalleVenta                  Tabla DETALLE_VENTA
-   * @property {number} ID_Detalle
-   * @property {'Servicio'|'Producto'|'Membresía'} TipoItem
-   * @property {string} NombreItem
-   * @property {number} PrecioUnitario
-   * @property {number} Cantidad
-   * @property {number|null} ID_Barbero
-   * @property {string|null} NombreBarbero           (JOIN)
-   * @property {number|null} ID_Producto
-   */
-
-  /**
-   * @typedef {Object} Venta                         Tabla VENTA (+ JOIN)
-   * @property {number} ID_Venta
-   * @property {string} NumeroFactura                Folio único.
-   * @property {string} FechaHoraCobro
-   * @property {number} Subtotal                     Suma de conceptos antes de descuento.
-   * @property {number} Descuento                    Descuento por membresía.
-   * @property {number} ImporteTotal
-   * @property {number} IVA                          IVA incluido en el total.
-   * @property {'Efectivo'|'Tarjeta'|'Transferencia'} MetodoPago
-   * @property {number|null} MontoRecibido           Solo efectivo.
-   * @property {number|null} Cambio                  Solo efectivo.
-   * @property {number|null} ID_Cliente
-   * @property {string|null} NombreCliente           (JOIN)
-   * @property {string|null} TelefonoCliente         (JOIN)
-   * @property {number} ID_Cajero
-   * @property {string} NombreCajero                 (JOIN)
-   * @property {number|null} ID_Corte
-   * @property {DetalleVenta[]} [Detalle]
-   */
-
-  // ---------------------------------------------------------------------------
-  // Error de la API
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Error con el código HTTP y el mensaje que envía el back end.
-   * @param {string} mensaje  Texto listo para mostrarse al usuario.
+   * Error con el código HTTP y el mensaje del servidor.
+   * @param {string} mensaje  Texto para el usuario.
    * @param {number} estado   Código HTTP (0 = sin conexión).
    * @param {*} [datos]       Cuerpo completo de la respuesta.
    */
@@ -136,15 +39,7 @@
   ErrorApi.prototype = Object.create(Error.prototype);
   ErrorApi.prototype.constructor = ErrorApi;
 
-  // ---------------------------------------------------------------------------
-  // Petición base
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Arma la cadena de consulta omitiendo valores vacíos.
-   * @param {Object} [consulta]
-   * @returns {string} Ej. "?fecha=2026-10-24&barbero=3"
-   */
+  /** Cadena de consulta sin valores vacíos: { fecha: '2026-11-05' } → "?fecha=2026-11-05". */
   function cadenaConsulta(consulta) {
     if (!consulta) return '';
     var params = new URLSearchParams();
@@ -157,30 +52,22 @@
   }
 
   /**
-   * Realiza una petición a la API y devuelve el cuerpo JSON ya interpretado.
-   *
+   * Petición a la API; devuelve el cuerpo JSON.
    * @param {'GET'|'POST'|'PUT'|'PATCH'|'DELETE'} metodo
-   * @param {string} ruta  Ruta relativa a API_URL, ej. "/clientes".
-   * @param {Object} [opciones]
-   * @param {Object} [opciones.consulta]  Parámetros de la URL.
-   * @param {Object|FormData} [opciones.cuerpo]  Cuerpo de la petición.
+   * @param {string} ruta  Ej. "/clientes".
+   * @param {{consulta?: Object, cuerpo?: Object}} [opciones]
    * @returns {Promise<*>}
    * @throws {ErrorApi}
    */
   async function solicitar(metodo, ruta, opciones) {
     opciones = opciones || {};
-
-    // Modo sin servidor: no se hace ninguna llamada de red.
-    if (!CFG.USAR_BACKEND) {
-      if (!window.ApiSinServidor) throw new ErrorApi('Falta assets/js/api-sin-servidor.js.', 0);
-      return window.ApiSinServidor.responder(metodo, ruta, opciones);
-    }
+    if (!CFG.API_URL) throw new ErrorApi(t('Configura la dirección del servidor.'), 0);
 
     var cabeceras = { Accept: 'application/json' };
-    var cuerpo = opciones.cuerpo;
-    if (cuerpo && !(cuerpo instanceof FormData)) {
+    var cuerpo;
+    if (opciones.cuerpo !== undefined) {
       cabeceras['Content-Type'] = 'application/json';
-      cuerpo = JSON.stringify(cuerpo);
+      cuerpo = JSON.stringify(opciones.cuerpo);
     }
     var token = window.Sesion.token();
     if (token) cabeceras.Authorization = 'Bearer ' + token;
@@ -190,15 +77,12 @@
     var respuesta;
     try {
       respuesta = await fetch(CFG.API_URL + ruta + cadenaConsulta(opciones.consulta), {
-        method: metodo,
-        headers: cabeceras,
-        body: cuerpo,
-        signal: control.signal
+        method: metodo, headers: cabeceras, body: cuerpo, signal: control.signal
       });
     } catch (error) {
-      throw new ErrorApi(
-        error.name === 'AbortError' ? 'El servidor tardó demasiado en responder.' : 'No hay conexión con el servidor.',
-        0, error);
+      throw new ErrorApi(t(error.name === 'AbortError'
+        ? 'El servidor tardó demasiado en responder.'
+        : 'No hay conexión con el servidor. Revisa que esté encendido y en la misma red.'), 0, error);
     } finally {
       clearTimeout(temporizador);
     }
@@ -209,196 +93,286 @@
     }
     if (respuesta.ok) return datos;
 
-    var mensaje = (datos && (datos.mensaje || datos.error)) || ('Error ' + respuesta.status + ' del servidor.');
-
+    var mensaje = t((datos && datos.mensaje) || ('Error ' + respuesta.status + ' del servidor.'));
     if (respuesta.status === 401 && ruta !== '/auth/login') {
       window.Sesion.borrar();
       window.location.replace(CFG.PAGINA_LOGIN);
     }
-    if (respuesta.status === 503) {
-      window.Sesion.guardarEstadoServicio({ EstadoServicio: 'Suspendido', MensajeMantenimiento: mensaje });
+    if (respuesta.status === 503 && datos && datos.EstadoServicio === 'Suspendido') {
+      window.Sesion.guardarEstadoServicio({ EstadoServicio: 'Suspendido', MensajeMantenimiento: datos.MensajeMantenimiento });
       if (window.Sesion.rol() !== window.Sesion.ROLES.DUENO) window.location.replace(CFG.PAGINA_MANTENIMIENTO);
     }
     throw new ErrorApi(mensaje, respuesta.status, datos);
   }
 
   var obtener = function (ruta, consulta) { return solicitar('GET', ruta, { consulta: consulta }); };
-  var crear = function (ruta, cuerpo) { return solicitar('POST', ruta, { cuerpo: cuerpo }); };
-  var reemplazar = function (ruta, cuerpo) { return solicitar('PUT', ruta, { cuerpo: cuerpo }); };
-  var modificar = function (ruta, cuerpo) { return solicitar('PATCH', ruta, { cuerpo: cuerpo }); };
+  var crear = function (ruta, cuerpo) { return solicitar('POST', ruta, { cuerpo: cuerpo || {} }); };
+  var reemplazar = function (ruta, cuerpo) { return solicitar('PUT', ruta, { cuerpo: cuerpo || {} }); };
+  var modificar = function (ruta, cuerpo) { return solicitar('PATCH', ruta, { cuerpo: cuerpo || {} }); };
   var eliminar = function (ruta) { return solicitar('DELETE', ruta); };
-
-  // ---------------------------------------------------------------------------
-  // Endpoints agrupados por recurso
-  // ---------------------------------------------------------------------------
+  var id = encodeURIComponent;
 
   var Api = {
-    /** Autenticación (tablas CAJERO, BARBERO y administrador). */
+    /** Autenticación. */
     auth: {
-      /**
-       * POST /auth/login
-       * @param {string} usuario
-       * @param {string} contrasena
-       * @returns {Promise<{token:string, usuario:{id:number, nombre:string, usuario:string, rol:string}}>}
-       */
-      iniciarSesion: function (usuario, contrasena) {
-        return crear('/auth/login', { usuario: usuario, contrasena: contrasena });
-      },
-      /** POST /auth/logout — invalida el token en el servidor. */
-      cerrarSesion: function () { return crear('/auth/logout'); }
+      /** POST /auth/login → { token, usuario: { id, nombre, usuario, rol } } */
+      iniciarSesion: function (usuario, contrasena) { return crear('/auth/login', { usuario: usuario, contrasena: contrasena }); },
+      /** POST /auth/logout */
+      cerrarSesion: function () { return crear('/auth/logout'); },
+      /** GET /auth/inicial → { RequiereDueno } (primer uso: falta la cuenta del Dueño) */
+      inicial: function () { return obtener('/auth/inicial'); },
+      /** POST /auth/primer-dueno { Nombre, Usuario, Contrasena } → { token, usuario } */
+      primerDueno: function (datos) { return crear('/auth/primer-dueno', datos); }
     },
 
-    /** Estado de la conexión (punto «En línea» del encabezado). */
-    salud: {
-      /** GET /salud → { estado: "ok" } */
-      verificar: function () { return obtener('/salud'); }
-    },
+    /** GET /salud → { estado: "ok" } (punto «En línea»). */
+    salud: { verificar: function () { return obtener('/salud'); } },
 
-    /** Datos del negocio y suspensión del servicio (tabla ESTABLECIMIENTO). */
+    /** Negocio y estado del servicio (ESTABLECIMIENTO). */
     establecimiento: {
-      /** GET /establecimiento → { NombreEstablecimiento, Direccion, Telefono, DatosFiscales, MensajeTicket } */
+      /** GET /establecimiento → datos del negocio para el ticket. */
       obtener: function () { return obtener('/establecimiento'); },
-      /**
-       * GET /establecimiento/estado (público) → { EstadoServicio, MensajeMantenimiento }
-       * Guarda una copia local para la protección de pantallas.
-       */
+      /** PUT /establecimiento (Dueño) */
+      actualizar: function (datos) { return reemplazar('/establecimiento', datos); },
+      /** GET /establecimiento/estado (pública); guarda copia local. */
       estado: function () {
         return obtener('/establecimiento/estado').then(function (estado) {
           if (estado) window.Sesion.guardarEstadoServicio(estado);
           return estado;
         });
       },
-      /**
-       * PUT /establecimiento/estado (solo Dueño)
-       * @param {{EstadoServicio:'Activo'|'Suspendido', MensajeMantenimiento:string}} datos
-       */
+      /** PUT /establecimiento/estado (Dueño) { EstadoServicio, MensajeMantenimiento } */
       cambiarEstado: function (datos) {
         return reemplazar('/establecimiento/estado', datos).then(function (estado) {
-          window.Sesion.guardarEstadoServicio(estado || datos);
-          return estado || datos;
+          window.Sesion.guardarEstadoServicio(estado);
+          return estado;
         });
       }
     },
 
-    /** Clientes (tabla CLIENTE). */
-    clientes: {
-      /** GET /clientes?buscar= → Cliente[]  (busca por nombre o teléfono) */
-      buscar: function (texto) { return obtener('/clientes', { buscar: texto }); },
-      /** GET /clientes/:id → Cliente */
-      obtener: function (id) { return obtener('/clientes/' + encodeURIComponent(id)); },
-      /**
-       * POST /clientes → Cliente creado (con ID_Cliente).
-       * Se envía como multipart/form-data cuando incluye la foto de referencia.
-       * @param {FormData|Object} datos
-       */
-      crear: function (datos) { return crear('/clientes', datos); },
-      /** PUT /clientes/:id → Cliente actualizado */
-      actualizar: function (id, datos) { return reemplazar('/clientes/' + encodeURIComponent(id), datos); },
-      /** GET /clientes/:id/servicios → [{ FechaHoraCobro, NombreItem, NombreBarbero, PrecioUnitario, Cantidad }] */
-      historial: function (id) { return obtener('/clientes/' + encodeURIComponent(id) + '/servicios'); },
-      /** GET /clientes/:id/fotos → [{ ID_Foto, Url, Titulo, Notas, Fecha, NombreBarbero }] */
-      fotos: function (id) { return obtener('/clientes/' + encodeURIComponent(id) + '/fotos'); },
-      /** POST /clientes/:id/fotos (multipart: foto, Titulo, Notas) */
-      subirFoto: function (id, formulario) { return crear('/clientes/' + encodeURIComponent(id) + '/fotos', formulario); },
-      /** DELETE /clientes/:id/fotos/:idFoto */
-      eliminarFoto: function (id, idFoto) {
-        return eliminar('/clientes/' + encodeURIComponent(id) + '/fotos/' + encodeURIComponent(idFoto));
+    /** Configuración de WhatsApp (Dueño). */
+    whatsapp: {
+      obtener: function () { return obtener('/ajustes/whatsapp'); },
+      guardar: function (datos) { return reemplazar('/ajustes/whatsapp', datos); },
+      /** POST /ajustes/whatsapp/prueba { Telefono } */
+      probar: function (telefono) { return crear('/ajustes/whatsapp/prueba', { Telefono: telefono }); },
+      /** POST /ajustes/whatsapp/conexion → { Conectado, Numero, Nombre, Calidad, Error } (no envía mensajes) */
+      conexion: function () { return crear('/ajustes/whatsapp/conexion'); },
+      /** POST /ajustes/whatsapp/bot/simular { Mensaje } → { Tema, Respuesta } */
+      simular: function (mensaje) { return crear('/ajustes/whatsapp/bot/simular', { Mensaje: mensaje }); },
+      /** GET /ajustes/whatsapp/chats → últimos mensajes recibidos y respuestas del bot */
+      chats: function () { return obtener('/ajustes/whatsapp/chats'); }
+    },
+
+    /** Descuentos y promociones (DESCUENTO). */
+    descuentos: {
+      /** GET /descuentos[?vigentes=1] */
+      listar: function (soloVigentes) { return obtener('/descuentos', soloVigentes ? { vigentes: 1 } : null); },
+      crear: function (datos) { return crear('/descuentos', datos); },
+      actualizar: function (idDescuento, datos) { return reemplazar('/descuentos/' + id(idDescuento), datos); },
+      eliminar: function (idDescuento) { return eliminar('/descuentos/' + id(idDescuento)); }
+    },
+
+    /** Reembolsos (REEMBOLSO). */
+    reembolsos: {
+      /** GET /reembolsos?desde=&hasta= → { registros, resumen } */
+      listar: function (filtros) { return obtener('/reembolsos', filtros); },
+      /** GET /reembolsos/venta/:id → venta con lo que todavía se puede reembolsar */
+      venta: function (idVenta) { return obtener('/reembolsos/venta/' + id(idVenta)); },
+      /** POST /reembolsos { ID_Venta, Renglones[{ID_Detalle, Cantidad}], Motivo, MetodoDevolucion, RegresarInventario, Contrasena } */
+      crear: function (datos) { return crear('/reembolsos', datos); }
+    },
+
+    /** Cuentas de cajeros y barberos (Dueño). */
+    cuentas: {
+      /** 'Dueño' → 'dueno' (ruta sin acentos). */
+      _ruta: function (rol) { return String(rol).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); },
+      listar: function () { return obtener('/cuentas'); },
+      /** POST /cuentas { Rol, Nombre, Usuario, Contrasena, Telefono? } */
+      crear: function (datos) { return crear('/cuentas', datos); },
+      cambiarContrasena: function (rol, idCuenta, contrasena) {
+        return reemplazar('/cuentas/' + id(this._ruta(rol)) + '/' + id(idCuenta) + '/contrasena', { Contrasena: contrasena });
       },
-      /** PUT /clientes/:id/foto-referencia { ID_Foto } */
-      usarComoReferencia: function (id, idFoto) {
-        return reemplazar('/clientes/' + encodeURIComponent(id) + '/foto-referencia', { ID_Foto: idFoto });
-      }
+      eliminar: function (rol, idCuenta) { return eliminar('/cuentas/' + id(this._ruta(rol)) + '/' + id(idCuenta)); }
     },
 
-    /** Barberos y sus horarios (tabla BARBERO). */
+    /** Clientes (CLIENTE, FOTO_CLIENTE). */
+    clientes: {
+      /**
+       * GET /clientes?buscar=&filtro=&limite=
+       * @param {{buscar?: string, filtro?: 'recientes'|'primeros'|'membresia', limite?: number}} filtros
+       */
+      buscar: function (filtros) { return obtener('/clientes', typeof filtros === 'string' ? { buscar: filtros } : filtros); },
+      /** GET /clientes/:id → ficha con estadísticas (Asistencias, Faltas, Puntualidad, ProximaCita…) */
+      obtener: function (idCliente) { return obtener('/clientes/' + id(idCliente)); },
+      /** POST /clientes { Nombre, Lada, Telefono, Descripcion, Observaciones, foto? } */
+      crear: function (datos) { return crear('/clientes', datos); },
+      actualizar: function (idCliente, datos) { return reemplazar('/clientes/' + id(idCliente), datos); },
+      /** GET /clientes/:id/servicios → historial cobrado */
+      historial: function (idCliente) { return obtener('/clientes/' + id(idCliente) + '/servicios'); },
+      /** GET /clientes/:id/pendientes → citas atendidas sin cobrar */
+      pendientes: function (idCliente) { return obtener('/clientes/' + id(idCliente) + '/pendientes'); },
+      /** GET /clientes/:id/membresia → membresía que aplica hoy con sus beneficios (o null) */
+      membresia: function (idCliente) { return obtener('/clientes/' + id(idCliente) + '/membresia'); },
+      fotos: function (idCliente) { return obtener('/clientes/' + id(idCliente) + '/fotos'); },
+      /** POST /clientes/:id/fotos { foto: dataURL, Titulo?, Referencia? } */
+      subirFoto: function (idCliente, datos) { return crear('/clientes/' + id(idCliente) + '/fotos', datos); },
+      eliminarFoto: function (idCliente, idFoto) { return eliminar('/clientes/' + id(idCliente) + '/fotos/' + id(idFoto)); },
+      usarComoReferencia: function (idCliente, idFoto) {
+        return reemplazar('/clientes/' + id(idCliente) + '/foto-referencia', { ID_Foto: idFoto });
+      },
+      /** DELETE /clientes/:id/foto-referencia → elimina la foto principal */
+      eliminarFotoPrincipal: function (idCliente) { return eliminar('/clientes/' + id(idCliente) + '/foto-referencia'); }
+    },
+
+    /** Barberos (BARBERO). */
     barberos: {
-      /** GET /barberos → Barbero[] */
       listar: function () { return obtener('/barberos'); },
-      /** GET /barberos/yo → Barbero del usuario con sesión (rol Barbero) */
       yo: function () { return obtener('/barberos/yo'); },
-      /**
-       * PUT /barberos/:id/horario (solo Dueño)
-       * @param {number} id
-       * @param {{HoraEntrada:string, HoraSalida:string, ComidaInicio:string, ComidaFin:string, DiasTrabajo:string, RolesActividades:string}} datos
-       */
-      actualizarHorario: function (id, datos) { return reemplazar('/barberos/' + encodeURIComponent(id) + '/horario', datos); },
-      /** GET /barberos/:id/ingresos?dias=7 → [{ Fecha, Servicios, Ingreso }] */
-      ingresos: function (id, dias) { return obtener('/barberos/' + encodeURIComponent(id) + '/ingresos', { dias: dias }); }
+      /** PUT /barberos/:id/horario (Dueño) */
+      actualizarHorario: function (idBarbero, datos) { return reemplazar('/barberos/' + id(idBarbero) + '/horario', datos); },
+      /** GET /barberos/:id/ingresos?dias= */
+      ingresos: function (idBarbero, dias) { return obtener('/barberos/' + id(idBarbero) + '/ingresos', { dias: dias }); }
     },
 
-    /** Citas (tabla CITA). */
+    /** Citas (CITA). */
     citas: {
-      /** GET /citas?fecha=&barbero= → Cita[] */
       listar: function (filtros) { return obtener('/citas', filtros); },
-      /** GET /citas/mias?fecha= → Cita[] del barbero con sesión */
       mias: function (fecha) { return obtener('/citas/mias', { fecha: fecha }); },
-      /** GET /citas/proxima → Cita | null (siguiente turno del barbero con sesión) */
       proxima: function () { return obtener('/citas/proxima'); },
-      /**
-       * GET /citas/disponibilidad?barbero=&fecha=
-       * → [{ Hora:"09:00", Estado:"Libre"|"Ocupado"|"NoDisponible", Motivo?, NombreCliente?, Origen? }]
-       */
-      disponibilidad: function (barbero, fecha) { return obtener('/citas/disponibilidad', { barbero: barbero, fecha: fecha }); },
-      /**
-       * POST /citas → Cita creada. El back end valida jornada, descanso y
-       * que el horario siga libre (UNIQUE ID_Barbero + FechaHora).
-       * @param {{ID_Cliente:number, ID_Barbero:number, FechaHora:string, ID_Servicio?:number, Origen:string}} datos
-       */
+      /** GET /citas/disponibilidad → { Fecha, Estado, Motivo, Libres, DuracionMin, Bloques[] } */
+      disponibilidad: function (barbero, fecha, servicio) {
+        return obtener('/citas/disponibilidad', { barbero: barbero, fecha: fecha, servicio: servicio });
+      },
+      /** GET /citas/dias → [{ Fecha, Estado: Libre|Ocupado|NoDisponible, Motivo, Libres }] */
+      dias: function (barbero, desde, dias, servicio) {
+        return obtener('/citas/dias', { barbero: barbero, desde: desde, dias: dias, servicio: servicio });
+      },
+      /** POST /citas { ID_Cliente, ID_Barbero, ID_Servicio, FechaHora } → cita + resultado de WhatsApp */
       crear: function (datos) { return crear('/citas', datos); },
-      /** PATCH /citas/:id/estado { Estado } — transiciones del diagrama de estados (3.2). */
-      cambiarEstado: function (id, estado) { return modificar('/citas/' + encodeURIComponent(id) + '/estado', { Estado: estado }); }
+      /** PATCH /citas/:id/estado { Estado } */
+      cambiarEstado: function (idCita, estado) { return modificar('/citas/' + id(idCita) + '/estado', { Estado: estado }); },
+      /** POST /citas/:id/enviar → reenvía la confirmación por WhatsApp */
+      enviar: function (idCita) { return crear('/citas/' + id(idCita) + '/enviar'); }
     },
 
-    /** Catálogos para el punto de venta. */
+    /** Catálogos (SERVICIO, PRODUCTO, MEMBRESIA). */
     catalogos: {
-      /** GET /servicios → [{ ID_Servicio, NombreServicio, Descripcion, Precio, DuracionMin }] */
       servicios: function () { return obtener('/servicios'); },
-      /** GET /productos → Producto[] */
       productos: function () { return obtener('/productos'); },
-      /** GET /membresias → [{ ID_Membresia, NombrePlan, Precio, DescuentoServicios, DuracionDias }] */
       membresias: function () { return obtener('/membresias'); }
     },
 
-    /** Ventas y tickets (tablas VENTA y DETALLE_VENTA). */
+    /** Altas, cambios y bajas de servicios (Dueño). */
+    servicios: {
+      crear: function (datos) { return crear('/servicios', datos); },
+      actualizar: function (idServicio, datos) { return reemplazar('/servicios/' + id(idServicio), datos); },
+      eliminar: function (idServicio) { return eliminar('/servicios/' + id(idServicio)); }
+    },
+
+    /** Productos e inventario. */
+    productos: {
+      crear: function (datos) { return crear('/productos', datos); },
+      actualizar: function (idProducto, datos) { return reemplazar('/productos/' + id(idProducto), datos); },
+      eliminar: function (idProducto) { return eliminar('/productos/' + id(idProducto)); },
+      /** POST /productos/:id/entrada { Cantidad, Motivo? } */
+      entrada: function (idProducto, datos) { return crear('/productos/' + id(idProducto) + '/entrada', datos); },
+      /** POST /productos/:id/baja { Cantidad, Motivo, Contrasena } */
+      baja: function (idProducto, datos) { return crear('/productos/' + id(idProducto) + '/baja', datos); },
+      movimientos: function (idProducto) { return obtener('/productos/' + id(idProducto) + '/movimientos'); }
+    },
+
+    /** Membresías y beneficios (Dueño). */
+    membresias: {
+      crear: function (datos) { return crear('/membresias', datos); },
+      actualizar: function (idMembresia, datos) { return reemplazar('/membresias/' + id(idMembresia), datos); },
+      eliminar: function (idMembresia) { return eliminar('/membresias/' + id(idMembresia)); }
+    },
+
+    /** Ventas y tickets (VENTA, DETALLE_VENTA). */
     ventas: {
-      /**
-       * POST /ventas → Venta completa (con Detalle) para el ticket.
-       * El back end recalcula precios, descuento e IVA, descuenta inventario
-       * y guarda todo en una sola transacción.
-       * @param {{ID_Cliente:number|null, MetodoPago:string, MontoRecibido:number|null,
-       *          Detalle:Array<{TipoItem:string, ID_Servicio?:number, ID_Producto?:number,
-       *          ID_Membresia?:number, ID_Barbero?:number, Cantidad:number}>}} datos
-       */
+      /** POST /ventas/calcular { ID_Cliente, Detalle } → { Lineas, Subtotal, Descuento, Total, Membresia } */
+      calcular: function (datos) { return crear('/ventas/calcular', datos); },
+      /** POST /ventas { ID_Cliente, MetodoPago, MontoRecibido, TotalEsperado, Detalle } → Venta */
       crear: function (datos) { return crear('/ventas', datos); },
-      /**
-       * GET /ventas?desde=&hasta=&concepto=&buscar=&pagina=&tamano=
-       * → { registros: Venta[], total, pagina, resumen: { Total, Transacciones, Servicios, Productos, TicketPromedio, PorMetodo } }
-       */
+      /** GET /ventas?desde=&hasta=&concepto=&buscar=&pagina=&tamano= */
       listar: function (filtros) { return obtener('/ventas', filtros); },
-      /** GET /ventas/:id → Venta (con Detalle) */
-      obtener: function (id) { return obtener('/ventas/' + encodeURIComponent(id)); },
-      /** POST /ventas/:id/enviar { canal: "whatsapp" | "sms" } — envía el ticket digital al cliente. */
-      enviarTicket: function (id, canal) { return crear('/ventas/' + encodeURIComponent(id) + '/enviar', { canal: canal }); }
+      obtener: function (idVenta) { return obtener('/ventas/' + id(idVenta)); },
+      /** POST /ventas/:id/enviar { canal: 'whatsapp'|'sms', Telefono? } */
+      enviarTicket: function (idVenta, canal, telefono) {
+        return crear('/ventas/' + id(idVenta) + '/enviar', { canal: canal, Telefono: telefono || undefined });
+      }
     },
 
-    /** Cierre de caja (tabla CIERRE_CAJA). */
+    /** Cierre de caja (CIERRE_CAJA). */
     cierres: {
-      /**
-       * GET /cierres/resumen → ventas del cajero con sesión que aún no tienen corte:
-       * { Fecha, NombreCajero, FondoInicial, Ventas: Venta[], TotalIngresos, TotalIVA,
-       *   PorMetodo: { Efectivo, Tarjeta, Transferencia }, Servicios, Productos, TicketPromedio }
-       */
       resumen: function () { return obtener('/cierres/resumen'); },
-      /** POST /cierres { EfectivoContado } → { ID_Corte, FechaCorte, TotalIngresos, TotalIVA, EfectivoContado, Diferencia } */
-      crear: function (datos) { return crear('/cierres', datos); }
+      /** POST /cierres { EfectivoContado } */
+      crear: function (datos) { return crear('/cierres', datos); },
+      listar: function (limite) { return obtener('/cierres', { limite: limite }); },
+      /** GET /cierres/:id → corte con sus ventas */
+      obtener: function (id) { return obtener('/cierres/' + encodeURIComponent(id)); }
     },
 
-    /** Avisos para el barbero (cancelaciones por WhatsApp, cambios de horario). */
+    /** Avisos del barbero. */
     avisos: {
-      /** GET /avisos → [{ ID_Aviso, Tipo, Mensaje, Fecha }] */
-      listar: function () { return obtener('/avisos'); }
+      listar: function () { return obtener('/avisos'); },
+      marcarLeidos: function () { return crear('/avisos/leidos'); }
     }
   };
+
+  // ---------------------------------------------------------------------------
+  // Sincronización entre dispositivos
+  // ---------------------------------------------------------------------------
+  // El servidor lleva un contador por tema (citas, ventas, catalogo, clientes).
+  // Cada pantalla pregunta cada pocos segundos y, si el contador de sus temas
+  // cambió (alguien guardó algo desde otro equipo), vuelve a cargar sus datos.
+
+  var vigilantes = [];
+  var ultimoEstado = null;
+  var temporizadorSync = null;
+  var consultando = false;
+
+  async function revisarCambios() {
+    if (consultando || !vigilantes.length || document.hidden || !window.Sesion.token() || !CFG.API_URL) return;
+    consultando = true;
+    try {
+      var control = new AbortController();
+      var limite = setTimeout(function () { control.abort(); }, 4000);
+      var r = await fetch(CFG.API_URL + '/sincronizar', {
+        headers: { Accept: 'application/json', Authorization: 'Bearer ' + window.Sesion.token() }, cache: 'no-store', signal: control.signal
+      });
+      clearTimeout(limite);
+      if (!r.ok) return;
+      var estado = await r.json();
+      var anterior = ultimoEstado;
+      ultimoEstado = estado;
+      if (!anterior) return;
+      var reinicio = anterior.servidor !== estado.servidor;
+      vigilantes.forEach(function (v) {
+        var cambio = reinicio || v.temas.some(function (tema) { return anterior[tema] !== estado[tema]; });
+        if (cambio) { try { v.fn(); } catch (e) { /* la pantalla sigue */ } }
+      });
+    } catch (e) { /* sin conexión: se reintenta en la siguiente vuelta */ }
+    finally { consultando = false; }
+  }
+
+  /**
+   * Avisa a la pantalla cuando cambian datos en el servidor (desde cualquier equipo).
+   * @param {Array<'citas'|'ventas'|'catalogo'|'clientes'>} temas
+   * @param {Function} fn  Vuelve a cargar los datos de la pantalla.
+   */
+  Api.alCambiar = function (temas, fn) {
+    vigilantes.push({ temas: temas, fn: fn });
+    if (temporizadorSync) return;
+    temporizadorSync = setInterval(revisarCambios, CFG.INTERVALO_SINCRONIA_MS || 3000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) revisarCambios(); });
+    window.addEventListener('focus', revisarCambios);
+    window.addEventListener('online', revisarCambios);
+    revisarCambios();
+  };
+  /** Revisa en este momento (ej. al volver a la pantalla). */
+  Api.revisarCambios = revisarCambios;
 
   window.ErrorApi = ErrorApi;
   window.Api = Object.freeze(Api);

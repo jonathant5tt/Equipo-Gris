@@ -21,6 +21,7 @@
   var Api = window.Api;
   var CFG = window.APP_CONFIG;
   var Sesion = window.Sesion;
+  var t = window.Idioma.t;
 
   var $ = function (id) { return document.getElementById(id); };
   var el = {
@@ -74,7 +75,7 @@
     estadoActual = estado.EstadoServicio === 'Suspendido' ? 'Suspendido' : 'Activo';
     var suspendido = estadoActual === 'Suspendido';
 
-    el.estadoTexto.textContent = suspendido ? 'Suspendido' : 'Activo';
+    el.estadoTexto.textContent = t(suspendido ? 'Suspendido' : 'Activo');
     el.insignia.className = 'insignia ' + (suspendido ? 'insignia--error' : 'insignia--exito');
     el.suspender.disabled = suspendido;
     el.reanudar.disabled = !suspendido;
@@ -88,7 +89,7 @@
   /** Actualiza el contador de caracteres y la vista previa del aviso. */
   function actualizarVistaPrevia() {
     el.contador.textContent = el.mensaje.value.length;
-    el.vistaPrevia.textContent = el.mensaje.value.trim() || CFG.MENSAJE_MANTENIMIENTO;
+    el.vistaPrevia.textContent = el.mensaje.value.trim() || t(CFG.MENSAJE_MANTENIMIENTO);
   }
 
   /** @param {'suspender'|'reanudar'|'mensaje'} clave */
@@ -96,8 +97,8 @@
     var a = ACCIONES[clave];
     accionPendiente = clave;
     el.confirmacionIcono.textContent = a.icono;
-    el.confirmacionTitulo.textContent = a.titulo;
-    el.confirmacionTexto.textContent = a.texto;
+    el.confirmacionTitulo.textContent = t(a.titulo);
+    el.confirmacionTexto.textContent = t(a.texto);
     el.confirmacion.hidden = false;
     el.confirmacion.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     el.confirmar.focus();

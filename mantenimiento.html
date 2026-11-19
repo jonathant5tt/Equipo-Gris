@@ -21,15 +21,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Servicio en mantenimiento · Engreídos Barbershop</title>
 
-  <!-- Tipografías e íconos -->
+  <!-- Ícono de la pestaña y de «Agregar a pantalla de inicio» (logotipo oficial) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icono-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icono-192.png">
+  <link rel="apple-touch-icon" href="assets/img/icono-180.png">
+  <meta name="theme-color" content="#0d0f13">
+
+  <!-- Tipografías e íconos (se cargan sin bloquear: la pantalla aparece aunque no haya internet) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
 
-  <!-- Tailwind CSS (distribución) + configuración compartida -->
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="assets/js/tailwind.config.js"></script>
+  <!-- Tailwind CSS compilado (funciona sin internet). Regenerar: cd servidor && npm run estilos -->
+  <link rel="stylesheet" href="assets/css/tailwind.css">
 
   <!-- Sistema de diseño propio -->
   <link rel="stylesheet" href="assets/css/comun.css">
@@ -37,7 +42,7 @@
   <!-- Estilos exclusivos de esta pantalla -->
   <style>
     .ilustracion { max-height: 240px; width: auto; margin: 0 auto; border-radius: var(--radio); filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.6)); user-select: none; pointer-events: none; }
-    .comillas { font: 600 34px/1 var(--fuente-titulos); color: var(--color-texto-tenue); user-select: none; }
+    .comillas { font: 600 34px/1 var(--fuente-titulo); color: var(--color-texto-tenue); user-select: none; }
     .girando { animation: girar 0.9s linear infinite; }
     @keyframes girar { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) { .girando { animation: none; } }
@@ -45,12 +50,13 @@
 
   <!-- Núcleo de la aplicación (el orden importa) -->
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/idioma.js"></script>
   <script src="assets/js/utilidades.js"></script>
   <script src="assets/js/sesion.js"></script>
   <script src="assets/js/api.js"></script>
-  <script src="assets/js/api-sin-servidor.js"></script>
 
-  <!-- Lógica de esta pantalla -->
+  <!-- Logotipo y lógica de esta pantalla -->
+  <script src="assets/js/componentes/logo-engreidos.js" defer></script>
   <script src="assets/js/paginas/mantenimiento.js" defer></script>
 </head>
 
@@ -58,11 +64,8 @@
   <main class="min-h-screen flex items-center justify-center p-4 sm:p-8">
     <div class="w-full max-w-2xl flex flex-col items-center text-center gap-6">
 
-      <!-- Marca (mismo diseño que el panel principal, en tamaño grande) -->
-      <span class="marca marca--grande" aria-label="Engreídos Barbershop">
-        <span class="marca__nombre"><span class="marca__corchete">[</span><span class="marca__texto">Engreídos</span><span class="marca__corchete">]</span></span>
-        <span class="marca__subtitulo">Barbershop</span>
-      </span>
+      <!-- Logotipo oficial en tamaño grande -->
+      <span class="marca marca--grande"><logo-engreidos></logo-engreidos></span>
 
       <img class="ilustracion" src="assets/img/mantenimiento.png" alt="Robot barbero en mantenimiento">
 

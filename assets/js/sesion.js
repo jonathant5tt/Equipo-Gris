@@ -11,7 +11,7 @@
  * debe validar SIEMPRE el token y el rol en cada endpoint.
  *
  * Expone el objeto global `Sesion`.
- * Requiere: config.js
+ * Requiere: config.js, idioma.js
  */
 (function () {
   'use strict';
@@ -45,11 +45,13 @@
     'perfil-cliente.html': CAJA,
     'cierre-caja.html': CAJA,
     'historial-ventas.html': CAJA,
+    'reembolsos.html': CAJA,
     'personal-horarios.html': [ROLES.DUENO],
     'suspender-servicio.html': [ROLES.DUENO],
     'barbero-mis-citas.html': [ROLES.BARBERO],
     'barbero-perfil-cliente.html': [ROLES.BARBERO],
-    'barbero-mi-horario.html': [ROLES.BARBERO]
+    'barbero-mi-horario.html': [ROLES.BARBERO],
+    'ajustes.html': TODOS            // cada rol ve solo sus secciones
   });
 
   // ---------------------------------------------------------------------------
@@ -103,14 +105,28 @@
    * @property {string}        inicio  Fecha ISO del inicio de sesión.
    */
 
-  /** @returns {DatosSesion|null} */
-  function obtener() { return Almacen.leer('sesion'); }
+  /**
+   * Sesión guardada, solo si pertenece al servidor configurado. Una sesión
+   * vieja (de la versión de prueba o de otro servidor) se descarta; si no,
+   * el inicio de sesión y el panel se mandarían uno al otro sin parar.
+   * @returns {DatosSesion|null}
+   */
+  function obtener() {
+    var s = Almacen.leer('sesion');
+    if (!s) return null;
+    if (!s.token || !s.usuario || !CFG.SERVIDOR || s.servidor !== CFG.SERVIDOR) {
+      Almacen.guardar('sesion', null);
+      return null;
+    }
+    return s;
+  }
 
   /** @param {{token:string, usuario:UsuarioSesion}} datos */
   function guardar(datos) {
     Almacen.guardar('sesion', {
       token: datos.token,
       usuario: datos.usuario,
+      servidor: CFG.SERVIDOR,
       inicio: new Date().toISOString()
     });
   }
@@ -205,6 +221,12 @@
   function proteger() {
     var permitidos = PERMISOS[paginaActual];
     var sesion = obtener();
+
+    // Sin dirección del servidor (app de Android recién instalada) solo se
+    // puede usar la pantalla de inicio de sesión, donde se configura.
+    if (!CFG.API_URL && paginaActual !== CFG.PAGINA_LOGIN) {
+      window.location.replace(CFG.PAGINA_LOGIN); return false;
+    }
 
     if (permitidos) {
       if (!sesion) { window.location.replace(CFG.PAGINA_LOGIN); return false; }

@@ -3,17 +3,15 @@
  * @description Controlador de «Registrar cobro» (registrar-cobro.html).
  *
  * Flujo (diagrama de secuencia 3.1.2):
- *   1. Carga catálogos y barberos.        GET /servicios, /productos, /membresias, /barberos
- *   2. (Opcional) asocia al cliente.      GET /clientes?buscar= | GET /clientes/:id
- *   3. Agrega conceptos validando existencias de productos.
- *   4. Calcula la vista previa de totales.
- *   5. Envía la venta.                    POST /ventas  → ticket-digital.html?venta=ID
+ *   1. Carga catálogos: servicios, productos, membresías y barberos.
+ *   2. Cliente: buscador con vista previa, «Cliente 0» o cliente nuevo.
+ *      Al elegirlo se agregan sus citas atendidas sin pagar.  GET /clientes/:id/pendientes
+ *   3. Cada cambio en la venta pide los importes al servidor.  POST /ventas/calcular
+ *      (beneficios de membresía, descuentos, vencimiento, existencias).
+ *   4. Cobrar → POST /ventas → ticket-digital.html?venta=ID
  *
- * Cálculo de la vista previa (el servidor recalcula y manda el valor final):
- *   subtotal  = Σ (PrecioUnitario × Cantidad)
- *   descuento = subtotal de servicios × DescuentoServicios % (si la membresía está Activa)
- *   total     = subtotal − descuento
- *   IVA       = total − total / (1 + TASA_IVA)      (los precios ya incluyen IVA)
+ * La lista local `carrito` guarda lo que se va a vender; el servidor devuelve
+ * los renglones calculados en el mismo orden.
  */
 (function () {
   'use strict';
@@ -22,388 +20,433 @@
 
   var U = window.Utilidades;
   var Api = window.Api;
-  var CFG = window.APP_CONFIG;
-
-  /**
-   * @typedef {Object} Concepto
-   * @property {'Servicio'|'Producto'|'Membresía'} TipoItem
-   * @property {number|null} ID_Servicio
-   * @property {number|null} ID_Producto
-   * @property {number|null} ID_Membresia
-   * @property {number|null} ID_Barbero
-   * @property {string} NombreItem
-   * @property {string|null} NombreBarbero
-   * @property {number} PrecioUnitario
-   * @property {number} Cantidad
-   */
+  var t = window.Idioma.t;
 
   var estado = {
-    servicios: [],
-    productos: [],
-    membresias: [],
-    barberos: [],
-    cliente: null,
-    /** @type {Concepto[]} */
-    conceptos: [],
+    servicios: [], productos: [], membresias: [], barberos: [],
+    cliente: null,          // Cliente elegido
+    clienteCero: false,     // true = «Cliente 0»
+    carrito: [],            // [{ TipoItem, ID_Servicio, ID_Barbero, ID_Cita, ID_Producto, Cantidad, ID_Membresia }]
+    calculo: null,          // Respuesta de POST /ventas/calcular
+    membresiaCliente: null, // GET /clientes/:id/membresia (beneficios que aplican hoy)
     metodo: 'Efectivo',
-    cantidad: 1
+    pestana: 'servicio',
+    consulta: 0
   };
 
   var $ = function (id) { return document.getElementById(id); };
   var el = {
-    buscarCliente: $('buscar-cliente'),
-    clienteBusqueda: $('cliente-busqueda'),
-    sinResultados: $('clientes-sin-resultados'),
-    resultadosClientes: $('resultados-clientes'),
-    clienteElegido: $('cliente-elegido'),
-    membresiaCliente: $('membresia-cliente'),
+    buscador: $('buscador'), clienteElegido: $('cliente-elegido'), clienteAvatar: $('cliente-avatar'),
+    clienteNombre: $('cliente-nombre'), clienteTelefono: $('cliente-telefono'), clienteMembresia: $('cliente-membresia'),
     cambiarCliente: $('cambiar-cliente'),
-    servicio: $('servicio'),
-    barbero: $('barbero'),
-    agregarServicio: $('agregar-servicio'),
-    producto: $('producto'),
-    cantidad: $('cantidad'),
-    cantidadMenos: $('cantidad-menos'),
-    cantidadMas: $('cantidad-mas'),
-    existencias: $('existencias'),
-    alertaExistencias: $('alerta-existencias'),
-    agregarProducto: $('agregar-producto'),
-    membresia: $('membresia'),
-    agregarMembresia: $('agregar-membresia'),
-    numeroConceptos: $('numero-conceptos'),
-    conceptosVacio: $('conceptos-vacio'),
+    servicio: $('servicio'), barbero: $('barbero'), agregarServicio: $('agregar-servicio'),
+    listaProductos: $('lista-productos'), productosVacio: $('productos-vacio'),
+    listaMembresias: $('lista-membresias'), membresiasVacio: $('membresias-vacio'), ayudaMembresia: $('ayuda-membresia'),
+    numeroConceptos: $('numero-conceptos'), conceptosVacio: $('conceptos-vacio'), calculando: $('calculando'),
     listaConceptos: $('lista-conceptos'),
-    totalSubtotal: $('total-subtotal'),
-    lineaDescuento: $('linea-descuento'),
-    textoDescuento: $('texto-descuento'),
-    totalDescuento: $('total-descuento'),
-    totalIva: $('total-iva'),
-    totalFinal: $('total-final'),
-    datosEfectivo: $('datos-efectivo'),
-    montoRecibido: $('monto-recibido'),
-    cambio: $('cambio'),
-    cobrar: $('cobrar'),
-    cancelarVenta: $('cancelar-venta')
+    totalSubtotal: $('total-subtotal'), lineaDescuento: $('linea-descuento'), totalDescuento: $('total-descuento'),
+    totalFinal: $('total-final'), venceMembresia: $('vence-membresia'),
+    beneficiosCliente: $('beneficios-cliente'), beneficiosTitulo: $('beneficios-cliente-titulo'), beneficiosLista: $('beneficios-cliente-lista'),
+    datosEfectivo: $('datos-efectivo'), montoRecibido: $('monto-recibido'), cambio: $('cambio'),
+    cobrar: $('cobrar'), cancelarVenta: $('cancelar-venta')
   };
 
   // ---------------------------------------------------------------------------
   // Catálogos
   // ---------------------------------------------------------------------------
 
-  /**
-   * Llena un <select> con un catálogo.
-   * @param {HTMLSelectElement} select
-   * @param {Array} lista
-   * @param {string} vacio  Texto si no hay registros.
-   * @param {function(Object):string} texto
-   * @param {string} campoId
-   */
-  function llenarSelect(select, lista, vacio, texto, campoId) {
-    select.replaceChildren(new Option(lista.length ? 'Selecciona una opción' : vacio, ''));
-    lista.forEach(function (item) { select.add(new Option(texto(item), item[campoId])); });
-    select.disabled = !lista.length;
-  }
-
-  /** Carga servicios, productos, membresías y barberos en paralelo; si uno falla, los demás siguen funcionando. */
+  /** Carga los catálogos en paralelo; si uno falla, los demás siguen funcionando. */
   async function cargarCatalogos() {
-    var respuestas = await Promise.allSettled([
+    var r = await Promise.allSettled([
       Api.catalogos.servicios(), Api.catalogos.productos(), Api.catalogos.membresias(), Api.barberos.listar()
     ]);
-    var valor = function (i) {
-      if (respuestas[i].status === 'rejected') { U.aviso(respuestas[i].reason.message, 'error'); return []; }
-      return respuestas[i].value || [];
-    };
+    var valor = function (i) { return r[i].status === 'fulfilled' ? (r[i].value || []) : []; };
+    r.forEach(function (x) { if (x.status === 'rejected') U.aviso(x.reason.message, 'error'); });
     estado.servicios = valor(0);
     estado.productos = valor(1);
     estado.membresias = valor(2);
     estado.barberos = valor(3);
 
-    llenarSelect(el.servicio, estado.servicios, 'No hay servicios registrados',
-      function (s) { return s.NombreServicio + ' — ' + U.formatoMoneda(s.Precio); }, 'ID_Servicio');
-    llenarSelect(el.barbero, estado.barberos, 'No hay barberos registrados',
-      function (b) { return b.Nombre; }, 'ID_Barbero');
-    llenarSelect(el.producto, estado.productos, 'No hay productos registrados',
-      function (p) { return p.NombreProducto + ' — ' + U.formatoMoneda(p.Precio); }, 'ID_Producto');
-    llenarSelect(el.membresia, estado.membresias, 'No hay planes registrados',
-      function (m) { return m.NombrePlan + ' — ' + U.formatoMoneda(m.Precio); }, 'ID_Membresia');
-    actualizarControles();
+    U.llenarSelect(el.servicio, estado.servicios, function (s) { return s.NombreServicio + ' — ' + U.formatoMoneda(s.Precio); },
+      'ID_Servicio', estado.servicios.length ? 'Selecciona un servicio' : 'No hay servicios registrados');
+    U.llenarSelect(el.barbero, estado.barberos, function (b) { return b.Nombre; }, 'ID_Barbero',
+      estado.barberos.length ? 'Selecciona al barbero' : 'No hay barberos registrados');
+    dibujarProductos();
+    dibujarMembresias();
+    validarServicio();
   }
 
-  /** Busca un registro por id en un catálogo. */
-  function buscarPorId(lista, campo, id) {
-    return lista.find(function (x) { return String(x[campo]) === String(id); }) || null;
+  /** Promociones vigentes (se aplican solas; aquí solo se le recuerdan al cajero).  GET /descuentos?vigentes=1 */
+  async function cargarPromociones() {
+    var lista = [];
+    try { lista = (await Api.descuentos.listar(true)) || []; } catch (e) { lista = []; }
+    var ul = document.getElementById('lista-promociones');
+    ul.replaceChildren();
+    lista.forEach(function (d) {
+      var li = document.createElement('li');
+      var nombre = document.createElement('span');
+      nombre.className = 'font-semibold text-white'; nombre.setAttribute('translate', 'no'); nombre.textContent = d.Nombre;
+      li.append(nombre, document.createTextNode(' · −' + U.valorDescuento(d) + ' · ' + U.alcanceDescuento(d)));
+      if (d.Descripcion) li.title = d.Descripcion;
+      ul.appendChild(li);
+    });
+    document.getElementById('promociones').hidden = !lista.length;
+  }
+
+  function validarServicio() { el.agregarServicio.disabled = !(el.servicio.value && el.barbero.value); }
+
+  /** Piezas de un producto que ya están en la venta. */
+  function enCarrito(idProducto) {
+    return estado.carrito.filter(function (c) { return c.ID_Producto === idProducto; })
+      .reduce(function (s, c) { return s + c.Cantidad; }, 0);
+  }
+
+  /** Tarjetas de productos con precio, existencias y botón para agregar. */
+  function dibujarProductos() {
+    U.dibujarLista({
+      contenedor: el.listaProductos, plantilla: 'plantilla-producto', datos: estado.productos, vacio: el.productosVacio,
+      alCrear: function (tarjeta, p) {
+        var disponibles = p.Stock - enCarrito(p.ID_Producto);
+        var cantidad = 1;
+        var salida = tarjeta.querySelector('output');
+        tarjeta.querySelector('[data-existencias]').textContent = disponibles > 0
+          ? t('Existencias: {n}', { n: disponibles }) : t('Sin existencias');
+        tarjeta.classList.toggle('articulo--agotado', disponibles <= 0);
+        var agregar = tarjeta.querySelector('[data-accion="agregar"]');
+        agregar.disabled = disponibles <= 0;
+        tarjeta.querySelector('[data-accion="menos"]').addEventListener('click', function () { cantidad = Math.max(1, cantidad - 1); salida.value = cantidad; });
+        tarjeta.querySelector('[data-accion="mas"]').addEventListener('click', function () { cantidad = Math.min(Math.max(1, disponibles), cantidad + 1); salida.value = cantidad; });
+        agregar.addEventListener('click', function () { agregarProducto(p, cantidad); });
+      }
+    });
+    el.listaProductos.hidden = !estado.productos.length;
+  }
+
+  /** Beneficios de una membresía tal como aparecen en el cartel. */
+  function textoBeneficios(m) {
+    var lista = (m.Beneficios || []).map(function (b) { return { texto: U.textoBeneficio(b), regla: U.reglaBeneficio(b) }; });
+    return lista.length ? lista : [{ texto: t('Sin beneficios configurados'), regla: '' }];
+  }
+
+  function dibujarMembresias() {
+    U.dibujarLista({
+      contenedor: el.listaMembresias, plantilla: 'plantilla-membresia', datos: estado.membresias, vacio: el.membresiasVacio,
+      alCrear: function (tarjeta, m) {
+        var ul = tarjeta.querySelector('[data-beneficios]');
+        ul.setAttribute('translate', 'no');
+        textoBeneficios(m).forEach(function (x) {
+          var li = document.createElement('li');
+          li.textContent = x.texto;
+          if (x.regla && x.regla !== x.texto) li.title = x.regla;
+          ul.appendChild(li);
+        });
+        var boton = tarjeta.querySelector('[data-accion="agregar"]');
+        boton.disabled = !estado.cliente;
+        boton.addEventListener('click', function () { agregarMembresia(m); });
+      }
+    });
+    el.listaMembresias.hidden = !estado.membresias.length;
+    el.ayudaMembresia.hidden = !!estado.cliente;
   }
 
   // ---------------------------------------------------------------------------
   // Cliente
   // ---------------------------------------------------------------------------
 
-  var buscarClientes = U.retrasar(async function () {
-    var texto = el.buscarCliente.value.trim();
-    if (texto.length < 2) { el.resultadosClientes.hidden = true; el.sinResultados.hidden = true; return; }
-    var clientes = [];
-    try { clientes = (await Api.clientes.buscar(texto)) || []; }
-    catch (error) { U.aviso(error.message, 'error'); }
-    U.dibujarLista({
-      contenedor: el.resultadosClientes,
-      plantilla: 'plantilla-cliente',
-      datos: clientes.slice(0, 6),
-      vacio: el.sinResultados,
-      alCrear: function (boton, cliente) { boton.addEventListener('click', function () { elegirCliente(cliente); }); }
-    });
-  }, 300);
-
-  /** @param {Object|null} cliente */
-  function elegirCliente(cliente) {
+  /**
+   * Asocia la venta a un cliente (o a Cliente 0) y agrega sus pendientes de pago.
+   * @param {Object|null} cliente  null = Cliente 0
+   */
+  async function elegirCliente(cliente) {
     estado.cliente = cliente;
-    el.clienteElegido.hidden = !cliente;
-    el.clienteBusqueda.hidden = !!cliente;
-    el.membresiaCliente.replaceChildren();
+    estado.clienteCero = !cliente;
+    // Se quitan los pendientes del cliente anterior y, con Cliente 0, las membresías.
+    estado.carrito = estado.carrito.filter(function (c) { return !c.ID_Cita && !(c.TipoItem === 'Membresía' && !cliente); });
+
+    el.buscador.hidden = true;
+    el.clienteElegido.hidden = false;
+    el.clienteNombre.textContent = cliente ? cliente.Nombre : t('Cliente 0');
+    el.clienteNombre.classList.toggle('texto-membresia', !!(cliente && cliente.MembresiaActiva));
+    el.clienteAvatar.textContent = cliente ? U.iniciales(cliente.Nombre) : '0';
+    U.ponerFotoAvatar(el.clienteAvatar, cliente && cliente.FotoCorteReferencia, cliente ? cliente.Nombre : '');
+    el.clienteTelefono.textContent = cliente ? U.formatoTelefono(cliente.Telefono) : t('Público en general · sin datos en el ticket');
+    el.clienteMembresia.replaceChildren();
+    if (cliente) {
+      var insignia = document.createElement('span');
+      insignia.className = 'insignia ' + (cliente.MembresiaActiva ? 'insignia--oro' : '');
+      insignia.textContent = cliente.MembresiaActiva
+        ? t('Membresía') + ' ' + (cliente.NombrePlan || '') + ' · ' + t('vence') + ' ' + U.formatoFecha(cliente.FechaVencimiento)
+        : t('Sin membresía');
+      el.clienteMembresia.appendChild(insignia);
+    }
+    dibujarMembresias();
+
+    // Beneficios de su membresía, visibles desde que se elige al cliente.
+    estado.membresiaCliente = null;
+    if (cliente && cliente.MembresiaActiva) {
+      try { estado.membresiaCliente = await Api.clientes.membresia(cliente.ID_Cliente); }
+      catch (error) { /* se verán al calcular */ }
+    }
+    dibujarBeneficios(estado.calculo && estado.calculo.Membresia);
 
     if (cliente) {
-      U.llenar(el.clienteElegido, cliente);
-      var activa = cliente.EstadoMembresia === 'Activa';
-      var insignia = document.createElement('span');
-      insignia.className = 'insignia ' + (activa ? 'insignia--exito' : '');
-      insignia.textContent = activa
-        ? 'Membresía activa' + (cliente.NombrePlan ? ': ' + cliente.NombrePlan : '') +
-          (Number(cliente.DescuentoServicios) ? ' (' + Number(cliente.DescuentoServicios) + ' % en servicios)' : '')
-        : 'Sin membresía activa';
-      el.membresiaCliente.appendChild(insignia);
-    } else {
-      el.buscarCliente.value = '';
-      el.resultadosClientes.hidden = true;
-      el.sinResultados.hidden = true;
-      // Las membresías requieren cliente: se quitan si se desasocia.
-      estado.conceptos = estado.conceptos.filter(function (c) { return c.TipoItem !== 'Membresía'; });
+      try {
+        var pendientes = (await Api.clientes.pendientes(cliente.ID_Cliente)) || [];
+        pendientes.forEach(function (p) {
+          estado.carrito.unshift({ TipoItem: 'Servicio', ID_Cita: p.ID_Cita, ID_Servicio: p.ID_Servicio, ID_Barbero: p.ID_Barbero });
+        });
+        if (pendientes.length) {
+          U.aviso(pendientes.length === 1 ? t('Se agregó 1 servicio pendiente de pago.') : t('Se agregaron {n} servicios pendientes de pago.', { n: pendientes.length }), 'info');
+        }
+      } catch (error) { U.aviso(error.message, 'error'); }
     }
-    dibujarConceptos();
+    calcular();
   }
 
-  /** Preselecciona al cliente recibido en ?cliente=ID (desde el perfil o una cita). */
+  function quitarCliente() {
+    estado.cliente = null;
+    estado.clienteCero = false;
+    estado.carrito = estado.carrito.filter(function (c) { return !c.ID_Cita && c.TipoItem !== 'Membresía'; });
+    el.clienteElegido.hidden = true;
+    el.buscador.hidden = false;
+    el.buscador.limpiar();
+    el.buscador.enfocar();
+    dibujarMembresias();
+    calcular();
+  }
+
   async function clienteDesdeURL() {
     var id = U.parametro('cliente');
     if (!id) return;
-    try { var c = await Api.clientes.obtener(id); if (c) elegirCliente(c); }
-    catch (error) { U.aviso(error.message, 'error'); }
+    try { await elegirCliente(await Api.clientes.obtener(id)); } catch (error) { U.aviso(error.message, 'error'); }
   }
 
   // ---------------------------------------------------------------------------
-  // Pestañas y existencias
+  // Agregar y quitar conceptos
   // ---------------------------------------------------------------------------
 
-  /** @param {'servicio'|'producto'|'membresia'} pestana */
-  function cambiarPestana(pestana) {
+  function agregarServicio() {
+    estado.carrito.push({ TipoItem: 'Servicio', ID_Servicio: Number(el.servicio.value), ID_Barbero: Number(el.barbero.value) });
+    el.servicio.value = '';
+    validarServicio();
+    calcular();
+  }
+
+  /** Suma la cantidad si el producto ya estaba en la venta. */
+  function agregarProducto(producto, cantidad) {
+    var existente = estado.carrito.find(function (c) { return c.ID_Producto === producto.ID_Producto; });
+    if (existente) existente.Cantidad += cantidad;
+    else estado.carrito.push({ TipoItem: 'Producto', ID_Producto: producto.ID_Producto, Cantidad: cantidad });
+    calcular();
+  }
+
+  function agregarMembresia(m) {
+    if (!estado.cliente) { U.aviso('Selecciona primero al cliente: la membresía no se puede vender a Cliente 0.', 'error'); return; }
+    estado.carrito = estado.carrito.filter(function (c) { return c.TipoItem !== 'Membresía'; });
+    estado.carrito.push({ TipoItem: 'Membresía', ID_Membresia: m.ID_Membresia });
+    U.aviso('Los beneficios de la membresía se aplican en esta misma venta.', 'info');
+    calcular();
+  }
+
+  function quitar(indice) {
+    estado.carrito.splice(indice, 1);
+    calcular();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Cálculo en el servidor y resumen
+  // ---------------------------------------------------------------------------
+
+  /** Pide los importes al servidor.  POST /ventas/calcular */
+  var calcular = U.retrasar(async function () {
+    var numero = ++estado.consulta;
+    if (!estado.carrito.length) { estado.calculo = null; dibujarResumen(); return; }
+    el.calculando.hidden = false;
+    try {
+      var calculo = await Api.ventas.calcular({ ID_Cliente: estado.cliente ? estado.cliente.ID_Cliente : null, Detalle: estado.carrito });
+      if (numero !== estado.consulta) return;
+      estado.calculo = calculo;
+    } catch (error) {
+      if (numero !== estado.consulta) return;
+      U.aviso(error.message, 'error');
+      // El último concepto provocó el error (ej. sin existencias): se retira.
+      estado.carrito.pop();
+      estado.calculo = null;
+      if (estado.carrito.length) { el.calculando.hidden = true; calcular(); return; }
+    }
+    el.calculando.hidden = true;
+    dibujarResumen();
+  }, 150);
+
+  /** Dibuja los renglones calculados, los totales y el botón de cobro. */
+  function dibujarResumen() {
+    var c = estado.calculo;
+    var lineas = c ? c.Lineas : [];
+    U.dibujarLista({
+      contenedor: el.listaConceptos, plantilla: 'plantilla-concepto', vacio: el.conceptosVacio,
+      datos: lineas.map(function (l) {
+        var detalle = l.TipoItem === 'Servicio' ? t('Barbero') + ': ' + l.NombreBarbero
+          : l.TipoItem === 'Producto' ? t('Producto') + ' · ' + U.formatoMoneda(l.PrecioUnitario) + ' c/u'
+          : t('Vence') + ': ' + U.formatoFecha(l.VenceMembresia);
+        return Object.assign({}, l, {
+          CantidadTexto: l.Cantidad > 1 ? '× ' + l.Cantidad : '',
+          Detalle: detalle,
+          Bruto: l.PrecioUnitario * l.Cantidad
+        });
+      }),
+      alCrear: function (li, l, i) {
+        li.querySelector('[data-campo="NombreItem"]').setAttribute('translate', 'no');
+        if (l.Descuento > 0) li.querySelector('.precio-normal').hidden = false;
+        if (l.Beneficio && !l.UsaBeneficio && l.Descuento === 0) li.querySelector('.concepto__beneficio').classList.add('concepto__beneficio--limite');
+        if (l.Beneficio && l.Descuento > 0) {
+          li.querySelector('.concepto__beneficio').textContent = t(l.Beneficio) + ' · −' + U.formatoMoneda(l.Descuento);
+        }
+        var quitarBoton = li.querySelector('[data-accion="quitar"]');
+        if (l.Pendiente) {
+          li.classList.add('concepto--pendiente');
+          quitarBoton.remove();
+          li.querySelector('[data-pendiente]').hidden = false;
+        } else {
+          // Un producto puede venir en dos renglones (ej. 1 gratis + 1 con descuento): Indice es su concepto.
+          quitarBoton.addEventListener('click', function () { quitar(l.Indice != null ? l.Indice : i); });
+        }
+      }
+    });
+
+    var total = c ? c.Total : 0;
+    var conceptos = c ? estado.carrito.length : 0;
+    el.numeroConceptos.textContent = conceptos === 1 ? t('1 concepto') : t('{n} conceptos', { n: conceptos });
+    el.totalSubtotal.textContent = U.formatoMoneda(c ? c.Subtotal : 0);
+    el.lineaDescuento.hidden = !(c && c.Descuento > 0);
+    el.totalDescuento.textContent = '−' + U.formatoMoneda(c ? c.Descuento : 0);
+    el.totalFinal.textContent = U.formatoMoneda(total);
+    var m = c && c.Membresia;
+    el.venceMembresia.hidden = !(m && m.VenceNueva);
+    if (m && m.VenceNueva) {
+      el.venceMembresia.textContent = t('Membresía {plan}: vence el {fecha}', { plan: m.NombrePlan, fecha: U.formatoFecha(m.VenceNueva) }) +
+        (m.Renovacion ? ' · ' + t('se suma a la fecha actual') : '');
+    }
+    dibujarBeneficios(m);
+    dibujarProductos();
+    actualizarCambio();
+  }
+
+  var SVG_PALOMITA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+
+  /** Beneficios de la membresía que se aplica (la vigente o la que se compra). */
+  function dibujarBeneficios(m) {
+    m = m || (estado.cliente ? estado.membresiaCliente : null);
+    var lista = m && m.Beneficios ? m.Beneficios : null;
+    el.beneficiosCliente.hidden = !(estado.cliente && m);
+    if (el.beneficiosCliente.hidden) return;
+    el.beneficiosTitulo.textContent = t('Beneficios de la membresía {plan}', { plan: m.NombrePlan });
+    el.beneficiosLista.replaceChildren();
+    (lista && lista.length ? lista : [{ Aplica: 'Texto', Etiqueta: t('Sin beneficios configurados') }]).forEach(function (b) {
+      var li = document.createElement('li');
+      li.innerHTML = SVG_PALOMITA;
+      var cuerpo = document.createElement('span');
+      var texto = document.createElement('span');
+      texto.className = 'lista-beneficios__texto';
+      texto.textContent = U.textoBeneficio(b);
+      cuerpo.appendChild(texto);
+      if (b.Etiqueta && b.Aplica !== 'Texto') {
+        var regla = document.createElement('span');
+        regla.className = 'lista-beneficios__regla';
+        regla.textContent = U.reglaBeneficio(b);
+        cuerpo.appendChild(regla);
+      }
+      li.appendChild(cuerpo);
+      el.beneficiosLista.appendChild(li);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pago
+  // ---------------------------------------------------------------------------
+
+  function elegirMetodo(metodo) {
+    estado.metodo = metodo;
+    document.querySelectorAll('.metodo-pago').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-metodo') === metodo)); });
+    el.datosEfectivo.hidden = metodo !== 'Efectivo';
+    actualizarCambio();
+  }
+
+  function actualizarCambio() {
+    var total = estado.calculo ? estado.calculo.Total : 0;
+    var recibido = Number(el.montoRecibido.value) || 0;
+    var cambio = recibido - total;
+    el.cambio.textContent = U.formatoMoneda(Math.max(0, cambio));
+    el.cambio.classList.toggle('texto-error', estado.metodo === 'Efectivo' && el.montoRecibido.value !== '' && cambio < 0);
+    var listo = !!(estado.calculo && estado.carrito.length && (estado.cliente || estado.clienteCero));
+    // Con total $0 (todo cubierto por la membresía) no hace falta capturar efectivo.
+    if (estado.metodo === 'Efectivo' && total > 0.009) listo = listo && el.montoRecibido.value !== '' && cambio >= -0.009;
+    el.cobrar.disabled = !listo;
+  }
+
+  /** Registra la venta y abre el ticket.  POST /ventas */
+  async function cobrar() {
+    if (!estado.cliente && !estado.clienteCero) { U.aviso('Elige al cliente o «Cliente 0».', 'error'); return; }
+    try {
+      var venta = await U.conCarga(el.cobrar, Api.ventas.crear({
+        ID_Cliente: estado.cliente ? estado.cliente.ID_Cliente : null,
+        MetodoPago: estado.metodo,
+        MontoRecibido: estado.metodo === 'Efectivo' ? Number(el.montoRecibido.value) || 0 : null,
+        TotalEsperado: estado.calculo.Total,
+        Detalle: estado.carrito
+      }));
+      window.location.href = 'ticket-digital.html?venta=' + encodeURIComponent(venta.ID_Venta) + '&nueva=1';
+    } catch (error) {
+      U.aviso(error.message, 'error');
+      if (error.estado === 409 || error.estado === 400) calcular();
+    }
+  }
+
+  async function cancelarVenta() {
+    if (!estado.carrito.length && !estado.cliente && !estado.clienteCero) return;
+    if (!(await U.confirmar('¿Cancelar la venta en curso? Se quitarán todos los conceptos.'))) return;
+    estado.carrito = [];
+    el.montoRecibido.value = '';
+    quitarCliente();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pestañas y arranque
+  // ---------------------------------------------------------------------------
+
+  function elegirPestana(nombre) {
+    estado.pestana = nombre;
     document.querySelectorAll('[data-pestana]').forEach(function (b) {
-      var activa = b.getAttribute('data-pestana') === pestana;
+      var activa = b.getAttribute('data-pestana') === nombre;
       b.setAttribute('aria-selected', String(activa));
       $('panel-' + b.getAttribute('data-pestana')).hidden = !activa;
     });
   }
 
-  /** @returns {number} Existencias del producto elegido menos lo ya agregado. */
-  function existenciasDisponibles() {
-    var producto = buscarPorId(estado.productos, 'ID_Producto', el.producto.value);
-    if (!producto) return 0;
-    var reservado = estado.conceptos
-      .filter(function (c) { return c.TipoItem === 'Producto' && String(c.ID_Producto) === String(producto.ID_Producto); })
-      .reduce(function (suma, c) { return suma + c.Cantidad; }, 0);
-    return Number(producto.Stock) - reservado;
-  }
-
-  /** Habilita o bloquea los botones de agregar según lo elegido. */
-  function actualizarControles() {
-    el.agregarServicio.disabled = !(el.servicio.value && el.barbero.value);
-
-    var hayProducto = !!el.producto.value;
-    var disponibles = existenciasDisponibles();
-    el.existencias.textContent = hayProducto ? disponibles + (disponibles === 1 ? ' pieza' : ' piezas') : '—';
-    el.existencias.className = 'numeros ' + (hayProducto ? (disponibles > 0 ? 'texto-exito' : 'texto-error') : '');
-    var insuficiente = hayProducto && estado.cantidad > disponibles;
-    el.alertaExistencias.hidden = !insuficiente;
-    el.agregarProducto.disabled = !hayProducto || insuficiente;
-    el.cantidad.textContent = String(estado.cantidad);
-
-    el.agregarMembresia.disabled = !(el.membresia.value && estado.cliente);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Conceptos
-  // ---------------------------------------------------------------------------
-
-  /** Agrega el servicio elegido con el barbero que lo realizó. */
-  function agregarServicio() {
-    var s = buscarPorId(estado.servicios, 'ID_Servicio', el.servicio.value);
-    var b = buscarPorId(estado.barberos, 'ID_Barbero', el.barbero.value);
-    if (!s || !b) return;
-    estado.conceptos.push({
-      TipoItem: 'Servicio', ID_Servicio: s.ID_Servicio, ID_Producto: null, ID_Membresia: null,
-      ID_Barbero: b.ID_Barbero, NombreBarbero: b.Nombre,
-      NombreItem: s.NombreServicio, PrecioUnitario: Number(s.Precio), Cantidad: 1
-    });
-    dibujarConceptos();
-  }
-
-  /** Agrega el producto elegido (o suma la cantidad si ya estaba) sin rebasar las existencias. */
-  function agregarProducto() {
-    var p = buscarPorId(estado.productos, 'ID_Producto', el.producto.value);
-    if (!p || estado.cantidad > existenciasDisponibles()) return;
-    var existente = estado.conceptos.find(function (c) { return c.TipoItem === 'Producto' && String(c.ID_Producto) === String(p.ID_Producto); });
-    if (existente) existente.Cantidad += estado.cantidad;
-    else estado.conceptos.push({
-      TipoItem: 'Producto', ID_Servicio: null, ID_Producto: p.ID_Producto, ID_Membresia: null,
-      ID_Barbero: null, NombreBarbero: null,
-      NombreItem: p.NombreProducto, PrecioUnitario: Number(p.Precio), Cantidad: estado.cantidad
-    });
-    estado.cantidad = 1;
-    dibujarConceptos();
-  }
-
-  /** Agrega la membresía elegida; requiere un cliente asociado. */
-  function agregarMembresia() {
-    var m = buscarPorId(estado.membresias, 'ID_Membresia', el.membresia.value);
-    if (!m || !estado.cliente) return;
-    estado.conceptos.push({
-      TipoItem: 'Membresía', ID_Servicio: null, ID_Producto: null, ID_Membresia: m.ID_Membresia,
-      ID_Barbero: null, NombreBarbero: null,
-      NombreItem: m.NombrePlan, PrecioUnitario: Number(m.Precio), Cantidad: 1
-    });
-    dibujarConceptos();
-  }
-
-  /** Dibuja la lista de conceptos de la venta y recalcula los totales. */
-  function dibujarConceptos() {
-    var total = estado.conceptos.length;
-    el.numeroConceptos.textContent = total + (total === 1 ? ' concepto' : ' conceptos');
-
-    U.dibujarLista({
-      contenedor: el.listaConceptos,
-      plantilla: 'plantilla-concepto',
-      vacio: el.conceptosVacio,
-      datos: estado.conceptos.map(function (c) {
-        return {
-          NombreItem: c.NombreItem,
-          CantidadTexto: c.Cantidad > 1 ? '× ' + c.Cantidad : '',
-          TipoItem: c.TipoItem,
-          DetalleTexto: c.NombreBarbero ? 'Barbero: ' + c.NombreBarbero : (c.TipoItem === 'Producto' ? 'Mostrador' : 'Cliente asociado'),
-          Importe: c.PrecioUnitario * c.Cantidad
-        };
-      }),
-      alCrear: function (fila, datos, indice) {
-        fila.querySelector('[data-accion="quitar"]').addEventListener('click', function () {
-          estado.conceptos.splice(indice, 1);
-          dibujarConceptos();
-        });
-      }
-    });
-    actualizarControles();
-    calcularTotales();
-  }
-
-  // ---------------------------------------------------------------------------
-  // Totales y pago
-  // ---------------------------------------------------------------------------
-
-  /** @returns {{subtotal:number, descuento:number, total:number, iva:number, porcentaje:number}} */
-  function totales() {
-    var redondear = function (n) { return Math.round(n * 100) / 100; };
-    var subtotal = estado.conceptos.reduce(function (s, c) { return s + c.PrecioUnitario * c.Cantidad; }, 0);
-    var servicios = estado.conceptos
-      .filter(function (c) { return c.TipoItem === 'Servicio'; })
-      .reduce(function (s, c) { return s + c.PrecioUnitario * c.Cantidad; }, 0);
-    var porcentaje = estado.cliente && estado.cliente.EstadoMembresia === 'Activa' ? Number(estado.cliente.DescuentoServicios) || 0 : 0;
-    var descuento = redondear(servicios * porcentaje / 100);
-    var total = redondear(subtotal - descuento);
-    var iva = redondear(total - total / (1 + CFG.TASA_IVA));
-    return { subtotal: subtotal, descuento: descuento, total: total, iva: iva, porcentaje: porcentaje };
-  }
-
-  /** Muestra subtotal, descuento, IVA, total y cambio (vista previa; el servidor recalcula). */
-  function calcularTotales() {
-    var t = totales();
-    el.totalSubtotal.textContent = U.formatoMoneda(t.subtotal);
-    el.lineaDescuento.hidden = !t.descuento;
-    el.textoDescuento.textContent = 'Descuento membresía (' + t.porcentaje + ' % en servicios)';
-    el.totalDescuento.textContent = '−' + U.formatoMoneda(t.descuento);
-    el.totalIva.textContent = U.formatoMoneda(t.iva);
-    el.totalFinal.textContent = U.formatoMoneda(t.total);
-
-    var efectivo = estado.metodo === 'Efectivo';
-    var recibido = Number(el.montoRecibido.value) || 0;
-    var cambio = recibido - t.total;
-    el.datosEfectivo.hidden = !efectivo;
-    el.cambio.textContent = recibido ? U.formatoMoneda(cambio) : U.formatoMoneda(0);
-    el.cambio.className = 'numeros font-bold text-lg ' + (cambio < 0 && recibido ? 'texto-error' : 'texto-exito');
-
-    el.cobrar.disabled = !estado.conceptos.length || (efectivo && recibido < t.total);
-  }
-
-  /** @param {'Efectivo'|'Transferencia'|'Tarjeta'} metodo */
-  function elegirMetodo(metodo) {
-    estado.metodo = metodo;
-    document.querySelectorAll('.metodo-pago').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.getAttribute('data-metodo') === metodo));
-    });
-    calcularTotales();
-  }
-
-  /** Envía la venta al servidor y abre el ticket. */
-  async function cobrar() {
-    var t = totales();
-    var datos = {
-      ID_Cliente: estado.cliente ? estado.cliente.ID_Cliente : null,
-      MetodoPago: estado.metodo,
-      MontoRecibido: estado.metodo === 'Efectivo' ? Number(el.montoRecibido.value) : null,
-      TotalEsperado: t.total,     // el servidor lo compara con su propio cálculo
-      Detalle: estado.conceptos.map(function (c) {
-        return {
-          TipoItem: c.TipoItem, ID_Servicio: c.ID_Servicio, ID_Producto: c.ID_Producto,
-          ID_Membresia: c.ID_Membresia, ID_Barbero: c.ID_Barbero, Cantidad: c.Cantidad
-        };
-      })
-    };
-    try {
-      var venta = await U.conCarga(el.cobrar, Api.ventas.crear(datos));
-      if (venta && venta.ID_Venta) {
-        window.location.href = 'ticket-digital.html?venta=' + encodeURIComponent(venta.ID_Venta);
-      }
-    } catch (error) {
-      U.aviso(error.message, 'error');
-      if (error.estado === 409) cargarCatalogos();   // existencias cambiaron: se recargan
-    }
-  }
-
-  /** Descarta la venta en curso previa confirmación. */
-  async function cancelarVenta() {
-    if (estado.conceptos.length && !(await U.confirmar('¿Cancelar la venta en curso?'))) return;
-    estado.conceptos = [];
-    estado.cantidad = 1;
-    el.montoRecibido.value = '';
-    elegirCliente(null);
-    elegirMetodo('Efectivo');
-  }
-
-  // ---- Arranque ---------------------------------------------------------------
-  el.buscarCliente.addEventListener('input', buscarClientes);
-  el.cambiarCliente.addEventListener('click', function () { elegirCliente(null); });
   document.querySelectorAll('[data-pestana]').forEach(function (b) {
-    b.addEventListener('click', function () { cambiarPestana(b.getAttribute('data-pestana')); });
+    b.addEventListener('click', function () { elegirPestana(b.getAttribute('data-pestana')); });
   });
-  [el.servicio, el.barbero, el.membresia].forEach(function (s) { s.addEventListener('change', actualizarControles); });
-  el.producto.addEventListener('change', function () { estado.cantidad = 1; actualizarControles(); });
-  el.cantidadMenos.addEventListener('click', function () { estado.cantidad = Math.max(1, estado.cantidad - 1); actualizarControles(); });
-  el.cantidadMas.addEventListener('click', function () { estado.cantidad += 1; actualizarControles(); });
-  el.agregarServicio.addEventListener('click', agregarServicio);
-  el.agregarProducto.addEventListener('click', agregarProducto);
-  el.agregarMembresia.addEventListener('click', agregarMembresia);
   document.querySelectorAll('.metodo-pago').forEach(function (b) {
     b.addEventListener('click', function () { elegirMetodo(b.getAttribute('data-metodo')); });
   });
-  el.montoRecibido.addEventListener('input', calcularTotales);
+  el.buscador.addEventListener('cliente:elegido', function (e) { elegirCliente(e.detail.cliente); });
+  el.cambiarCliente.addEventListener('click', quitarCliente);
+  el.servicio.addEventListener('change', validarServicio);
+  el.barbero.addEventListener('change', validarServicio);
+  el.agregarServicio.addEventListener('click', agregarServicio);
+  el.montoRecibido.addEventListener('input', actualizarCambio);
   el.cobrar.addEventListener('click', cobrar);
   el.cancelarVenta.addEventListener('click', cancelarVenta);
 
-  dibujarConceptos();
-  cargarCatalogos();
-  clienteDesdeURL();
+  dibujarResumen();
+  cargarCatalogos().then(clienteDesdeURL);
+  cargarPromociones();
+  // Precios, existencias o promociones cambiados desde otro equipo: se actualizan sin perder la venta.
+  Api.alCambiar(['catalogo'], function () {
+    var servicio = el.servicio.value, barbero = el.barbero.value;
+    cargarCatalogos().then(function () {
+      el.servicio.value = servicio; el.barbero.value = barbero; validarServicio();
+      if (estado.carrito.length) calcular();
+    });
+    cargarPromociones();
+  });
 })();

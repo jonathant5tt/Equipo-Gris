@@ -17,15 +17,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mi horario · Engreídos Barbershop</title>
 
-  <!-- Tipografías e íconos -->
+  <!-- Ícono de la pestaña y de «Agregar a pantalla de inicio» (logotipo oficial) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icono-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icono-192.png">
+  <link rel="apple-touch-icon" href="assets/img/icono-180.png">
+  <meta name="theme-color" content="#0d0f13">
+
+  <!-- Tipografías e íconos (se cargan sin bloquear: la pantalla aparece aunque no haya internet) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;500;600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
 
-  <!-- Tailwind CSS (distribución) + configuración compartida -->
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="assets/js/tailwind.config.js"></script>
+  <!-- Tailwind CSS compilado (funciona sin internet). Regenerar: cd servidor && npm run estilos -->
+  <link rel="stylesheet" href="assets/css/tailwind.css">
 
   <!-- Sistema de diseño propio -->
   <link rel="stylesheet" href="assets/css/comun.css">
@@ -44,12 +49,13 @@
 
   <!-- Núcleo de la aplicación (el orden importa) -->
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/idioma.js"></script>
   <script src="assets/js/utilidades.js"></script>
   <script src="assets/js/sesion.js"></script>
   <script src="assets/js/api.js"></script>
-  <script src="assets/js/api-sin-servidor.js"></script>
 
   <!-- Componentes y lógica de esta pantalla -->
+  <script src="assets/js/componentes/logo-engreidos.js" defer></script>
   <script src="assets/js/componentes/encabezado-app.js" defer></script>
   <script src="assets/js/componentes/navegacion-barbero.js" defer></script>
   <script src="assets/js/paginas/barbero-mi-horario.js" defer></script>
@@ -84,8 +90,8 @@
           <span class="insignia" id="estado-hoy"><span class="insignia__punto" aria-hidden="true"></span><span data-texto></span></span>
         </div>
         <dl id="jornada">
-          <div class="renglon"><dt class="texto-suave text-sm">Entrada</dt><dd class="numeros font-bold text-lg"><span data-campo="HoraEntrada" data-formato="hora"></span> <small class="texto-tenue font-normal">hrs</small></dd></div>
-          <div class="renglon"><dt class="texto-suave text-sm">Salida</dt><dd class="numeros font-bold text-lg"><span data-campo="HoraSalida" data-formato="hora"></span> <small class="texto-tenue font-normal">hrs</small></dd></div>
+          <div class="renglon"><dt class="texto-suave text-sm">Entrada</dt><dd class="numeros font-bold text-lg"><span data-campo="HoraEntrada" data-formato="hora"></span></dd></div>
+          <div class="renglon"><dt class="texto-suave text-sm">Salida</dt><dd class="numeros font-bold text-lg"><span data-campo="HoraSalida" data-formato="hora"></span></dd></div>
           <div class="renglon"><dt class="texto-suave text-sm">Comida</dt><dd class="numeros font-bold text-lg" data-campo="Comida"></dd></div>
         </dl>
       </section>
