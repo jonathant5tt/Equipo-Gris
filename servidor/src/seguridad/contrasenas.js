@@ -37,9 +37,16 @@ async function verificar(contrasena, guardado) {
   if (partes.length !== 6 || partes[0] !== 'scrypt') return false;
   const [, N, r, p, salB64, hashB64] = partes;
   const esperado = Buffer.from(hashB64, 'base64');
-  const obtenido = await scrypt(String(contrasena), Buffer.from(salB64, 'base64'), esperado.length,
-    { N: Number(N), r: Number(r), p: Number(p) });
-  return crypto.timingSafeEqual(esperado, obtenido);
+  // Un hash vacío o corto haría que cualquier contraseña coincidiera (scrypt de 0 bytes = 0 bytes).
+  if (esperado.length < 32) return false;
+  try {
+    const obtenido = await scrypt(String(contrasena), Buffer.from(salB64, 'base64'), esperado.length,
+      { N: Number(N), r: Number(r), p: Number(p) });
+    return crypto.timingSafeEqual(esperado, obtenido);
+  } catch (error) {
+    // Parámetros dañados en la base de datos: se rechaza el acceso en lugar de responder 500.
+    return false;
+  }
 }
 
 module.exports = { cifrar, verificar };

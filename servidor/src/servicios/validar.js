@@ -8,6 +8,13 @@
 const { ErrorApi } = require('../middleware/errores');
 
 const falla = (mensaje) => { throw new ErrorApi(400, mensaje); };
+
+/**
+ * Redondeo comercial a centavos (medio centavo hacia arriba). Math.round(n * 100)
+ * falla con valores como 1.005 o 2.175, cuyo producto queda en 100.4999… por la
+ * representación binaria; toPrecision(12) elimina ese ruido antes de redondear.
+ */
+const redondear = (n) => Math.round(Number((n * 100).toPrecision(12))) / 100;
 const vacio = (v) => v === undefined || v === null || String(v).trim() === '';
 
 /**
@@ -52,7 +59,18 @@ function importe(valor, campo, { min = 0, max = 1e7, obligatorio = true } = {}) 
   }
   const n = Number(valor);
   if (!Number.isFinite(n) || n < min || n > max) falla(`${campo} no es válido.`);
-  return Math.round(n * 100) / 100;
+  return redondear(n);
+}
+
+/**
+ * ¿'AAAA-MM-DD' es un día real del calendario? Date.parse() acepta días como
+ * el 31 de abril o el 30 de febrero (los recorre al mes siguiente), por eso
+ * se reconstruye la fecha y se compara con el texto original.
+ */
+function fechaExiste(texto) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(texto))) return false;
+  const d = new Date(texto + 'T00:00:00Z');
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === texto;
 }
 
 /** Fecha 'AAAA-MM-DD'. */
@@ -62,7 +80,7 @@ function fecha(valor, campo, obligatorio = true) {
     return null;
   }
   const t = String(valor).slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(t) || Number.isNaN(Date.parse(t + 'T00:00:00Z'))) falla(`${campo} no es una fecha válida.`);
+  if (!fechaExiste(t)) falla(`${campo} no es una fecha válida.`);
   return t;
 }
 
@@ -128,4 +146,4 @@ function contrasena(valor, campo = 'La contraseña') {
   return c;
 }
 
-module.exports = { texto, textoLargo, entero, importe, fecha, hora, opcion, telefono, dias, usuario, contrasena, LETRAS_DIAS };
+module.exports = { redondear, fechaExiste, texto, textoLargo, entero, importe, fecha, hora, opcion, telefono, dias, usuario, contrasena, LETRAS_DIAS };

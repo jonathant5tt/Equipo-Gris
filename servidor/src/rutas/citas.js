@@ -122,7 +122,8 @@ router.post('/', envolver(async (req, res) => {
   const b = req.body || {};
   const m = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/.exec(String(b.FechaHora || ''));
   if (!m) throw new ErrorApi(400, 'Elige la fecha y la hora de la cita.');
-  const [, fecha, hora] = m;
+  const [, , hora] = m;
+  const fecha = v.fecha(m[1], 'La fecha de la cita');
   const idCliente = v.entero(b.ID_Cliente, 'El cliente', { min: 1 });
   const idBarbero = req.usuario.rol === ROLES.BARBERO && !b.ID_Barbero ? req.usuario.id : v.entero(b.ID_Barbero, 'El barbero', { min: 1 });
   const servicio = await obtenerServicio(b.ID_Servicio);

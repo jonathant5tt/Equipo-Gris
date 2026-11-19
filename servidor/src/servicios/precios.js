@@ -32,7 +32,7 @@
 const f = require('./fechas');
 const { ErrorApi } = require('../middleware/errores');
 
-const redondear = (n) => Math.round(n * 100) / 100;
+const { redondear } = require('./validar');
 const TIPOS = ['Servicio', 'Producto', 'Membresía'];
 
 /** Texto para comparar categorías: sin acentos, espacios ni mayúsculas. */
@@ -206,7 +206,8 @@ async function calcularVenta(db, pedido, opciones = {}) {
   for (const [i, item] of detalle.entries()) {
     const tipo = item.TipoItem;
     if (!TIPOS.includes(tipo)) throw new ErrorApi(400, `Concepto ${i + 1}: tipo no válido.`);
-    const cantidad = tipo === 'Producto' ? Number(item.Cantidad || 1) : 1;
+    // Sin cantidad = 1 pieza; una cantidad 0 o vacía explícita es un error (antes se convertía en 1).
+    const cantidad = tipo === 'Producto' ? (item.Cantidad === undefined || item.Cantidad === null ? 1 : Number(item.Cantidad)) : 1;
     if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 999) throw new ErrorApi(400, `Concepto ${i + 1}: cantidad no válida.`);
 
     if (tipo === 'Servicio') {
